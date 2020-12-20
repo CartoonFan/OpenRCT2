@@ -262,8 +262,8 @@ STR_0875    :{POP16}{POP16}{POP16}{POP16}{POP16}{POP16}{POP16}{POP16}{POP16}{POP
 STR_0876    :{BLACK}▼
 STR_0877    :Příliš nízko!
 STR_0878    :Moc vysoko!
-STR_0879    :Tady nelze zemi snížit...
-STR_0880    :Tady nelze zemi zvýšit...
+STR_0879    :Tady nelze zemi snížit…
+STR_0880    :Tady nelze zemi zvýšit…
 STR_0881    :Objekt v cestě
 STR_0882    :Nahrát hru
 STR_0883    :Uložit hru
@@ -307,8 +307,8 @@ STR_0922    :{SMALLFONT}{BLACK}Prudce vzhůru
 STR_0923    :{SMALLFONT}{BLACK}Kolmo vzhůru
 STR_0924    :{SMALLFONT}{BLACK}Šroubovice dolů
 STR_0925    :{SMALLFONT}{BLACK}Šroubovice vzhůru
-STR_0926    :Tohle nelze odstranit...
-STR_0927    :Tohle zde nejde postavit...
+STR_0926    :Tohle nelze odstranit…
+STR_0927    :Tohle zde nejde postavit…
 STR_0928    :{SMALLFONT}{BLACK}Řetězový vlek - výtah vozů do kopce
 STR_0929    :„S“ Ohyb (levý)
 STR_0930    :„S“ Ohyb (pravý)
@@ -369,7 +369,7 @@ STR_0984    :{WINDOW_COLOUR_2}▲{BLACK}  {CURRENCY2DP}
 STR_0985    :{WINDOW_COLOUR_2}▼{BLACK}  {CURRENCY2DP}
 STR_0986    :{BLACK}{CURRENCY2DP}
 STR_0987    :Příliš mnoho atrakcí
-STR_0988    :Nelze vytvořit novou atrakci...
+STR_0988    :Nelze vytvořit novou atrakci…
 STR_0989    :{STRINGID}
 STR_0990    :{SMALLFONT}{BLACK}Stavba
 STR_0991    :Stanice
@@ -383,10 +383,10 @@ STR_0998    :Na této trati nelze postavit více nástupišť
 STR_0999    :Vyžaduje nástupiště
 STR_1000    :Trať není uzavřený okruh.
 STR_1001    :Trať není vhodná pro tento typ vozů
-STR_1002    :Nelze otevřít {POP16}{POP16}{POP16}{STRINGID}...
-STR_1003    :Nelze testovat {POP16}{POP16}{POP16}{STRINGID}...
-STR_1004    :Nelze zavřít {POP16}{POP16}{POP16}{STRINGID}...
-STR_1005    :Nelze začít stavět {POP16}{POP16}{POP16}{STRINGID}...
+STR_1002    :Nelze otevřít {POP16}{POP16}{POP16}{STRINGID}…
+STR_1003    :Nelze testovat {POP16}{POP16}{POP16}{STRINGID}…
+STR_1004    :Nelze zavřít {POP16}{POP16}{POP16}{STRINGID}…
+STR_1005    :Nelze začít stavět {POP16}{POP16}{POP16}{STRINGID}…
 STR_1006    :Napřed musí být zavřeno
 STR_1007    :Nelze vytvořit dostatečný počet vozů
 STR_1008    :{SMALLFONT}{BLACK}Otevřít, zavřít nebo testovat atrakci
@@ -398,10 +398,10 @@ STR_1013    :Zavřít park
 STR_1014    :Otevřít park
 STR_1015    :Tento mód nefunguje s více než jednou stanicí
 STR_1016    :Tento mód nefunguje s méně než dvěmi stanicemi
-STR_1017    :Nelze změnit mód běhu...
-STR_1018    :Nelze vytvářet změny...
-STR_1019    :Nelze vytvářet změny...
-STR_1020    :Nelze vytvářet změny...
+STR_1017    :Nelze změnit mód běhu…
+STR_1018    :Nelze vytvářet změny…
+STR_1019    :Nelze vytvářet změny…
+STR_1020    :Nelze vytvářet změny…
 STR_1021    :{POP16}{POP16}{POP16}{POP16}{STRINGID}
 STR_1022    :{POP16}{POP16}{POP16}{COMMA16} vagon na vlak
 STR_1023    :{POP16}{POP16}{POP16}{COMMA16} vagónů na vlak
@@ -431,7 +431,7 @@ STR_1046    :Soubor designu dráhy OpenRCT2
 STR_1047    :Uložení hry selhalo!
 STR_1048    :Uložení scénáře selhalo!
 STR_1049    :Uložení krajiny selhalo!
-STR_1050    :Nepodařilo se načíst...{NEWLINE}Soubor obsahuje neplatná data!
+STR_1050    :Nepodařilo se načíst…{NEWLINE}Soubor obsahuje neplatná data!
 STR_1051    :Neviditelné podpěry
 STR_1052    :Neviditelní lidé
 STR_1053    :{SMALLFONT}{BLACK}Atrakce v parku
@@ -440,7 +440,7 @@ STR_1055    :{SMALLFONT}{BLACK}Přejmenovat návštěvníka
 STR_1056    :{SMALLFONT}{BLACK}Přejmenovat zaměstnance
 STR_1057    :Název atrakce
 STR_1058    :Zadejte nové jméno atrakce:
-STR_1059    :Tuto atrakci nelze přejmenovat...
+STR_1059    :Tuto atrakci nelze přejmenovat…
 STR_1060    :Neplatný název atrakce
 STR_1061    :Normální běh
 STR_1062    :Mód okruhu
@@ -523,10 +523,10 @@ STR_1138    :{SMALLFONT}{BLACK}Vybrat doplňkovou barvu 2
 STR_1139    :{SMALLFONT}{BLACK}Vybrat barvu podpěr
 STR_1140    :{SMALLFONT}{BLACK}Vybrat barevné schéma vozidel
 STR_1141    :{SMALLFONT}{BLACK}Vyberte, které vozidlo/vlak chcete upravit
-STR_1142    :{MOVE_X}{SMALLFONT}{STRINGID}
-STR_1143    :»{MOVE_X}{SMALLFONT}{STRINGID}
-STR_1144    :Nelze postavit/přesunout vstup této atrakce...
-STR_1145    :Nelze postavit/přesunout výstup z této atrakce...
+STR_1142    :{MOVE_X}{10}{STRINGID}
+STR_1143    :»{MOVE_X}{10}{STRINGID}
+STR_1144    :Nelze postavit/přesunout vstup této atrakce…
+STR_1145    :Nelze postavit/přesunout výstup z této atrakce…
 STR_1146    :Vstup ještě není postaven
 STR_1147    :Výstup ještě není postaven
 STR_1148    :25% naložení
@@ -537,18 +537,18 @@ STR_1152    :jakkékoliv naložení
 STR_1153    :Výškové popisky atrakcí
 STR_1154    :Výškové popisky krajiny
 STR_1155    :Výškové popisky cest
-STR_1156    :{MOVE_X}{SMALLFONT}{STRINGID}
-STR_1157    :✓{MOVE_X}{SMALLFONT}{STRINGID}
-STR_1158    :Tohle nelze odstranit...
+STR_1156    :{MOVE_X}{10}{STRINGID}
+STR_1157    :✓{MOVE_X}{10}{STRINGID}
+STR_1158    :Tohle nelze odstranit…
 STR_1159    :{SMALLFONT}{BLACK}Nástroj pro kulisy, květiny a ostatní doplňky
 STR_1160    :{SMALLFONT}{BLACK}Nástroj pro vodní plochy
-STR_1161    :Tohle tady nemůže být...
+STR_1161    :Tohle tady nemůže být…
 STR_1162    :{OUTLINE}{TOPAZ}{STRINGID}
 STR_1163    :{STRINGID}{NEWLINE}(Upravit pravým kliknutím)
 STR_1164    :{STRINGID}{NEWLINE}(Odebrat pravým kliknutím)
 STR_1165    :{STRINGID} - {STRINGID} {COMMA16}
-STR_1166    :Tady nelze snížit hladinu vody...
-STR_1167    :Tady nelze zvýšit hladinu vody...
+STR_1166    :Tady nelze snížit hladinu vody…
+STR_1167    :Tady nelze zvýšit hladinu vody…
 STR_1168    :Nastavení
 STR_1169    :(None)
 STR_1170    :{STRING}
@@ -557,8 +557,8 @@ STR_1172    :{YELLOW}{STRINGID}
 STR_1173    :{SMALLFONT}{BLACK}Nástroj pro cesty a fronty
 STR_1174    :Banner v cestě
 STR_1175    :Toto nelze postavit na strmé cestě
-STR_1176    :Nelze stavět cestu...
-STR_1177    :Tuto cestu nelze odstranit...
+STR_1176    :Nelze stavět cestu…
+STR_1177    :Tuto cestu nelze odstranit…
 STR_1178    :Příliš velký sklon terénu
 # hehe :-)
 STR_1179    :Cesta v cestě
@@ -721,7 +721,7 @@ STR_1335    :{STRINGID} - Vstup{POP16}{POP16}
 STR_1336    :{STRINGID} - Vstup do stanice {POP16}{COMMA16}
 STR_1337    :{STRINGID} - Východ{POP16}{POP16}
 STR_1338    :{STRINGID} - Východ ze stanice {POP16}{COMMA16}
-STR_1339    :{BLACK}Testování zatím nebylo dokončeno...
+STR_1339    :{BLACK}Testování zatím nebylo dokončeno…
 STR_1340    :{WINDOW_COLOUR_2}Max. rychlost: {BLACK}{VELOCITY}
 STR_1341    :{WINDOW_COLOUR_2}Doba jízdy: {BLACK}{STRINGID}{STRINGID}{STRINGID}{STRINGID}
 STR_1342    :{DURATION}
@@ -743,8 +743,8 @@ STR_1357    :{WINDOW_COLOUR_2}Děr: {BLACK}{COMMA16}
 STR_1358    :{WINDOW_COLOUR_2}Celkem ve stav beztíže: {BLACK}{COMMA2DP32}sekund
 STR_1359    :{WINDOW_COLOUR_2}Doba čekání: {BLACK}{COMMA16} minuta
 STR_1360    :{WINDOW_COLOUR_2}Doba čekání: {BLACK}{COMMA16} minut
-STR_1361    :Nelze změnit rychlost...
-STR_1362    :Nelze změnit startovací rychlost...
+STR_1361    :Nelze změnit rychlost…
+STR_1362    :Nelze změnit startovací rychlost…
 STR_1363    :Příliš vysoké podpěry!
 STR_1364    :Podpěry tratě nelze více zvyšovat!
 STR_1365    :Otočka kolem trati (levá)
@@ -768,8 +768,8 @@ STR_1382    :Zahnutý vlečný svah (vpravo)
 STR_1383    :Čtvrt smyčky
 STR_1384    :{YELLOW}{STRINGID}
 STR_1385    :{SMALLFONT}{BLACK}Jiné možnosti tratě
-STR_1386    :Speciální...
-STR_1387    :Typ povrchu nelze změnit...
+STR_1386    :Speciální…
+STR_1387    :Typ povrchu nelze změnit…
 STR_1388    :{OUTLINE}{GREEN}+ {CURRENCY}
 STR_1389    :{OUTLINE}{RED}- {CURRENCY}
 STR_1390    :{CURRENCY2DP}
@@ -836,7 +836,7 @@ STR_1450    :{INLINE_SPRITE}{09}{20}{00}{00}{SPRITE} {STRINGID}{NEWLINE}({STRING
 STR_1451    :{STRINGID}{NEWLINE}({STRINGID})
 STR_1452    :Jméno návštěvníka
 STR_1453    :Vložte jméno tohoto návštěvníka:
-STR_1454    :Nelze pojmenovat návštěvníka...
+STR_1454    :Nelze pojmenovat návštěvníka…
 STR_1455    :Neplatné jméno pro návštěvníka
 STR_1456    :{WINDOW_COLOUR_2}Utracených peněz: {BLACK}{CURRENCY2DP}
 STR_1457    :{WINDOW_COLOUR_2}Peněz v kapse: {BLACK}{CURRENCY2DP}
@@ -1034,7 +1034,7 @@ STR_1648    :{SMALLFONT}„Pomoc! Polož mě dolů!“
 STR_1649    :{SMALLFONT}„Dochází mi hotovost!“
 STR_1650    :{SMALLFONT}„Wow! Tady se staví nová atrakce!“
 # Two removed inside jokes about Intamin and Phoenix
-STR_1653    :{SMALLFONT}„...a teď jsme na {STRINGID}!“
+STR_1653    :{SMALLFONT}„…a teď jsme na {STRINGID}!“
 STR_1654    :{WINDOW_COLOUR_2}Poslední myšlenky:
 STR_1655    :{SMALLFONT}{BLACK}Stavět cestu na povrchu
 STR_1656    :{SMALLFONT}{BLACK}Stavět most nebo tunel
@@ -1085,7 +1085,7 @@ STR_1700    :Zaměstnat nového údržbáře
 STR_1701    :Zaměstnat nového mechanika
 STR_1702    :Zaměstnat nového hlídače
 STR_1703    :Zaměstnat nového maskota
-STR_1704    :Nelze přijímat nové zaměstnance...
+STR_1704    :Nelze přijímat nové zaměstnance…
 STR_1705    :{SMALLFONT}{BLACK}Propustit tohoto zaměstnance
 STR_1706    :{SMALLFONT}{BLACK}Přesunout tuto osobu na jiné místo
 STR_1707    :Příliš mnoho zaměstnanců ve hře
@@ -1098,18 +1098,18 @@ STR_1713    :{INLINE_SPRITE}{248}{19}{00}{00}{WINDOW_COLOUR_2}Zalévání květi
 STR_1714    :{INLINE_SPRITE}{249}{19}{00}{00}{WINDOW_COLOUR_2}Vysypávání košů
 STR_1715    :{INLINE_SPRITE}{250}{19}{00}{00}{WINDOW_COLOUR_2}Sekání trávy
 STR_1716    :Neplatné jméno parku
-STR_1717    :Nejde přejmenovat park...
+STR_1717    :Nejde přejmenovat park…
 STR_1718    :Název parku
 STR_1719    :Zadejte nové jméno parku:
 STR_1720    :{SMALLFONT}{BLACK}Přejmenovat park
 STR_1721    :Park je zavřený
 STR_1722    :Park je otevřený
-STR_1723    :Park nelze otevřít...
-STR_1724    :Park nelze zavřít...
-STR_1725    :Pozemek nelze zakoupit...
+STR_1723    :Park nelze otevřít…
+STR_1724    :Park nelze zavřít…
+STR_1725    :Pozemek nelze zakoupit…
 STR_1726    :Pozemek není na prodej!
 STR_1727    :Stavební práva nejsou na prodej!
-STR_1728    :Tyto stavební práva nelze zakoupit...
+STR_1728    :Tyto stavební práva nelze zakoupit…
 STR_1729    :Pozemek není ve vlastnictví parku!
 STR_1730    :{RED}Zavřeno
 STR_1731    :{WHITE}{STRINGID}
@@ -1118,18 +1118,18 @@ STR_1733    :Mód
 STR_1734    :{WINDOW_COLOUR_2}Počet kol:
 STR_1735    :{SMALLFONT}{BLACK}Počet kol okruhu
 STR_1736    :{POP16}{POP16}{POP16}{POP16}{POP16}{POP16}{POP16}{POP16}{POP16}{COMMA16}
-STR_1738    :Nelze změnit počet kol...
+STR_1738    :Nelze změnit počet kol…
 STR_1739    :Závod vyhrál návštěvník {INT32}
 STR_1740    :Závod vyhrál návštěvník {STRINGID}
 STR_1741    :Zatím není postaveno!
 STR_1742    :{WINDOW_COLOUR_2}Max. návštěvníků na atrakci
 STR_1743    :{SMALLFONT}{BLACK}Maximální povolený počet návštěvníků současně na atrakci
 STR_1744    :{POP16}{POP16}{POP16}{POP16}{POP16}{POP16}{POP16}{POP16}{POP16}{COMMA16}
-STR_1746    :Tohle nelze změnit...
+STR_1746    :Tohle nelze změnit…
 STR_1747    :{WINDOW_COLOUR_2}Časový limit:
 STR_1748    :{SMALLFONT}{BLACK}Časový limit atrakce
 STR_1749    :{POP16}{POP16}{POP16}{POP16}{POP16}{POP16}{POP16}{POP16}{POP16}{DURATION}
-STR_1751    :Časový limit atrakce nelze změnit...
+STR_1751    :Časový limit atrakce nelze změnit…
 STR_1752    :{SMALLFONT}{BLACK}Zobrazit seznam návštěvníků v parku
 STR_1753    :{SMALLFONT}{BLACK}Zobrazit sumarizovaný seznam návštěvníků v parku
 STR_1754    :{BLACK}{COMMA32} návštěvníků
@@ -1146,7 +1146,7 @@ STR_1764    :Nárazy
 STR_1765    :Fotobuňka
 STR_1766    :Otáčející blok
 STR_1767    :Točící se tunel
-STR_1768    :Nelze změnit počet zhoupnutí...
+STR_1768    :Nelze změnit počet zhoupnutí…
 STR_1769    :{WINDOW_COLOUR_2}Počet zhoupnutí:
 STR_1770    :{SMALLFONT}{BLACK}Počet zhoupnutí
 STR_1771    :{POP16}{POP16}{POP16}{POP16}{POP16}{POP16}{POP16}{POP16}{POP16}{COMMA16}
@@ -1185,7 +1185,7 @@ STR_1807    :Porucha ovládání
 STR_1808    :{WINDOW_COLOUR_2}Poslední porucha: {BLACK}{STRINGID}
 STR_1809    :{WINDOW_COLOUR_2}Současná porucha: {OUTLINE}{RED}{STRINGID}
 STR_1810    :{WINDOW_COLOUR_2}Návštěvník nese:
-STR_1811    :Tohle zde nelze postavit...
+STR_1811    :Tohle zde nelze postavit…
 STR_1812    :{SMALLFONT}{BLACK}{STRINGID}
 STR_1813    :Ostatní objekty
 STR_1814    :Dle aktivity
@@ -1242,7 +1242,7 @@ STR_1864    :mechanik
 STR_1865    :hlídač
 STR_1866    :maskot
 STR_1867    :{BLACK}{COMMA16} {STRINGID}
-STR_1868    :Nelze změnit počet otoček...
+STR_1868    :Nelze změnit počet otoček…
 STR_1869    :{WINDOW_COLOUR_2}Počet otoček:
 STR_1870    :{SMALLFONT}{BLACK}Počet celých otoček
 STR_1871    :{POP16}{POP16}{POP16}{POP16}{POP16}{POP16}{POP16}{POP16}{POP16}{COMMA16}
@@ -1297,7 +1297,7 @@ STR_1920    :Nelze splatit půjčku!
 STR_1921    :{SMALLFONT}{BLACK}Začít novou hru
 STR_1922    :{SMALLFONT}{BLACK}Nahrát uloženou hru
 STR_1924    :{SMALLFONT}{BLACK}Ukončit hru
-STR_1925    :Sem tuto osobu nelze umístit...
+STR_1925    :Sem tuto osobu nelze umístit…
 STR_1926    :{SMALLFONT}
 STR_1927    :{YELLOW}{STRINGID} má poruchu
 STR_1928    :{RED}{STRINGID} havaroval!
@@ -1331,7 +1331,7 @@ STR_1955    :{WINDOW_COLOUR_2}Počet kol:
 STR_1956    :{SMALLFONT}{BLACK}Počet kol za jednu jízdu
 STR_1957    :{POP16}{POP16}{POP16}{POP16}{POP16}{POP16}{POP16}{POP16}{POP16}{POP16}{POP16}{COMMA16}
 STR_1958    :{COMMA16}
-STR_1959    :Počet kol nelze změnit...
+STR_1959    :Počet kol nelze změnit…
 STR_1960    :{WINDOW_COLOUR_2}Cena balónku:
 STR_1961    :{WINDOW_COLOUR_2}Cena plyšáka:
 STR_1962    :{WINDOW_COLOUR_2}Cena mapy parku:
@@ -1605,7 +1605,7 @@ STR_2244    :září
 STR_2245    :říjen
 STR_2246    :listopad
 STR_2247    :prosinec
-STR_2248    :Nelze zbourat atrakci...
+STR_2248    :Nelze zbourat atrakci…
 STR_2249    :{BABYBLUE}Dostupný nový obchod, stánek nebo atrakce:{NEWLINE}{STRINGID}
 STR_2250    :{BABYBLUE}Dostupná nová kulisa:{NEWLINE}{STRINGID}
 STR_2251    :Toto lze postavit pouze na cestách!
@@ -1827,7 +1827,7 @@ STR_2483    :{WINDOW_COLOUR_2}Týdenní zisk: {BLACK}+{CURRENCY2DP}
 STR_2484    :{WINDOW_COLOUR_2}Týdenní zisk: {RED}{CURRENCY2DP}
 STR_2487    :Zobrazit „skutečná“ jména návštěvníků
 STR_2488    :{SMALLFONT}{BLACK}Přepíná mezi zobrazením „skutečného“ jména a čísla návštěvníka
-STR_2489    :Klávesové zkratky...
+STR_2489    :Klávesové zkratky…
 STR_2490    :Klávesové zkratky
 STR_2491    :Obnovit původní nastavení
 STR_2492    :{SMALLFONT}{BLACK}Nastaví všechny klávesové zkratky na jejich výchozí hodnoty
@@ -1970,15 +1970,14 @@ STR_2763    :???
 STR_2765    :Plná tramvaj
 STR_2766    :Vyhrát scénář
 STR_2767    :Zakázat změny počasí
-STR_2768    :Povolit změny počasí
 STR_2769    :Otevřít park
 STR_2770    :Zavřít park
 STR_2773    :V okně
 STR_2774    :Celá obrazovka
 STR_2775    :Celá obrazovka (okno bez okrajů)
 STR_2776    :Jazyk:
-STR_2777    :{MOVE_X}{SMALLFONT}{STRING}
-STR_2778    :»{MOVE_X}{SMALLFONT}{STRING}
+STR_2777    :{MOVE_X}{10}{STRING}
+STR_2778    :»{MOVE_X}{10}{STRING}
 STR_2779    :Pohled #{COMMA16}
 STR_2780    :Extra pohled
 # End of new strings
@@ -2057,9 +2056,9 @@ STR_2852    :Návrh trati už je nainstalován
 STR_2853    :Zakázáno místní správnou!
 STR_2854    :{RED}Návštěvníci nemohou najít vstup do {STRINGID} !{NEWLINE}Postavte cestu k vstupu
 STR_2855    :{RED}{STRINGID} nemá postavenou vestu z východu!{NEWLINE}Postavte cestu z východu atrakce
-STR_2858    :Nelze zahájit reklamní kampaň...
+STR_2858    :Nelze zahájit reklamní kampaň…
 STR_2861    :{WINDOW_COLOUR_2}Licencováno Infogrames Interactive Inc.
-STR_2862    :Poděkování za hudbu...
+STR_2862    :Poděkování za hudbu…
 STR_2863    :Poděkování za hudbu
 STR_2864    :{WINDOW_COLOUR_2}Děti pluku - pochod:   (Fučík) non copyright
 STR_2865    :{WINDOW_COLOUR_2}Heyken's Serenade:   (J.Heyken) British Standard Music Coy; GEMA, BRITICO
@@ -2112,12 +2111,12 @@ STR_2975    :{SMALLFONT}{BLACK}Vyberte barevnou kombinaci, kterou chcete změnit
 STR_2976    :{SMALLFONT}{BLACK}Obarvit část atrakce vybranou barevnou kombinací
 STR_2977    :Přejmenovat zaměstnance
 STR_2978    :Zadejte nové jméno tohoto zaměstnance:
-STR_2979    :Nelze přejmenovat zaměstnance...
+STR_2979    :Nelze přejmenovat zaměstnance…
 STR_2980    :Příliš mnoho bannerů ve hře
 STR_2981    :{RED}Zákaz vstupu
 STR_2982    :Text banneru
 STR_2983    :Zadejte nový text banneru:
-STR_2984    :Nelze změnit text banneru...
+STR_2984    :Nelze změnit text banneru…
 STR_2985    :Banner
 STR_2986    :{SMALLFONT}{BLACK}Změnit text banneru
 STR_2987    :{SMALLFONT}{BLACK}Nastavit tento banner jako „zákaz vstupu“ pro návštěvníky
@@ -2143,7 +2142,7 @@ STR_3006    :{PALEGOLD}ABC
 STR_3007    :{LIGHTPINK}ABC
 STR_3008    :{PEARLAQUA}ABC
 STR_3009    :{PALESILVER}ABC
-STR_3010    :Nepodařilo se načíst soubor...
+STR_3010    :Nepodařilo se načíst soubor…
 STR_3011    :Soubor obsahuje neplatná data
 STR_3012    :Autodrom
 STR_3013    :Tržnice
@@ -2186,7 +2185,7 @@ STR_3050    :Jamka B
 STR_3051    :Jamka C
 STR_3052    :Jamka D
 STR_3053    :Jamka E
-STR_3054    :Načítání...
+STR_3054    :Načítání…
 STR_3058    :Cihlová zeď
 STR_3059    :Živý plot
 STR_3060    :Kusy ledu
@@ -2207,18 +2206,6 @@ STR_3074    :{RED}POZOR: Hodnocení parku je stále nižší, než 700!{NEWLINE}
 STR_3075    :{RED}POZOR: Hodnocení parku je stále nižší, než 700!{NEWLINE}Máte už jen 2 týdny na zvýšení hodnocení parku, nebo bude park uzavřen
 STR_3076    :{RED}POSLEDNÍ VAROVÁNÍ: Hodnocení parku je stále nižší, než 700!{NEWLINE}Za pouhých 7 dní dojde k uzavření parku, pokud do té doby nezvýšíte hodnocení
 STR_3077    :{RED}OZNÁMENÍ O UZAVŘENÍ: Zábavní park byl uzavřen!
-STR_3078    :Obyčejný
-STR_3079    :Dřevěný
-STR_3080    :Plátěný stan
-STR_3081    :Hradní věž (šedá)
-STR_3082    :Hradní věž (hnědá)
-STR_3083    :Jungle
-STR_3084    :Dřevěná chata
-STR_3085    :Klasika/Římský styl
-STR_3086    :Abstraktní
-STR_3087    :Sníh/led
-STR_3088    :Pagoda
-STR_3089    :Vesmír
 STR_3090    :{SMALLFONT}{BLACK}Vyberte styl vchodu, východu a stanice
 STR_3091    :Není dovoleno odebrat tuto stanici
 STR_3092    :Není dovoleno přesouvat nebo modifikovat tuto stanici
@@ -2231,7 +2218,7 @@ STR_3099    :{SMALLFONT}{BLACK}Vyberte barvu
 STR_3100    :{SMALLFONT}{BLACK}Vyberte sekundární barvu
 STR_3101    :{SMALLFONT}{BLACK}Vyberte terciální barvu
 STR_3102    :{SMALLFONT}{BLACK}Přebarvit kulisy v krajině
-STR_3103    :Nelze přemalovat...
+STR_3103    :Nelze přemalovat…
 STR_3104    :{SMALLFONT}{BLACK}Seznam atrakcí
 STR_3105    :{SMALLFONT}{BLACK}Seznam obchodů a stánků
 STR_3106    :{SMALLFONT}{BLACK}Seznam kiosků a jiných zařízení
@@ -2245,7 +2232,7 @@ STR_3113    :Vybrat jiný návrh
 STR_3114    :{SMALLFONT}{BLACK}Jít zpět do okna výběru návrhů
 STR_3115    :{SMALLFONT}{BLACK}Uložit návrh trati
 STR_3116    :{SMALLFONT}{BLACK}Uložit návrh trati (Možné pouze po otestování trati a naměření hodnot)
-STR_3117    :{BLACK}Volá se mechanik...
+STR_3117    :{BLACK}Volá se mechanik…
 STR_3118    :{BLACK}{STRINGID} jde k atrakci
 STR_3119    :{BLACK}{STRINGID} opravuje atrakci
 STR_3120    :{SMALLFONT}{BLACK}Najít nejbližšího dostupného mechanika, nebo mechanika, který tuto atrakci právě opravuje
@@ -2260,7 +2247,7 @@ STR_3128    :Uložit návrh trati
 STR_3129    :Uložit návrh trati s kulisami
 STR_3130    :Uložit
 STR_3131    :Zrušit
-STR_3132    :{BLACK}Klikněte na kulisy, které chcete uložit společně s tratí...
+STR_3132    :{BLACK}Klikněte na kulisy, které chcete uložit společně s tratí…
 STR_3133    :Toto nelze postavit na trati se sklonem
 STR_3134    :{RED}(Návrh obsahuje kulisy, které nejsou dostupné)
 STR_3135    :{RED}(Návrh vozů nedostupný - může ovlivnit výkon atrakce)
@@ -2273,8 +2260,6 @@ STR_3141    :Více kol za jízdu není přípustné současně s řetězovým v�
 STR_3142    :{WINDOW_COLOUR_2}Kapacita: {BLACK}{STRINGID}
 STR_3143    :{SMALLFONT}{BLACK}Zobrazit návštěvníky na mapě
 STR_3144    :{SMALLFONT}{BLACK}Zobrazit atrakce a stánky na mapě
-STR_3158    :graph
-STR_3159    :list
 STR_3160    :Vyberte počet kol za jednu jízdu
 STR_3162    :Nepodařilo se alokovat dostatek paměti
 STR_3163    :Instaluji nová data: 
@@ -2404,7 +2389,7 @@ STR_3290    :Chladno a mokro
 STR_3291    :Teplo
 STR_3292    :Horko a sucho
 STR_3293    :Chladno
-STR_3294    :Změnit...
+STR_3294    :Změnit…
 STR_3295    :{SMALLFONT}{BLACK}Změnit název parku
 STR_3296    :{SMALLFONT}{BLACK}Změnit název scénáře
 STR_3297    :{SMALLFONT}{BLACK}Změnit podrobnosti parku/scénáře
@@ -2430,12 +2415,12 @@ STR_3316    :Zadejte popis scénáře:
 STR_3317    :Zatím bez detailů
 STR_3318    :{SMALLFONT}{BLACK}Vyberte skupinu scénářů
 STR_3319    :{WINDOW_COLOUR_2}Skupina scénářů:
-STR_3320    :Nepodařilo se uložit scénář...
+STR_3320    :Nepodařilo se uložit scénář…
 STR_3321    :Nové objekty byly úspěšně nainstalovány
 STR_3322    :{WINDOW_COLOUR_2}Cíl scénáře: {BLACK}{STRINGID}
 STR_3326    :{WINDOW_COLOUR_2}(bez obrázku)
 STR_3327    :Nenastavena počáteční pozice návštěvníků
-STR_3328    :Nelze přejít k dalšímu kroku...
+STR_3328    :Nelze přejít k dalšímu kroku…
 STR_3329    :Není postaven vstup do parku
 STR_3330    :Park nevlastní žádné pozemky
 STR_3331    :Cesta od vstupu do parku k hraně mapy není kompletní, nebo je příliš složitá - Cesta musí být široká jednu dlaždici a mít co nejméně zatáček a křižovatek
@@ -2452,19 +2437,19 @@ STR_3342    :Editor scénáře
 STR_3343    :Konvertovat uloženou hru na scénář
 STR_3344    :Návrhář trati
 STR_3345    :Správa návrhu trati
-STR_3346    :Nelze uložit návrh trati...
+STR_3346    :Nelze uložit návrh trati…
 STR_3347    :Trať je příliš velká, obsahuje příliš mnoho prvků, nebo příliš rozsáhlé kulisy
 STR_3348    :Přejmenovat
 STR_3349    :Odstranit
 STR_3350    :Název návrhu trati
 STR_3351    :Zadejte jméno návrhu tratě:
-STR_3352    :Nelze přejmenovat návrh tratě...
+STR_3352    :Nelze přejmenovat návrh tratě…
 STR_3353    :Nový název obsahuje neplatné znaky
 STR_3354    :Existuje soubor se stejným jménem, nebo je soubor jen pro čtení
 STR_3355    :Soubor je jen pro čtení, nebo zamčený
 STR_3356    :Smazat soubor
 STR_3357    :{WINDOW_COLOUR_2}Opravdu chcete nevratně odstranit {STRING} ?
-STR_3358    :Nelze odstranit návrh trati...
+STR_3358    :Nelze odstranit návrh trati…
 STR_3359    :{BLACK}Žádné návrhy tratí tohoto typu
 STR_3360    :Pozor!
 STR_3361    :Příliš mnoho návrhů tratí tohoto typu - některé nejsou zobrazeny.
@@ -2484,15 +2469,15 @@ STR_3376    :Instalace nového návrhu trati
 STR_3377    :{SMALLFONT}{BLACK}Instalace nového souboru s návrhem trati
 STR_3378    :Instalovat
 STR_3379    :Zrušit
-STR_3380    :Nelze nainstalovat tento návrh trati...
+STR_3380    :Nelze nainstalovat tento návrh trati…
 STR_3381    :Soubor není kompatibilní, nebo obsahuje neplatná data
 STR_3382    :Kopírování souboru selhalo
 STR_3383    :Vyberte nový název návrhu trati
 STR_3384    :Existuje návrh trati se stejným názvem - vyberte prosím jiný název:
-STR_3389    :Nepodařilo se vybrat dodatečné kulisy...
+STR_3389    :Nepodařilo se vybrat dodatečné kulisy…
 STR_3390    :Vybráno příliš mnoho položek
 STR_3437    :{SMALLFONT}{BLACK}Odebrat velkou oblast kulis z krajiny
-STR_3438    :Odsud nelze odebrat všechny kulisy...
+STR_3438    :Odsud nelze odebrat všechny kulisy…
 STR_3439    :Odebrat kulisy
 STR_3445    :Nastavit oblast obchůzky
 STR_3446    :Zrušit oblast obchůzky
@@ -2530,7 +2515,7 @@ STR_5149    :{SMALLFONT}{BLACK}Zobrazit možnosti cheatů
 STR_5150    :Zapnout debug nástroje
 STR_5151    : 
 STR_5152    :,
-STR_5153    :Upravit motivy...
+STR_5153    :Upravit motivy…
 STR_5154    :Hardwarové zobrazování
 STR_5155    :Povolit testování nedostavěných atrakcí
 STR_5156    :{SMALLFONT}{BLACK}Povolí testování většiny typů atrakcí, i přesto, že atrakce není dostavěna. Netýká se módu sekcí
@@ -2647,8 +2632,6 @@ STR_5281    :{SMALLFONT}{BLACK}Funkce
 STR_5282    :RCT1 světla atrakcí otevřeno/zavřeno
 STR_5283    :RCT1 světla parku otevřeno/zavřeno
 STR_5284    :RCT1 výber fontu scénáře
-STR_5285    :VÝBUCH!!!
-STR_5286    :{SMALLFONT}{BLACK}Vyhodit několik návštěvníků do povětří
 STR_5287    :Atrakce už má poruchu
 STR_5288    :Atrakce je zavřená
 STR_5289    :Tato atrakce nemůže mít poruchy
@@ -2709,8 +2692,6 @@ STR_5365    :{BLACK}Rychlost personálu:
 STR_5366    :Normální
 STR_5367    :Vysoká
 STR_5368    :Vymazat havárii
-STR_5369    :Parametry parku...
-STR_5370    :{SMALLFONT}{BLACK}Klikněte na toto tlačítko pro   {NEWLINE}úpravy parametrů jako omezení parku,{NEWLINE} generování návštěvníků a peněz.
 STR_5371    :Výběr objektů
 STR_5372    :Obrátit směr posouvání pohledu pravým tlačítkem
 STR_5373    :Název {STRINGID}
@@ -2775,7 +2756,7 @@ STR_5432    :Příkaz:
 STR_5433    :Herní sekvence
 STR_5434    :Editor příkazů
 STR_5435    :Přejmenovat uloženou hru
-STR_5436    :Upravit herní sekvence...
+STR_5436    :Upravit herní sekvence…
 STR_5437    :Nevybrána žádná uložená hra
 STR_5438    :Nelze vytvářet změny, když je otevřený editor příkazů
 STR_5439    :Příkaz „Čekat“ alespoň 4 vteřiny je vyžadován společně s příkazem „Restart“
@@ -2827,7 +2808,6 @@ STR_5484    :{BLACK}(zbývá {COMMA16} týden)
 STR_5485    :{SMALLFONT}{STRING}
 STR_5486    :{BLACK}{COMMA16}
 STR_5487    :{SMALLFONT}{BLACK}Zobrazit poslední zprávy
-STR_5488    :Bez vstupu (pouze pro OpenRCT2!)
 STR_5489    :{SMALLFONT}{BLACK}Zobrazit pouze sledované návštěvníky
 STR_5490    :Vypnout zvuk při přepnutí ze hry
 STR_5491    :Seznam vynálezů
@@ -2936,7 +2916,6 @@ STR_5595    :Atrakce havarovala
 STR_5596    :Varování atrakcí
 STR_5597    :Vyzkoumané atrakce / kulisy
 STR_5598    :Varování návštěvníků
-STR_5599    :Návštěvník se ztratil
 STR_5600    :Návštěvník opustil zábavní park
 STR_5601    :Návštěvník čeká ve frontě na atrakci
 STR_5602    :Návštěvník je na atrakci
@@ -2969,12 +2948,12 @@ STR_5628    :Původní hry
 STR_5629    :Obtížnosti
 STR_5630    :Zapnout progresivní odemykání scénářů
 STR_5631    :Originální DLC parky
-STR_5632    :Postav si vlastní...
+STR_5632    :Postav si vlastní…
 STR_5633    :CMD + 
 STR_5634    :OPTION + 
 STR_5635    :{WINDOW_COLOUR_2}Utracená hotovost: {BLACK}{CURRENCY2DP}
 STR_5636    :{WINDOW_COLOUR_2}Spuštěné příkazy: {BLACK}{COMMA16}
-STR_5637    :Toto nelze provést...
+STR_5637    :Toto nelze provést…
 STR_5638    :Přístup zamítnut
 STR_5639    :{SMALLFONT}{BLACK}Zobrazit seznam hráčů
 STR_5640    :{SMALLFONT}{BLACK}Spravovat skupiny
@@ -3032,8 +3011,6 @@ STR_5724    :Bouřka
 STR_5725    :{BLACK}Vynutit počasí:
 STR_5726    :{SMALLFONT}{BLACK}Nastaví momentální počasí v parku
 STR_5727    :Metoda škálování:
-STR_5728    :Vyžaduje hardwarové zobrazování
-STR_5729    :{SMALLFONT}{BLACK}Vyžaduje hardwarové zobrazování
 STR_5731    :Lineární
 STR_5734    :{SMALLFONT}{BLACK}Vykreslování
 STR_5735    :Stav připojení
@@ -3043,9 +3020,9 @@ STR_5738    :Zavřeno, {COMMA16} návštěvníků zůstalo na atrakci
 STR_5739    :{WINDOW_COLOUR_2}Návštěvníci na atrakci: {BLACK}{COMMA16}
 STR_5740    :Nekonečné marketingové kampaně
 STR_5741    :{SMALLFONT}{BLACK}Reklamní marketingové kampaně nikdy neskončí
-STR_5742    :Autentizace ...
-STR_5743    :Připojování ...
-STR_5744    :Hledání adresy serveru ...
+STR_5742    :Autentizace …
+STR_5743    :Připojování …
+STR_5744    :Hledání adresy serveru …
 STR_5745    :Detekována desynchronizace se serverem
 STR_5746    :Odpojeno
 STR_5747    :Odpojeno: {STRING}
@@ -3060,7 +3037,7 @@ STR_5755    :Nesprávná verze hry (Server používá {STRING})
 STR_5756    :Špatné heslo
 STR_5757    :Server je plný
 STR_5758    :{OUTLINE}{GREEN}Hráč {STRING} se připojil do hry
-STR_5759    :Stahování mapy ... ({INT32} / {INT32}) KiB
+STR_5759    :Stahování mapy … ({INT32} / {INT32}) KiB
 STR_5760    :Hongkongský dolar (HK$)
 STR_5761    :Tchajwanský dolar (NT$)
 STR_5762    :Čínský jüan (CN¥)
@@ -3086,7 +3063,7 @@ STR_5781    :Cena údržby: neznámá
 STR_5782    :Úspěšně připojeno. Chatujte stisknutím klávesy „{STRING}“.
 STR_5783    :{WINDOW_COLOUR_2}Neodemčený scénář
 STR_5784    :{BLACK}Pro odemčení tohoto scénáře dokončete předcházející scénáře
-STR_5785    :Nelze přejmenovat skupinu...
+STR_5785    :Nelze přejmenovat skupinu…
 STR_5786    :Neplatný název skupiny.
 STR_5787    :{COMMA32} hráčů online
 STR_5788    :Výchozí interval inspekcí:
@@ -3150,7 +3127,6 @@ STR_5846    :{SMALLFONT}{BLACK}Nastavení frekvence automatického ukládání h
 STR_5847    :{SMALLFONT}{BLACK}Vyberte ukázky parků na hlavní obrazovce. Ukázky parků z her RCT1/2 vyžadují importované scénáře
 STR_5848    :{SMALLFONT}{BLACK}Vytvořit a spravovat vlastní ukázky parků pro hlavní obrazovku
 STR_5849    :{SMALLFONT}{BLACK}Automaticky umisťovat{NEWLINE}nově najatý personál
-STR_5850    :<removed string - do not use>
 STR_5851    :{SMALLFONT}{BLACK}Nastaví výchozí interval inspekcí{NEWLINE}na nově postavených atrakcích
 STR_5853    :{SMALLFONT}{BLACK}Povolit/zakázat zvukové efekty
 STR_5854    :{SMALLFONT}{BLACK}Povolit/zakázat hudbu atrakcí
@@ -3289,7 +3265,7 @@ STR_5987    :Nepodařilo se vytvořit složku
 STR_5988    :{SMALLFONT}{BLACK}Žádná další pozemková práva ke koupi
 STR_5989    :{SMALLFONT}{BLACK}Žádná další stavební práva ke koupi
 STR_5990    :{SMALLFONT}{BLACK}Žádná další pozemková ani stavební práva ke koupi
-STR_5991    :Nelze vložit prvek...
+STR_5991    :Nelze vložit prvek…
 STR_5992    :Dosažen limit prvků mapy
 STR_5993    :{SMALLFONT}{BLACK}Kopírovat prvek
 STR_5994    :{SMALLFONT}{BLACK}Vložit prvek
@@ -3402,21 +3378,13 @@ STR_6100    :Odpojili jste se od serveru.
 STR_6101    :Hodnota atrakcí časem nedegraduje
 STR_6102    :{SMALLFONT}{BLACK}Hodnota atrakce nebude s postupem času klesat, takže návštěvníci nebudou najednou mít pocit, že je vstupné moc drahé.
 STR_6103    :{SMALLFONT}{BLACK}Tato volba není ve hře více hráčů dostupná.
-STR_6104    :Vývrtková horská dráha
 STR_6105    :Hyper horská dráha
-STR_6106    :Autodráha
 STR_6107    :Monster Trucks
-STR_6108    :Ocelová horská
 STR_6109    :Hyper-Twister
-STR_6110    :Dorostenecká horská dráha
 STR_6111    :Klasická malá horská dráha
-STR_6112    :Malá ocelová horská dráha, na které vlak projíždí smyčky a vývrtky
 STR_6113    :Vysoká horská dráha s dlouhými pády, velkou rychlostí a pohodlnými vlaky, kde se jezdí s opěrkou v klíně
-STR_6114    :Návštěvníci jedou pomalu ve vozidlech po postavené dráze.
 STR_6115    :Obří auta s pohonem 4x4, které jsou schopna vyjíždět velmi strmé svahy
 STR_6116    :Široká ocelová horská dráha, na které vozy jedou po hladkých kolejnicích skrze propletenou dráhu
-STR_6117    :Horská dráha s dlouhými pády, velkou rychlostí a pohodlnými vlaky, kde se jezdí s opěrkou v klíně, která přelétává vrcholky kopců
-STR_6118    :Pozvolná horská dráha pro ty kdo se zatím neodvažují na větší dráhy
 STR_6119    :Levná horská dráha, kterou lze snadno postavit - má však omezenou maximální výšku
 STR_6120    :{BABYBLUE}Nové vozy dostupné pro {STRINGID}:{NEWLINE}{STRINGID}
 STR_6121    :{SMALLFONT}{BLACK}Zajistí práva pro všechny pozemky na mapě
@@ -3438,7 +3406,7 @@ STR_6136    :Server zaslal neplatný požadavek
 STR_6137    :OpenRCT2 je zdarma dostupný open source klon hry Roller Coaster Tycoon 2.
 STR_6138    :OpenRCT2 je dílem mnoha lidí. Seznam všech přispěvatelů je dostupný v souboru „contributors.md“. Pro více informací navštivte http://github.com/OpenRCT2/OpenRCT2
 STR_6139    :Všechny názvy produktů a společností jsou vlastnictvím jejich příslušných vlastníků. Jejich užití neimplikuje vazbu ani podporu příslušných vlastníků a tohoto projektu.
-STR_6140    :Seznam změn...
+STR_6140    :Seznam změn…
 STR_6141    :RCT1 dolní nástrojová lišta
 STR_6142    :{WINDOW_COLOUR_2}Název trati: {BLACK}{STRING}
 STR_6143    :{WINDOW_COLOUR_2}Název atrakce: {BLACK}{STRINGID}
@@ -3446,7 +3414,7 @@ STR_6144    :Zvýraznit znevalidované bloky pro vykreslení
 STR_6145    :{SMALLFONT}{BLACK}Nastavit rychlostní limit boosteru
 STR_6146    :Povolit všechny vykreslitelné části trati
 STR_6147    :{SMALLFONT}{BLACK}Povolí všechny části trati, které atrakce podporuje. Nezáleží, jestli je podporují i vozy.
-STR_6148    :Připojování na master server...
+STR_6148    :Připojování na master server…
 STR_6149    :Nepodařilo se připojit k master serveru
 STR_6150    :Neplatná odpověď master serveru (chybí JSON číslo)
 STR_6151    :Master server neposlal seznam herních serverů
@@ -3456,7 +3424,7 @@ STR_6154    :Z bezpečnostních důvodů se nedoporučuje spouštět OpenRCT2 v 
 STR_6155    :Není nainstalován KDialog ani Zenity. Jeden z nich prosím nainstalujte, nebo konfigurujte z příkazové řádky.
 STR_6156    :Tento název je rezervován a nelze jej použít.
 STR_6157    :Konzole
-STR_6158    :Tento soubor nelze načíst...{NEWLINE}Nekompatibilní verze RCTC: {COMMA16}
+STR_6158    :Tento soubor nelze načíst…{NEWLINE}Nekompatibilní verze RCTC: {COMMA16}
 STR_6159    :Vyhlazený nejbližší soused
 STR_6160    :{WINDOW_COLOUR_2}Dostupné vozy: {BLACK}{STRING} 
 STR_6161    :Přepnout vykreslování mřížky
@@ -3509,7 +3477,7 @@ STR_6218    :OpenRCT2 oficiální
 STR_6219    :Zvýraznit problémy s cestami
 STR_6220    :Zprovoznit
 STR_6221    :{SMALLFONT}{BLACK}Nastaví vstup do/výstup ze stanice na právě vybrané políčko. V jednu chvíli může každá stanice mít v provozu pouze jeden vchod/východ.
-STR_6222    :Sem nelze umístit vstup návštěvníků...
+STR_6222    :Sem nelze umístit vstup návštěvníků…
 STR_6223    :Musí být za hranicemi parku!
 STR_6224    :{STRING} umístil/a vstup návštěvníků.
 STR_6225    :Není podporováno společně s OpenGL renderováním
@@ -3531,7 +3499,7 @@ STR_6240    :Horizontální oříznutí
 STR_6241    :Vybrat oblast
 STR_6242    :Zrušit výběr
 STR_6243    :{SMALLFONT}{BLACK}Zrenovuje atrakci,{NEWLINE}bude jako nová
-STR_6244    :Atrakci nelze renovovat...
+STR_6244    :Atrakci nelze renovovat…
 STR_6245    :{SMALLFONT}{BLACK}Atrakce nepotřebuje renovaci
 STR_6246    :Renovovat
 STR_6247    :Renovovat atrakci
@@ -3558,7 +3526,7 @@ STR_6270    :Povrchy terénu
 STR_6271    :Hrany terénu
 STR_6272    :Stanice
 STR_6273    :Hudba
-STR_6274    :Nelze nastavit schéma barev...
+STR_6274    :Nelze nastavit schéma barev…
 STR_6275    :{WINDOW_COLOUR_2}Styl stanice:
 STR_6276    :{RED}Na atrakci {STRINGID} se zasekávají návštěvníci, zkontrolujte typ atrakce a mód provozu.
 STR_6277    :{WINDOW_COLOUR_2}Index stanice: {BLACK}{STRINGID}
@@ -3592,7 +3560,7 @@ STR_6304    :Otevřít výběr kulis
 STR_6305    :Multithreading
 STR_6306    :{SMALLFONT}{BLACK}Experimentální podpora více vláken pro vykreslování obrazu, může způsobit nestabilitu.
 STR_6307    :Barevné schéma: {BLACK}{STRINGID}
-STR_6308    :“{STRINGID}{OUTLINE}{TOPAZ}”{NEWLINE}{STRINGID}
+STR_6308    :{TOPAZ}“{STRINGID}{OUTLINE}{TOPAZ}”{NEWLINE}{STRINGID}
 STR_6309    :Znovu připojit
 STR_6310    :{WINDOW_COLOUR_2}Pozice: {BLACK}{INT32} {INT32} {INT32}
 STR_6311    :{WINDOW_COLOUR_2}Další: {BLACK}{INT32} {INT32} {INT32}
@@ -3610,7 +3578,7 @@ STR_6322    :{WINDOW_COLOUR_2}Sprite Id: {BLACK}{INT32}
 STR_6323    :Probíhá simulace
 STR_6324    :Simulovat
 STR_6325    :{SMALLFONT}{BLACK}Simulovat atrakci
-STR_6326    :Nelze simulovat {POP16}{POP16}{POP16}{STRINGID}...
+STR_6326    :Nelze simulovat {POP16}{POP16}{POP16}{STRINGID}…
 STR_6327    :Průhledné pozadí pro velké screenshoty
 STR_6328    :{SMALLFONT}{BLACK}Velké snímky obrazovky budou mít průhledné pozadí namísto výchozí černé barvy.
 STR_6329    :{STRING}{STRINGID}
@@ -3668,6 +3636,15 @@ STR_6380    :Dostupná aktualizace!
 STR_6381    :Připojte se na OpenRCT2 Discord!
 STR_6382    :Je k dispozici nová verze OpenRCT2: {STRING}!
 STR_6383    :Otevřít stránku Ke Stažení
+STR_6384    :Jemné sněžení
+STR_6385    :Silné sněžení
+STR_6386    :Vánice
+STR_6387    :Element nelze posunout níže…
+STR_6388    :Element nelze posunout výše…
+STR_6389    :Málo místa
+STR_6390    :OpenRCT2 potřebuje soubory originální hry RollerCoaster Tycoon 2. Zvolte prosím složku instalace RollerCoaster Tycoon 2.
+STR_6391    :Vyberte RCT2 složku
+STR_6392    :Ve zvolené složce se nepodařilo nalézt {STRING}.
 
 ###############################################################################
 ## RCT2 Scenarios
@@ -3918,7 +3895,7 @@ STR_SCNR    :Mythological - Animatronic Film Set
 STR_PARK    :Animatronic Antics
 STR_DTLS    :Byl vám zadán úkol správy a vylepšování stávajícího zábavního parku, který byl postaven na starém filmařském místě. Vybudujte odkaz průkopníkům-animátorům, kteří poprvé přinesli mýtické postavy k životu na stříbrném plátně.
 
-<Mythological - Cradle of Civilization>
+<Mythological - Cradle of Civilisation>
 STR_SCNR    :Mythological - Cradle of Civilisation
 STR_PARK    :Mythological Madness
 STR_DTLS    :Vlastníte ostrov velké archeologické hodnoty. Rozhodli jste se podpořit jeho zachování vybudováním zábavního parku založeném na mytologii tohoto místa.

@@ -73,7 +73,7 @@ void track_design_save_select_tile_element(int32_t interactionType, const Coords
             {
                 context_show_error(
                     STR_SAVE_TRACK_SCENERY_UNABLE_TO_SELECT_ADDITIONAL_ITEM_OF_SCENERY,
-                    STR_SAVE_TRACK_SCENERY_TOO_MANY_ITEMS_SELECTED);
+                    STR_SAVE_TRACK_SCENERY_TOO_MANY_ITEMS_SELECTED, {});
             }
         }
     }
@@ -208,7 +208,7 @@ static void track_design_save_push_tile_element_desc(
 static void track_design_save_add_scenery(const CoordsXY& loc, SmallSceneryElement* sceneryElement)
 {
     int32_t entryType = sceneryElement->GetEntryIndex();
-    auto entry = object_entry_get_entry(OBJECT_TYPE_SMALL_SCENERY, entryType);
+    auto entry = object_entry_get_entry(ObjectType::SmallScenery, entryType);
 
     uint8_t flags = 0;
     flags |= sceneryElement->GetDirection();
@@ -234,7 +234,7 @@ static void track_design_save_add_large_scenery(const CoordsXY& loc, LargeScener
     }
 
     int32_t entryType = tileElement->GetEntryIndex();
-    auto entry = object_entry_get_entry(OBJECT_TYPE_LARGE_SCENERY, entryType);
+    auto entry = object_entry_get_entry(ObjectType::LargeScenery, entryType);
     sceneryTiles = get_large_scenery_entry(entryType)->large_scenery.tiles;
 
     int32_t z = tileElement->base_height;
@@ -276,7 +276,7 @@ static void track_design_save_add_large_scenery(const CoordsXY& loc, LargeScener
 static void track_design_save_add_wall(const CoordsXY& loc, WallElement* wallElement)
 {
     int32_t entryType = wallElement->GetEntryIndex();
-    auto entry = object_entry_get_entry(OBJECT_TYPE_WALLS, entryType);
+    auto entry = object_entry_get_entry(ObjectType::Walls, entryType);
 
     uint8_t flags = 0;
     flags |= wallElement->GetDirection();
@@ -293,7 +293,7 @@ static void track_design_save_add_wall(const CoordsXY& loc, WallElement* wallEle
 static void track_design_save_add_footpath(const CoordsXY& loc, PathElement* pathElement)
 {
     int32_t entryType = pathElement->GetSurfaceEntryIndex();
-    auto entry = object_entry_get_entry(OBJECT_TYPE_PATHS, entryType);
+    auto entry = object_entry_get_entry(ObjectType::Paths, entryType);
 
     uint8_t flags = 0;
     flags |= pathElement->GetEdges();
@@ -395,7 +395,7 @@ static void track_design_save_pop_tile_element_desc(const rct_object_entry* entr
 static void track_design_save_remove_scenery(const CoordsXY& loc, SmallSceneryElement* sceneryElement)
 {
     int32_t entryType = sceneryElement->GetEntryIndex();
-    auto entry = object_entry_get_entry(OBJECT_TYPE_SMALL_SCENERY, entryType);
+    auto entry = object_entry_get_entry(ObjectType::SmallScenery, entryType);
 
     uint8_t flags = 0;
     flags |= sceneryElement->GetDirection();
@@ -417,7 +417,7 @@ static void track_design_save_remove_large_scenery(const CoordsXY& loc, LargeSce
     }
 
     int32_t entryType = tileElement->GetEntryIndex();
-    auto entry = object_entry_get_entry(OBJECT_TYPE_LARGE_SCENERY, entryType);
+    auto entry = object_entry_get_entry(ObjectType::LargeScenery, entryType);
     sceneryTiles = get_large_scenery_entry(entryType)->large_scenery.tiles;
 
     int32_t z = tileElement->base_height;
@@ -456,7 +456,7 @@ static void track_design_save_remove_large_scenery(const CoordsXY& loc, LargeSce
 static void track_design_save_remove_wall(const CoordsXY& loc, WallElement* wallElement)
 {
     int32_t entryType = wallElement->GetEntryIndex();
-    auto entry = object_entry_get_entry(OBJECT_TYPE_WALLS, entryType);
+    auto entry = object_entry_get_entry(ObjectType::Walls, entryType);
 
     uint8_t flags = 0;
     flags |= wallElement->GetDirection();
@@ -469,7 +469,7 @@ static void track_design_save_remove_wall(const CoordsXY& loc, WallElement* wall
 static void track_design_save_remove_footpath(const CoordsXY& loc, PathElement* pathElement)
 {
     int32_t entryType = pathElement->GetSurfaceEntryIndex();
-    auto entry = object_entry_get_entry(OBJECT_TYPE_PATHS, entryType);
+    auto entry = object_entry_get_entry(ObjectType::Paths, entryType);
 
     uint8_t flags = 0;
     flags |= pathElement->GetEdges();

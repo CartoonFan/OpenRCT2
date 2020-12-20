@@ -33,7 +33,7 @@ rct_string_id DrawingEngineStringIds[] = {
     STR_DRAWING_ENGINE_OPENGL,
 };
 
-int32_t drawing_engine_get_type()
+DrawingEngine drawing_engine_get_type()
 {
     auto context = GetContext();
     return context->GetDrawingEngineType();
@@ -50,10 +50,10 @@ static IDrawingEngine* GetDrawingEngine()
     return result;
 }
 
-bool drawing_engine_requires_new_window(int32_t srcEngine, int32_t dstEngine)
+bool drawing_engine_requires_new_window(DrawingEngine srcEngine, DrawingEngine dstEngine)
 {
 #ifdef _WIN32
-    if (srcEngine != DRAWING_ENGINE_OPENGL && dstEngine != DRAWING_ENGINE_OPENGL)
+    if (srcEngine != DrawingEngine::OpenGL && dstEngine != DrawingEngine::OpenGL)
     {
         // Windows is apparently able to switch to hardware rendering on the fly although
         // using the same window in an unaccelerated and accelerated context is unsupported by SDL2
@@ -191,13 +191,12 @@ void gfx_fill_rect(rct_drawpixelinfo* dpi, const ScreenRect& rect, int32_t colou
     }
 }
 
-void gfx_filter_rect(
-    rct_drawpixelinfo* dpi, int32_t left, int32_t top, int32_t right, int32_t bottom, FILTER_PALETTE_ID palette)
+void gfx_filter_rect(rct_drawpixelinfo* dpi, int32_t left, int32_t top, int32_t right, int32_t bottom, FilterPaletteID palette)
 {
     gfx_filter_rect(dpi, { left, top, right, bottom }, palette);
 }
 
-void gfx_filter_rect(rct_drawpixelinfo* dpi, const ScreenRect& rect, FILTER_PALETTE_ID palette)
+void gfx_filter_rect(rct_drawpixelinfo* dpi, const ScreenRect& rect, FilterPaletteID palette)
 {
     auto drawingEngine = dpi->DrawingEngine;
     if (drawingEngine != nullptr)

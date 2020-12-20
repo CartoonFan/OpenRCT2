@@ -22,6 +22,11 @@
 #include <cstring>
 #include <stdexcept>
 
+ObjectType& operator++(ObjectType& d, int)
+{
+    return d = (d == ObjectType::Count) ? ObjectType::Ride : static_cast<ObjectType>(static_cast<uint8_t>(d) + 1);
+}
+
 Object::Object(const rct_object_entry& entry)
 {
     _objectEntry = entry;
@@ -35,6 +40,21 @@ void* Object::GetLegacyData()
 void Object::ReadLegacy(IReadObjectContext* context, OpenRCT2::IStream* stream)
 {
     throw std::runtime_error("Not supported.");
+}
+
+void Object::PopulateTablesFromJson(IReadObjectContext* context, json_t& root)
+{
+    _stringTable.ReadJson(root);
+    _imageTable.ReadJson(context, root);
+}
+
+rct_object_entry Object::ParseObjectEntry(const std::string& s)
+{
+    rct_object_entry entry = {};
+    std::fill_n(entry.name, sizeof(entry.name), ' ');
+    auto copyLen = std::min<size_t>(8, s.size());
+    std::copy_n(s.c_str(), copyLen, entry.name);
+    return entry;
 }
 
 std::string Object::GetOverrideString(uint8_t index) const
@@ -85,12 +105,12 @@ rct_object_entry Object::CreateHeader(const char name[DAT_NAME_LENGTH + 1], uint
     return header;
 }
 
-std::vector<uint8_t> Object::GetSourceGames()
+std::vector<ObjectSourceGame> Object::GetSourceGames()
 {
     return _sourceGames;
 }
 
-void Object::SetSourceGames(const std::vector<uint8_t>& sourceGames)
+void Object::SetSourceGames(const std::vector<ObjectSourceGame>& sourceGames)
 {
     _sourceGames = sourceGames;
 }
@@ -130,15 +150,15 @@ std::optional<uint8_t> rct_object_entry::GetSceneryType() const
 {
     switch (GetType())
     {
-        case OBJECT_TYPE_SMALL_SCENERY:
+        case ObjectType::SmallScenery:
             return SCENERY_TYPE_SMALL;
-        case OBJECT_TYPE_LARGE_SCENERY:
+        case ObjectType::LargeScenery:
             return SCENERY_TYPE_LARGE;
-        case OBJECT_TYPE_WALLS:
+        case ObjectType::Walls:
             return SCENERY_TYPE_WALL;
-        case OBJECT_TYPE_BANNERS:
+        case ObjectType::Banners:
             return SCENERY_TYPE_BANNER;
-        case OBJECT_TYPE_PATH_BITS:
+        case ObjectType::PathBits:
             return SCENERY_TYPE_PATH_ITEM;
         default:
             return std::nullopt;

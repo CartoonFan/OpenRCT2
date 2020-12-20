@@ -35,27 +35,29 @@ namespace OpenRCT2
             uint8_t* Blocks;
         };
 
-        class X8RainDrawer final : public IRainDrawer
+        class X8WeatherDrawer final : public IWeatherDrawer
         {
         private:
-            struct RainPixel
+            struct WeatherPixel
             {
                 uint32_t Position;
                 uint8_t Colour;
             };
 
-            static constexpr uint32_t MaxRainPixels = 0xFFFE;
+            static constexpr uint32_t MaxWeatherPixels = 0xFFFE;
 
-            size_t _rainPixelsCapacity = MaxRainPixels;
-            uint32_t _rainPixelsCount = 0;
-            RainPixel* _rainPixels = nullptr;
+            size_t _weatherPixelsCapacity = MaxWeatherPixels;
+            uint32_t _weatherPixelsCount = 0;
+            WeatherPixel* _weatherPixels = nullptr;
             rct_drawpixelinfo* _screenDPI = nullptr;
 
         public:
-            X8RainDrawer();
-            ~X8RainDrawer();
+            X8WeatherDrawer();
+            ~X8WeatherDrawer();
             void SetDPI(rct_drawpixelinfo* dpi);
-            void Draw(int32_t x, int32_t y, int32_t width, int32_t height, int32_t xStart, int32_t yStart) override;
+            void Draw(
+                int32_t x, int32_t y, int32_t width, int32_t height, int32_t xStart, int32_t yStart,
+                const uint8_t* weatherpattern) override;
             void Restore();
         };
 
@@ -80,7 +82,7 @@ namespace OpenRCT2
             bool _lastLightFXenabled = false;
 #endif
 
-            X8RainDrawer _rainDrawer;
+            X8WeatherDrawer _weatherDrawer;
             X8DrawingContext* _drawingContext;
 
         public:
@@ -105,7 +107,7 @@ namespace OpenRCT2
             void EndDraw() override;
             void PaintWindows() override;
             void UpdateWindows() override;
-            void PaintRain() override;
+            void PaintWeather() override;
             void CopyRect(int32_t x, int32_t y, int32_t width, int32_t height, int32_t dx, int32_t dy) override;
             std::string Screenshot() override;
             IDrawingContext* GetDrawingContext(rct_drawpixelinfo* dpi) override;
@@ -143,7 +145,7 @@ namespace OpenRCT2
 
             void Clear(uint8_t paletteIndex) override;
             void FillRect(uint32_t colour, int32_t x, int32_t y, int32_t w, int32_t h) override;
-            void FilterRect(FILTER_PALETTE_ID palette, int32_t left, int32_t top, int32_t right, int32_t bottom) override;
+            void FilterRect(FilterPaletteID palette, int32_t left, int32_t top, int32_t right, int32_t bottom) override;
             void DrawLine(uint32_t colour, int32_t x1, int32_t y1, int32_t x2, int32_t y2) override;
             void DrawSprite(uint32_t image, int32_t x, int32_t y, uint32_t tertiaryColour) override;
             void DrawSpriteRawMasked(int32_t x, int32_t y, uint32_t maskImage, uint32_t colourImage) override;

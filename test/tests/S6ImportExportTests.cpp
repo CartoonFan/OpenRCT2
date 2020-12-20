@@ -110,7 +110,7 @@ static std::unique_ptr<GameState_t> GetGameState(std::unique_ptr<IContext>& cont
     {
         rct_sprite* sprite = reinterpret_cast<rct_sprite*>(GetEntity(spriteIdx));
         if (sprite == nullptr)
-            res->sprites[spriteIdx].generic.sprite_identifier = SPRITE_IDENTIFIER_NULL;
+            res->sprites[spriteIdx].generic.sprite_identifier = SpriteIdentifier::Null;
         else
             res->sprites[spriteIdx] = *sprite;
     }
@@ -191,7 +191,7 @@ static void CompareSpriteDataPeep(const Peep& left, const Peep& right)
     {
         COMPARE_FIELD(RideTypesBeenOn[i]);
     }
-    COMPARE_FIELD(ItemExtraFlags);
+    COMPARE_FIELD(ItemFlags);
     COMPARE_FIELD(Photo2RideRef);
     COMPARE_FIELD(Photo3RideRef);
     COMPARE_FIELD(Photo4RideRef);
@@ -217,7 +217,7 @@ static void CompareSpriteDataPeep(const Peep& left, const Peep& right)
     COMPARE_FIELD(Id);
     COMPARE_FIELD(CashInPocket);
     COMPARE_FIELD(CashSpent);
-    COMPARE_FIELD(TimeInPark);
+    COMPARE_FIELD(ParkEntryTime);
     COMPARE_FIELD(RejoinQueueTimeout);
     COMPARE_FIELD(PreviousRide);
     COMPARE_FIELD(PreviousRideTimeOut);
@@ -267,7 +267,6 @@ static void CompareSpriteDataPeep(const Peep& left, const Peep& right)
     COMPARE_FIELD(HatColour);
     COMPARE_FIELD(FavouriteRide);
     COMPARE_FIELD(FavouriteRideRating);
-    COMPARE_FIELD(ItemStandardFlags);
 }
 
 static void CompareSpriteDataVehicle(const Vehicle& left, const Vehicle& right)
@@ -410,16 +409,16 @@ static void CompareSpriteData(const rct_sprite& left, const rct_sprite& right)
     {
         switch (left.generic.sprite_identifier)
         {
-            case SPRITE_IDENTIFIER_PEEP:
+            case SpriteIdentifier::Peep:
                 CompareSpriteDataPeep(left.peep, right.peep);
                 break;
-            case SPRITE_IDENTIFIER_VEHICLE:
+            case SpriteIdentifier::Vehicle:
                 CompareSpriteDataVehicle(left.vehicle, right.vehicle);
                 break;
-            case SPRITE_IDENTIFIER_LITTER:
+            case SpriteIdentifier::Litter:
                 CompareSpriteDataLitter(left.litter, right.litter);
                 break;
-            case SPRITE_IDENTIFIER_MISC:
+            case SpriteIdentifier::Misc:
                 switch (left.generic.type)
                 {
                     case SPRITE_MISC_STEAM_PARTICLE:
@@ -443,6 +442,8 @@ static void CompareSpriteData(const rct_sprite& left, const rct_sprite& right)
                         break;
                 }
                 break;
+            case SpriteIdentifier::Null:
+                break;
         }
     }
 }
@@ -455,13 +456,14 @@ static void CompareStates(
     {
         log_warning(
             "Inconsistent export size! Import Size: %llu bytes, Export Size: %llu bytes",
-            (unsigned long long)importBuffer.GetLength(), (unsigned long long)exportBuffer.GetLength());
+            static_cast<unsigned long long>(importBuffer.GetLength()),
+            static_cast<unsigned long long>(exportBuffer.GetLength()));
     }
 
     for (size_t spriteIdx = 0; spriteIdx < MAX_SPRITES; ++spriteIdx)
     {
-        if (importedState->sprites[spriteIdx].generic.sprite_identifier == SPRITE_IDENTIFIER_NULL
-            && exportedState->sprites[spriteIdx].generic.sprite_identifier == SPRITE_IDENTIFIER_NULL)
+        if (importedState->sprites[spriteIdx].generic.sprite_identifier == SpriteIdentifier::Null
+            && exportedState->sprites[spriteIdx].generic.sprite_identifier == SpriteIdentifier::Null)
         {
             continue;
         }

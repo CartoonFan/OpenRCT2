@@ -10,7 +10,7 @@
 #include "T6Exporter.h"
 
 #include "../Context.h"
-#include "../core/FileStream.hpp"
+#include "../core/FileStream.h"
 #include "../core/MemoryStream.h"
 #include "../localisation/Localisation.h"
 #include "../localisation/StringIds.h"
@@ -51,7 +51,7 @@ bool T6Exporter::SaveTrack(OpenRCT2::IStream* stream)
     tempStream.WriteValue<uint8_t>(_trackDesign->type);
     tempStream.WriteValue<uint8_t>(_trackDesign->vehicle_type);
     tempStream.WriteValue<uint32_t>(_trackDesign->flags);
-    tempStream.WriteValue<uint8_t>(_trackDesign->ride_mode);
+    tempStream.WriteValue<uint8_t>(static_cast<uint8_t>(_trackDesign->ride_mode));
     tempStream.WriteValue<uint8_t>((_trackDesign->colour_scheme & 0x3) | (2 << 2));
     tempStream.WriteArray(_trackDesign->vehicle_colours.data(), RCT12_MAX_VEHICLE_COLOURS);
     tempStream.WriteValue<uint8_t>(0);

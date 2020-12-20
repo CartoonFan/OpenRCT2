@@ -16,8 +16,8 @@
 #include "GameState.h"
 #include "OpenRCT2.h"
 #include "ParkImporter.h"
-#include "actions/LandBuyRightsAction.hpp"
-#include "actions/LandSetRightsAction.hpp"
+#include "actions/LandBuyRightsAction.h"
+#include "actions/LandSetRightsAction.h"
 #include "audio/audio.h"
 #include "interface/Viewport.h"
 #include "interface/Window_internal.h"
@@ -47,7 +47,7 @@ using namespace OpenRCT2;
 
 namespace Editor
 {
-    static std::array<std::vector<uint8_t>, OBJECT_TYPE_COUNT> _editorSelectedObjectFlags;
+    static std::array<std::vector<uint8_t>, EnumValue(ObjectType::Count)> _editorSelectedObjectFlags;
 
     static void ConvertSaveToScenarioCallback(int32_t result, const utf8* path);
     static void SetAllLandOwned();
@@ -77,7 +77,7 @@ namespace Editor
      */
     void Load()
     {
-        audio_stop_all_music_and_sounds();
+        OpenRCT2::Audio::StopAll();
         object_manager_unload_all_objects();
         object_list_load();
         OpenRCT2::GetContext()->GetGameState()->InitAll(150);
@@ -130,10 +130,10 @@ namespace Editor
 
         safe_strcpy(gS6Info.name, gScenarioName.c_str(), sizeof(gS6Info.name));
         safe_strcpy(gS6Info.details, gScenarioDetails.c_str(), sizeof(gS6Info.details));
-        gS6Info.objective_type = gScenarioObjectiveType;
-        gS6Info.objective_arg_1 = gScenarioObjectiveYear;
-        gS6Info.objective_arg_2 = gScenarioObjectiveCurrency;
-        gS6Info.objective_arg_3 = gScenarioObjectiveNumGuests;
+        gS6Info.objective_type = gScenarioObjective.Type;
+        gS6Info.objective_arg_1 = gScenarioObjective.Year;
+        gS6Info.objective_arg_2 = gScenarioObjective.Currency;
+        gS6Info.objective_arg_3 = gScenarioObjective.NumGuests;
         climate_reset(gClimate);
 
         gScreenFlags = SCREEN_FLAGS_SCENARIO_EDITOR;
@@ -152,7 +152,7 @@ namespace Editor
      */
     void LoadTrackDesigner()
     {
-        audio_stop_all_music_and_sounds();
+        OpenRCT2::Audio::StopAll();
         gScreenFlags = SCREEN_FLAGS_TRACK_DESIGNER;
         gScreenAge = 0;
 
@@ -173,7 +173,7 @@ namespace Editor
      */
     void LoadTrackManager()
     {
-        audio_stop_all_music_and_sounds();
+        OpenRCT2::Audio::StopAll();
         gScreenFlags = SCREEN_FLAGS_TRACK_MANAGER;
         gScreenAge = 0;
 
@@ -415,12 +415,12 @@ namespace Editor
                 context_open_window(WC_EDITOR_SCENARIO_OPTIONS);
                 break;
             case EDITOR_STEP_OBJECTIVE_SELECTION:
-                if (window_find_by_class(WC_EDTIOR_OBJECTIVE_OPTIONS))
+                if (window_find_by_class(WC_EDITOR_OBJECTIVE_OPTIONS))
                 {
                     return;
                 }
 
-                context_open_window(WC_EDTIOR_OBJECTIVE_OPTIONS);
+                context_open_window(WC_EDITOR_OBJECTIVE_OPTIONS);
                 break;
         }
     }
@@ -445,41 +445,41 @@ namespace Editor
      *
      *  rct2: 0x006AB9B8
      */
-    int32_t CheckObjectSelection()
+    ObjectType CheckObjectSelection()
     {
         bool isTrackDesignerManager = gScreenFlags & (SCREEN_FLAGS_TRACK_DESIGNER | SCREEN_FLAGS_TRACK_MANAGER);
 
         if (!isTrackDesignerManager)
         {
-            if (!editor_check_object_group_at_least_one_selected(OBJECT_TYPE_PATHS))
+            if (!editor_check_object_group_at_least_one_selected(ObjectType::Paths))
             {
                 gGameCommandErrorText = STR_AT_LEAST_ONE_PATH_OBJECT_MUST_BE_SELECTED;
-                return OBJECT_TYPE_PATHS;
+                return ObjectType::Paths;
             }
         }
 
-        if (!editor_check_object_group_at_least_one_selected(OBJECT_TYPE_RIDE))
+        if (!editor_check_object_group_at_least_one_selected(ObjectType::Ride))
         {
             gGameCommandErrorText = STR_AT_LEAST_ONE_RIDE_OBJECT_MUST_BE_SELECTED;
-            return OBJECT_TYPE_RIDE;
+            return ObjectType::Ride;
         }
 
         if (!isTrackDesignerManager)
         {
-            if (!editor_check_object_group_at_least_one_selected(OBJECT_TYPE_PARK_ENTRANCE))
+            if (!editor_check_object_group_at_least_one_selected(ObjectType::ParkEntrance))
             {
                 gGameCommandErrorText = STR_PARK_ENTRANCE_TYPE_MUST_BE_SELECTED;
-                return OBJECT_TYPE_PARK_ENTRANCE;
+                return ObjectType::ParkEntrance;
             }
 
-            if (!editor_check_object_group_at_least_one_selected(OBJECT_TYPE_WATER))
+            if (!editor_check_object_group_at_least_one_selected(ObjectType::Water))
             {
                 gGameCommandErrorText = STR_WATER_TYPE_MUST_BE_SELECTED;
-                return OBJECT_TYPE_WATER;
+                return ObjectType::Water;
             }
         }
 
-        return -1;
+        return ObjectType::None;
     }
 
     /**
@@ -530,10 +530,10 @@ namespace Editor
         return true;
     }
 
-    uint8_t GetSelectedObjectFlags(int32_t objectType, size_t index)
+    uint8_t GetSelectedObjectFlags(ObjectType objectType, size_t index)
     {
         uint8_t result = 0;
-        auto& list = _editorSelectedObjectFlags[objectType];
+        auto& list = _editorSelectedObjectFlags[EnumValue(objectType)];
         if (list.size() > index)
         {
             result = list[index];
@@ -541,9 +541,9 @@ namespace Editor
         return result;
     }
 
-    void ClearSelectedObject(int32_t objectType, size_t index, uint32_t flags)
+    void ClearSelectedObject(ObjectType objectType, size_t index, uint32_t flags)
     {
-        auto& list = _editorSelectedObjectFlags[objectType];
+        auto& list = _editorSelectedObjectFlags[EnumValue(objectType)];
         if (list.size() <= index)
         {
             list.resize(index + 1);
@@ -551,9 +551,9 @@ namespace Editor
         list[index] &= ~flags;
     }
 
-    void SetSelectedObject(int32_t objectType, size_t index, uint32_t flags)
+    void SetSelectedObject(ObjectType objectType, size_t index, uint32_t flags)
     {
-        auto& list = _editorSelectedObjectFlags[objectType];
+        auto& list = _editorSelectedObjectFlags[EnumValue(objectType)];
         if (list.size() <= index)
         {
             list.resize(index + 1);

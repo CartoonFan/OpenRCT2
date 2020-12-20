@@ -67,13 +67,10 @@ namespace OpenRCT2::Scripting
         std::shared_ptr<ScRide> getRide(int32_t id) const
         {
             auto rideManager = GetRideManager();
-            if (id >= 0 && id < static_cast<int32_t>(rideManager.size()))
+            auto ride = rideManager[static_cast<ride_id_t>(id)];
+            if (ride != nullptr)
             {
-                auto ride = rideManager[static_cast<ride_id_t>(id)];
-                if (ride != nullptr)
-                {
-                    return std::make_shared<ScRide>(ride->id);
-                }
+                return std::make_shared<ScRide>(ride->id);
             }
             return {};
         }
@@ -90,7 +87,7 @@ namespace OpenRCT2::Scripting
             {
                 auto spriteId = static_cast<uint16_t>(id);
                 auto sprite = GetEntity(spriteId);
-                if (sprite != nullptr && sprite->sprite_identifier != SPRITE_IDENTIFIER_NULL)
+                if (sprite != nullptr && sprite->sprite_identifier != SpriteIdentifier::Null)
                 {
                     return GetEntityAsDukValue(sprite);
                 }
@@ -179,9 +176,9 @@ namespace OpenRCT2::Scripting
             auto spriteId = sprite->sprite_index;
             switch (sprite->sprite_identifier)
             {
-                case SPRITE_IDENTIFIER_VEHICLE:
+                case SpriteIdentifier::Vehicle:
                     return GetObjectAsDukValue(_context, std::make_shared<ScVehicle>(spriteId));
-                case SPRITE_IDENTIFIER_PEEP:
+                case SpriteIdentifier::Peep:
                 {
                     if (sprite->Is<Staff>())
                         return GetObjectAsDukValue(_context, std::make_shared<ScStaff>(spriteId));

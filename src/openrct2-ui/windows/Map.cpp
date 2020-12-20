@@ -18,12 +18,13 @@
 #include <openrct2/Game.h>
 #include <openrct2/Input.h>
 #include <openrct2/OpenRCT2.h>
-#include <openrct2/actions/LandSetRightsAction.hpp>
-#include <openrct2/actions/PlaceParkEntranceAction.hpp>
-#include <openrct2/actions/PlacePeepSpawnAction.hpp>
-#include <openrct2/actions/SurfaceSetStyleAction.hpp>
+#include <openrct2/actions/LandSetRightsAction.h>
+#include <openrct2/actions/PlaceParkEntranceAction.h>
+#include <openrct2/actions/PlacePeepSpawnAction.h>
+#include <openrct2/actions/SurfaceSetStyleAction.h>
 #include <openrct2/audio/audio.h>
 #include <openrct2/localisation/Localisation.h>
+#include <openrct2/ride/RideData.h>
 #include <openrct2/ride/Track.h>
 #include <openrct2/world/Entrance.h>
 #include <openrct2/world/Footpath.h>
@@ -81,23 +82,23 @@ validate_global_widx(WC_MAP, WIDX_ROTATE_90);
 
 static rct_widget window_map_widgets[] = {
     WINDOW_SHIM(WINDOW_TITLE, WW, WH),
-    MakeWidget        ({  0,  43}, {245, 215}, WWT_RESIZE,    WindowColour::Secondary                                                                                  ),
-    MakeRemapWidget   ({  3,  17}, { 31,  27}, WWT_COLOURBTN, WindowColour::Secondary, SPR_TAB,                         STR_SHOW_PEOPLE_ON_MAP_TIP                     ),
-    MakeRemapWidget   ({ 34,  17}, { 31,  27}, WWT_COLOURBTN, WindowColour::Secondary, SPR_TAB,                         STR_SHOW_RIDES_STALLS_ON_MAP_TIP               ),
-    MakeWidget        ({  3,  46}, {239, 180}, WWT_SCROLL,    WindowColour::Secondary, SCROLL_BOTH                                                                     ),
-    MakeSpinnerWidgets({104, 229}, { 95,  12}, WWT_SPINNER,   WindowColour::Secondary, STR_MAP_SIZE_VALUE                                                              ), // NB: 3 widgets
-    MakeWidget        ({  4,   1}, { 24,  24}, WWT_FLATBTN,   WindowColour::Secondary, SPR_BUY_LAND_RIGHTS,             STR_SELECT_PARK_OWNED_LAND_TIP                 ),
-    MakeWidget        ({  4,   1}, { 24,  24}, WWT_FLATBTN,   WindowColour::Secondary, SPR_PARK_ENTRANCE,               STR_BUILD_PARK_ENTRANCE_TIP                    ),
-    MakeWidget        ({ 28,   1}, { 24,  24}, WWT_FLATBTN,   WindowColour::Secondary, 0xFFFFFFFF,                      STR_SET_STARTING_POSITIONS_TIP                 ),
-    MakeWidget        ({  4,  17}, { 44,  32}, WWT_IMGBTN,    WindowColour::Secondary, SPR_LAND_TOOL_SIZE_0                                                            ),
-    MakeRemapWidget   ({  5,  18}, { 16,  16}, WWT_TRNBTN,    WindowColour::Secondary, SPR_LAND_TOOL_DECREASE,          STR_ADJUST_SMALLER_LAND_TIP                    ),
-    MakeRemapWidget   ({ 31,  32}, { 16,  16}, WWT_TRNBTN,    WindowColour::Secondary, SPR_LAND_TOOL_INCREASE,          STR_ADJUST_LARGER_LAND_TIP                     ),
-    MakeWidget        ({ 58, 197}, {184,  12}, WWT_CHECKBOX,  WindowColour::Secondary, STR_LAND_OWNED,                  STR_SET_LAND_TO_BE_OWNED_TIP                   ),
-    MakeWidget        ({ 58, 197}, {184,  12}, WWT_CHECKBOX,  WindowColour::Secondary, STR_CONSTRUCTION_RIGHTS_OWNED,   STR_SET_CONSTRUCTION_RIGHTS_TO_BE_OWNED_TIP    ),
-    MakeWidget        ({ 58, 197}, {184,  12}, WWT_CHECKBOX,  WindowColour::Secondary, STR_LAND_SALE,                   STR_SET_LAND_TO_BE_AVAILABLE_TIP               ),
-    MakeWidget        ({ 58, 197}, {174,  12}, WWT_CHECKBOX,  WindowColour::Secondary, STR_CONSTRUCTION_RIGHTS_SALE,    STR_SET_CONSTRUCTION_RIGHTS_TO_BE_AVAILABLE_TIP),
-    MakeWidget        ({218,  45}, { 24,  24}, WWT_FLATBTN,   WindowColour::Secondary, SPR_ROTATE_ARROW,                STR_ROTATE_OBJECTS_90                          ),
-    MakeWidget        ({110, 189}, {131,  14}, WWT_BUTTON,    WindowColour::Secondary, STR_MAPGEN_WINDOW_TITLE,         STR_MAP_GENERATOR_TIP                          ),
+    MakeWidget        ({  0,  43}, {245, 215}, WindowWidgetType::Resize,    WindowColour::Secondary                                                                                  ),
+    MakeRemapWidget   ({  3,  17}, { 31,  27}, WindowWidgetType::ColourBtn, WindowColour::Secondary, SPR_TAB,                         STR_SHOW_PEOPLE_ON_MAP_TIP                     ),
+    MakeRemapWidget   ({ 34,  17}, { 31,  27}, WindowWidgetType::ColourBtn, WindowColour::Secondary, SPR_TAB,                         STR_SHOW_RIDES_STALLS_ON_MAP_TIP               ),
+    MakeWidget        ({  3,  46}, {239, 180}, WindowWidgetType::Scroll,    WindowColour::Secondary, SCROLL_BOTH                                                                     ),
+    MakeSpinnerWidgets({104, 229}, { 95,  12}, WindowWidgetType::Spinner,   WindowColour::Secondary, STR_MAP_SIZE_VALUE                                                              ), // NB: 3 widgets
+    MakeWidget        ({  4,   1}, { 24,  24}, WindowWidgetType::FlatBtn,   WindowColour::Secondary, SPR_BUY_LAND_RIGHTS,             STR_SELECT_PARK_OWNED_LAND_TIP                 ),
+    MakeWidget        ({  4,   1}, { 24,  24}, WindowWidgetType::FlatBtn,   WindowColour::Secondary, SPR_PARK_ENTRANCE,               STR_BUILD_PARK_ENTRANCE_TIP                    ),
+    MakeWidget        ({ 28,   1}, { 24,  24}, WindowWidgetType::FlatBtn,   WindowColour::Secondary, 0xFFFFFFFF,                      STR_SET_STARTING_POSITIONS_TIP                 ),
+    MakeWidget        ({  4,  17}, { 44,  32}, WindowWidgetType::ImgBtn,    WindowColour::Secondary, SPR_LAND_TOOL_SIZE_0                                                            ),
+    MakeRemapWidget   ({  5,  18}, { 16,  16}, WindowWidgetType::TrnBtn,    WindowColour::Secondary, SPR_LAND_TOOL_DECREASE,          STR_ADJUST_SMALLER_LAND_TIP                    ),
+    MakeRemapWidget   ({ 31,  32}, { 16,  16}, WindowWidgetType::TrnBtn,    WindowColour::Secondary, SPR_LAND_TOOL_INCREASE,          STR_ADJUST_LARGER_LAND_TIP                     ),
+    MakeWidget        ({ 58, 197}, {184,  12}, WindowWidgetType::Checkbox,  WindowColour::Secondary, STR_LAND_OWNED,                  STR_SET_LAND_TO_BE_OWNED_TIP                   ),
+    MakeWidget        ({ 58, 197}, {184,  12}, WindowWidgetType::Checkbox,  WindowColour::Secondary, STR_CONSTRUCTION_RIGHTS_OWNED,   STR_SET_CONSTRUCTION_RIGHTS_TO_BE_OWNED_TIP    ),
+    MakeWidget        ({ 58, 197}, {184,  12}, WindowWidgetType::Checkbox,  WindowColour::Secondary, STR_LAND_SALE,                   STR_SET_LAND_TO_BE_AVAILABLE_TIP               ),
+    MakeWidget        ({ 58, 197}, {174,  12}, WindowWidgetType::Checkbox,  WindowColour::Secondary, STR_CONSTRUCTION_RIGHTS_SALE,    STR_SET_CONSTRUCTION_RIGHTS_TO_BE_AVAILABLE_TIP),
+    MakeWidget        ({218,  45}, { 24,  24}, WindowWidgetType::FlatBtn,   WindowColour::Secondary, SPR_ROTATE_ARROW,                STR_ROTATE_OBJECTS_90                          ),
+    MakeWidget        ({110, 189}, {131,  14}, WindowWidgetType::Button,    WindowColour::Secondary, STR_MAPGEN_WINDOW_TITLE,         STR_MAP_GENERATOR_TIP                          ),
     { WIDGETS_END },
 };
 
@@ -138,36 +139,25 @@ static void window_map_invalidate(rct_window *w);
 static void window_map_paint(rct_window *w, rct_drawpixelinfo *dpi);
 static void window_map_scrollpaint(rct_window *w, rct_drawpixelinfo *dpi, int32_t scrollIndex);
 
-static rct_window_event_list window_map_events = {
-    window_map_close,
-    window_map_mouseup,
-    window_map_resize,
-    window_map_mousedown,
-    nullptr,
-    nullptr,
-    window_map_update,
-    nullptr,
-    nullptr,
-    window_map_toolupdate,
-    window_map_tooldown,
-    window_map_tooldrag,
-    nullptr,
-    window_map_toolabort,
-    nullptr,
-    window_map_scrollgetsize,
-    window_map_scrollmousedown,
-    window_map_scrollmousedown,
-    nullptr,
-    window_map_textinput,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    window_map_invalidate,
-    window_map_paint,
-    window_map_scrollpaint
-};
+static rct_window_event_list window_map_events([](auto& events)
+{
+    events.close = &window_map_close;
+    events.mouse_up = &window_map_mouseup;
+    events.resize = &window_map_resize;
+    events.mouse_down = &window_map_mousedown;
+    events.update = &window_map_update;
+    events.tool_update = &window_map_toolupdate;
+    events.tool_down = &window_map_tooldown;
+    events.tool_drag = &window_map_tooldrag;
+    events.tool_abort = &window_map_toolabort;
+    events.get_scroll_size = &window_map_scrollgetsize;
+    events.scroll_mousedown = &window_map_scrollmousedown;
+    events.scroll_mousedrag = &window_map_scrollmousedown;
+    events.text_input = &window_map_textinput;
+    events.invalidate = &window_map_invalidate;
+    events.paint = &window_map_paint;
+    events.scroll_paint = &window_map_scrollpaint;
+});
 // clang-format on
 
 /** rct2: 0x00F1AD61 */
@@ -228,7 +218,7 @@ rct_window* window_map_open()
         return nullptr;
     }
 
-    w = window_create_auto_pos(245, 259, &window_map_events, WC_MAP, WF_10);
+    w = WindowCreateAutoPos(245, 259, &window_map_events, WC_MAP, WF_10);
     w->widgets = window_map_widgets;
     w->enabled_widgets = (1 << WIDX_CLOSE) | (1 << WIDX_PEOPLE_TAB) | (1 << WIDX_RIDES_TAB) | (1 << WIDX_MAP_SIZE_SPINNER)
         | (1 << WIDX_MAP_SIZE_SPINNER_UP) | (1 << WIDX_MAP_SIZE_SPINNER_DOWN) | (1 << WIDX_LAND_TOOL)
@@ -240,7 +230,7 @@ rct_window* window_map_open()
     w->hold_down_widgets = (1 << WIDX_MAP_SIZE_SPINNER_UP) | (1 << WIDX_MAP_SIZE_SPINNER_DOWN) | (1 << WIDX_LAND_TOOL_LARGER)
         | (1 << WIDX_LAND_TOOL_SMALLER);
 
-    window_init_scroll_widgets(w);
+    WindowInitScrollWidgets(w);
 
     w->map.rotation = get_current_rotation();
 
@@ -597,7 +587,7 @@ static void window_map_scrollmousedown(rct_window* w, int32_t scrollIndex, const
             gLandToolTerrainSurface, gLandToolTerrainEdge);
         GameActions::Execute(&surfaceSetStyleAction);
     }
-    else if (widget_is_active_tool(w, WIDX_SET_LAND_RIGHTS))
+    else if (WidgetIsActiveTool(w, WIDX_SET_LAND_RIGHTS))
     {
         // Set land rights
         int32_t landRightsToolSize = std::max<int32_t>(1, _landRightsToolSize);
@@ -755,7 +745,7 @@ static void window_map_invalidate(rct_window* w)
     // Disable all scenario editor related widgets
     for (i = WIDX_MAP_SIZE_SPINNER; i <= WIDX_MAP_GENERATOR; i++)
     {
-        w->widgets[i].type = WWT_EMPTY;
+        w->widgets[i].type = WindowWidgetType::Empty;
     }
 
     if ((gScreenFlags & SCREEN_FLAGS_SCENARIO_EDITOR) || gCheatsSandboxMode)
@@ -764,11 +754,11 @@ static void window_map_invalidate(rct_window* w)
         if ((input_test_flag(INPUT_FLAG_TOOL_ACTIVE)) && gCurrentToolWidget.window_classification == WC_MAP
             && gCurrentToolWidget.widget_index == WIDX_BUILD_PARK_ENTRANCE)
         {
-            w->widgets[WIDX_ROTATE_90].type = WWT_FLATBTN;
+            w->widgets[WIDX_ROTATE_90].type = WindowWidgetType::FlatBtn;
         }
 
         // Always show set land rights button
-        w->widgets[WIDX_SET_LAND_RIGHTS].type = WWT_FLATBTN;
+        w->widgets[WIDX_SET_LAND_RIGHTS].type = WindowWidgetType::FlatBtn;
 
         // If any tool is active
         if ((input_test_flag(INPUT_FLAG_TOOL_ACTIVE)) && gCurrentToolWidget.window_classification == WC_MAP)
@@ -780,14 +770,14 @@ static void window_map_invalidate(rct_window* w)
             }
             else
             { // if in set land rights mode: show land tool buttons + modes
-                w->widgets[WIDX_LAND_TOOL].type = WWT_IMGBTN;
-                w->widgets[WIDX_LAND_TOOL_SMALLER].type = WWT_TRNBTN;
-                w->widgets[WIDX_LAND_TOOL_LARGER].type = WWT_TRNBTN;
+                w->widgets[WIDX_LAND_TOOL].type = WindowWidgetType::ImgBtn;
+                w->widgets[WIDX_LAND_TOOL_SMALLER].type = WindowWidgetType::TrnBtn;
+                w->widgets[WIDX_LAND_TOOL_LARGER].type = WindowWidgetType::TrnBtn;
 
                 for (i = 0; i < 4; i++)
-                    w->widgets[WIDX_LAND_OWNED_CHECKBOX + i].type = WWT_CHECKBOX;
+                    w->widgets[WIDX_LAND_OWNED_CHECKBOX + i].type = WindowWidgetType::Checkbox;
 
-                w->widgets[WIDX_LAND_TOOL].image = land_tool_size_to_sprite_index(_landRightsToolSize);
+                w->widgets[WIDX_LAND_TOOL].image = LandTool::SizeToSpriteIndex(_landRightsToolSize);
             }
         }
         else
@@ -804,14 +794,14 @@ static void window_map_invalidate(rct_window* w)
  */
 static void window_map_paint(rct_window* w, rct_drawpixelinfo* dpi)
 {
-    window_draw_widgets(w, dpi);
+    WindowDrawWidgets(w, dpi);
     window_map_draw_tab_images(w, dpi);
 
     auto screenCoords = w->windowPos
         + ScreenCoordsXY{ window_map_widgets[WIDX_LAND_TOOL].midX(), window_map_widgets[WIDX_LAND_TOOL].midY() };
 
     // Draw land tool size
-    if (widget_is_active_tool(w, WIDX_SET_LAND_RIGHTS) && _landRightsToolSize > MAX_TOOL_SIZE_WITH_SPRITE)
+    if (WidgetIsActiveTool(w, WIDX_SET_LAND_RIGHTS) && _landRightsToolSize > MAX_TOOL_SIZE_WITH_SPRITE)
     {
         gfx_draw_string_centred(
             dpi, STR_LAND_TOOL_SIZE_VALUE, screenCoords - ScreenCoordsXY{ 0, 2 }, COLOUR_BLACK, &_landRightsToolSize);
@@ -819,7 +809,7 @@ static void window_map_paint(rct_window* w, rct_drawpixelinfo* dpi)
     screenCoords.y = w->windowPos.y + window_map_widgets[WIDX_LAND_TOOL].bottom + 5;
 
     // People starting position (scenario editor only)
-    if (w->widgets[WIDX_PEOPLE_STARTING_POSITION].type != WWT_EMPTY)
+    if (w->widgets[WIDX_PEOPLE_STARTING_POSITION].type != WindowWidgetType::Empty)
     {
         screenCoords = w->windowPos
             + ScreenCoordsXY{ w->widgets[WIDX_PEOPLE_STARTING_POSITION].left + 12,
@@ -854,7 +844,7 @@ static void window_map_paint(rct_window* w, rct_drawpixelinfo* dpi)
             }
         }
     }
-    else if (!widget_is_active_tool(w, WIDX_SET_LAND_RIGHTS))
+    else if (!WidgetIsActiveTool(w, WIDX_SET_LAND_RIGHTS))
     {
         gfx_draw_string_left(
             dpi, STR_MAP_SIZE, nullptr, w->colours[1],
@@ -951,7 +941,7 @@ static void window_map_centre_on_view_point()
 
     w_map->scrolls[0].h_left = cx;
     w_map->scrolls[0].v_top = dx;
-    widget_scroll_update_thumbs(w_map, WIDX_MAP);
+    WidgetScrollUpdateThumbs(w_map, WIDX_MAP);
 }
 
 /**
@@ -960,15 +950,15 @@ static void window_map_centre_on_view_point()
  */
 static void window_map_show_default_scenario_editor_buttons(rct_window* w)
 {
-    w->widgets[WIDX_BUILD_PARK_ENTRANCE].type = WWT_FLATBTN;
-    w->widgets[WIDX_PEOPLE_STARTING_POSITION].type = WWT_FLATBTN;
-    w->widgets[WIDX_MAP_SIZE_SPINNER].type = WWT_SPINNER;
-    w->widgets[WIDX_MAP_SIZE_SPINNER_UP].type = WWT_BUTTON;
-    w->widgets[WIDX_MAP_SIZE_SPINNER_DOWN].type = WWT_BUTTON;
+    w->widgets[WIDX_BUILD_PARK_ENTRANCE].type = WindowWidgetType::FlatBtn;
+    w->widgets[WIDX_PEOPLE_STARTING_POSITION].type = WindowWidgetType::FlatBtn;
+    w->widgets[WIDX_MAP_SIZE_SPINNER].type = WindowWidgetType::Spinner;
+    w->widgets[WIDX_MAP_SIZE_SPINNER_UP].type = WindowWidgetType::Button;
+    w->widgets[WIDX_MAP_SIZE_SPINNER_DOWN].type = WindowWidgetType::Button;
 
     // Only show this in the scenario editor, even when in sandbox mode.
     if (gScreenFlags & SCREEN_FLAGS_SCENARIO_EDITOR)
-        w->widgets[WIDX_MAP_GENERATOR].type = WWT_BUTTON;
+        w->widgets[WIDX_MAP_GENERATOR].type = WindowWidgetType::Button;
 
     auto ft = Formatter::Common();
     ft.Increment(2);
@@ -1183,7 +1173,7 @@ static void window_map_set_land_rights_tool_update(const ScreenCoordsXY& screenC
 static CoordsXYZD place_park_entrance_get_map_position(const ScreenCoordsXY& screenCoords)
 {
     CoordsXYZD parkEntranceMapPosition{ 0, 0, 0, INVALID_DIRECTION };
-    const CoordsXY mapCoords = sub_68A15E(screenCoords);
+    const CoordsXY mapCoords = ViewportInteractionGetTileStartAtCursor(screenCoords);
     parkEntranceMapPosition = { mapCoords.x, mapCoords.y, 0, INVALID_DIRECTION };
     if (parkEntranceMapPosition.isNull())
         return parkEntranceMapPosition;
@@ -1302,9 +1292,9 @@ static void window_map_place_park_entrance_tool_down(const ScreenCoordsXY& scree
     {
         auto gameAction = PlaceParkEntranceAction(parkEntrancePosition);
         auto result = GameActions::Execute(&gameAction);
-        if (result->Error == GA_ERROR::OK)
+        if (result->Error == GameActions::Status::Ok)
         {
-            audio_play_sound_at_location(SoundId::PlaceItem, result->Position);
+            OpenRCT2::Audio::Play3D(OpenRCT2::Audio::SoundId::PlaceItem, result->Position);
         }
     }
 }
@@ -1327,9 +1317,9 @@ static void window_map_set_peep_spawn_tool_down(const ScreenCoordsXY& screenCoor
 
     auto gameAction = PlacePeepSpawnAction({ mapCoords, mapZ, static_cast<Direction>(direction) });
     auto result = GameActions::Execute(&gameAction);
-    if (result->Error == GA_ERROR::OK)
+    if (result->Error == GameActions::Status::Ok)
     {
-        audio_play_sound_at_location(SoundId::PlaceItem, result->Position);
+        OpenRCT2::Audio::Play3D(OpenRCT2::Audio::SoundId::PlaceItem, result->Position);
     }
 }
 
@@ -1341,7 +1331,7 @@ static void map_window_increase_map_size()
 {
     if (gMapSize >= MAXIMUM_MAP_SIZE_TECHNICAL)
     {
-        context_show_error(STR_CANT_INCREASE_MAP_SIZE_ANY_FURTHER, STR_NONE);
+        context_show_error(STR_CANT_INCREASE_MAP_SIZE_ANY_FURTHER, STR_NONE, {});
         return;
     }
 
@@ -1363,7 +1353,7 @@ static void map_window_decrease_map_size()
 {
     if (gMapSize < 16)
     {
-        context_show_error(STR_CANT_DECREASE_MAP_SIZE_ANY_FURTHER, STR_NONE);
+        context_show_error(STR_CANT_DECREASE_MAP_SIZE_ANY_FURTHER, STR_NONE, {});
         return;
     }
 

@@ -13,12 +13,12 @@
 
 #include "../Context.h"
 #include "../core/IStream.hpp"
+#include "../core/Json.hpp"
 #include "../core/Memory.hpp"
 #include "../core/String.hpp"
 #include "../drawing/Drawing.h"
 #include "../localisation/Language.h"
 #include "../peep/Staff.h"
-#include "ObjectJsonHelpers.h"
 #include "ObjectManager.h"
 #include "ObjectRepository.h"
 
@@ -75,7 +75,7 @@ void SceneryGroupObject::UpdateEntryIndexes()
     _legacyType.entry_count = 0;
     for (const auto& objectEntry : _items)
     {
-        auto ori = objectRepository.FindObject(&objectEntry);
+        auto ori = objectRepository.FindObject(objectEntry);
         if (ori == nullptr)
             continue;
         if (ori->LoadedObject == nullptr)
@@ -98,95 +98,82 @@ void SceneryGroupObject::SetRepositoryItem(ObjectRepositoryItem* item) const
     item->SceneryGroupInfo.Entries = _items;
 }
 
-std::vector<rct_object_entry> SceneryGroupObject::ReadItems(IStream* stream)
+std::vector<ObjectEntryDescriptor> SceneryGroupObject::ReadItems(IStream* stream)
 {
-    auto items = std::vector<rct_object_entry>();
+    auto items = std::vector<ObjectEntryDescriptor>();
     while (stream->ReadValue<uint8_t>() != 0xFF)
     {
         stream->Seek(-1, STREAM_SEEK_CURRENT);
         auto entry = stream->ReadValue<rct_object_entry>();
-        items.push_back(entry);
+        items.push_back(ObjectEntryDescriptor(entry));
     }
     return items;
 }
 
-void SceneryGroupObject::ReadJson(IReadObjectContext* context, const json_t* root)
+void SceneryGroupObject::ReadJson(IReadObjectContext* context, json_t& root)
 {
-    auto properties = json_object_get(root, "properties");
-    _legacyType.priority = json_integer_value(json_object_get(properties, "priority"));
+    Guard::Assert(root.is_object(), "SceneryGroupObject::ReadJson expects parameter root to be object");
 
-    // Entertainer cosumes
-    auto jCostumes = json_object_get(properties, "entertainerCostumes");
-    if (jCostumes != nullptr)
+    auto properties = root["properties"];
+
+    if (properties.is_object())
     {
-        _legacyType.entertainer_costumes = ReadJsonEntertainerCostumes(jCostumes);
+        _legacyType.priority = Json::GetNumber<uint8_t>(properties["priority"]);
+        _legacyType.entertainer_costumes = ReadJsonEntertainerCostumes(properties["entertainerCostumes"]);
+
+        _items = ReadJsonEntries(properties["entries"]);
     }
 
-    auto jEntries = json_object_get(properties, "entries");
-    if (jEntries != nullptr)
-    {
-        _items = ReadJsonEntries(jEntries);
-    }
-
-    ObjectJsonHelpers::LoadStrings(root, GetStringTable());
-    ObjectJsonHelpers::LoadImages(context, root, GetImageTable());
+    PopulateTablesFromJson(context, root);
 }
 
-uint32_t SceneryGroupObject::ReadJsonEntertainerCostumes(const json_t* jCostumes)
+uint32_t SceneryGroupObject::ReadJsonEntertainerCostumes(json_t& jCostumes)
 {
     uint32_t costumes = 0;
-    auto szCostumes = ObjectJsonHelpers::GetJsonStringArray(jCostumes);
-    for (const auto& szCostume : szCostumes)
+    for (auto& jCostume : jCostumes)
     {
-        auto entertainer = ParseEntertainerCostume(szCostume);
-
-        // For some reason the flags are +4 from the actual costume IDs
-        // See staff_get_available_entertainer_costumes
-        costumes |= 1 << (entertainer + 4);
+        auto entertainer = ParseEntertainerCostume(Json::GetString(jCostume));
+        auto peepSprite = EntertainerCostumeToSprite(entertainer);
+        costumes |= 1 << (static_cast<uint8_t>(peepSprite));
     }
     return costumes;
 }
 
-uint32_t SceneryGroupObject::ParseEntertainerCostume(const std::string& s)
+EntertainerCostume SceneryGroupObject::ParseEntertainerCostume(const std::string& s)
 {
     if (s == "panda")
-        return ENTERTAINER_COSTUME_PANDA;
+        return EntertainerCostume::Panda;
     if (s == "tiger")
-        return ENTERTAINER_COSTUME_TIGER;
+        return EntertainerCostume::Tiger;
     if (s == "elephant")
-        return ENTERTAINER_COSTUME_ELEPHANT;
+        return EntertainerCostume::Elephant;
     if (s == "roman")
-        return ENTERTAINER_COSTUME_ROMAN;
+        return EntertainerCostume::Roman;
     if (s == "gorilla")
-        return ENTERTAINER_COSTUME_GORILLA;
+        return EntertainerCostume::Gorilla;
     if (s == "snowman")
-        return ENTERTAINER_COSTUME_SNOWMAN;
+        return EntertainerCostume::Snowman;
     if (s == "knight")
-        return ENTERTAINER_COSTUME_KNIGHT;
+        return EntertainerCostume::Knight;
     if (s == "astronaut")
-        return ENTERTAINER_COSTUME_ASTRONAUT;
+        return EntertainerCostume::Astronaut;
     if (s == "bandit")
-        return ENTERTAINER_COSTUME_BANDIT;
+        return EntertainerCostume::Bandit;
     if (s == "sheriff")
-        return ENTERTAINER_COSTUME_SHERIFF;
+        return EntertainerCostume::Sheriff;
     if (s == "pirate")
-        return ENTERTAINER_COSTUME_PIRATE;
-    return ENTERTAINER_COSTUME_PANDA;
+        return EntertainerCostume::Pirate;
+    return EntertainerCostume::Panda;
 }
 
-std::vector<rct_object_entry> SceneryGroupObject::ReadJsonEntries(const json_t* jEntries)
+std::vector<ObjectEntryDescriptor> SceneryGroupObject::ReadJsonEntries(json_t& jEntries)
 {
-    std::vector<rct_object_entry> entries;
-    size_t index;
-    json_t* jEntry;
-    json_array_foreach(jEntries, index, jEntry)
+    std::vector<ObjectEntryDescriptor> entries;
+
+    for (auto& jEntry : jEntries)
     {
-        auto entryId = json_string_value(jEntry);
-        if (entryId != nullptr)
-        {
-            auto entry = ObjectJsonHelpers::ParseObjectEntry(entryId);
-            entries.push_back(entry);
-        }
+        auto entry = ObjectEntryDescriptor(Json::GetString(jEntry));
+        entries.push_back(entry);
     }
     return entries;
 }

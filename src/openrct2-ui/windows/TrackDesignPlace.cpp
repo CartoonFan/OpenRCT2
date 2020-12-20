@@ -62,10 +62,10 @@ validate_global_widx(WC_TRACK_DESIGN_PLACE, WIDX_ROTATE);
 
 static rct_widget window_track_place_widgets[] = {
     WINDOW_SHIM(WINDOW_TITLE, WW, WH),
-    MakeWidget({173,  83}, { 24, 24}, WWT_FLATBTN, WindowColour::Primary, SPR_ROTATE_ARROW,              STR_ROTATE_90_TIP                         ),
-    MakeWidget({173,  59}, { 24, 24}, WWT_FLATBTN, WindowColour::Primary, SPR_MIRROR_ARROW,              STR_MIRROR_IMAGE_TIP                      ),
-    MakeWidget({  4, 109}, {192, 12}, WWT_BUTTON,  WindowColour::Primary, STR_SELECT_A_DIFFERENT_DESIGN, STR_GO_BACK_TO_DESIGN_SELECTION_WINDOW_TIP),
-    MakeWidget({  0,   0}, {  1,  1}, WWT_EMPTY,   WindowColour::Primary),
+    MakeWidget({173,  83}, { 24, 24}, WindowWidgetType::FlatBtn, WindowColour::Primary, SPR_ROTATE_ARROW,              STR_ROTATE_90_TIP                         ),
+    MakeWidget({173,  59}, { 24, 24}, WindowWidgetType::FlatBtn, WindowColour::Primary, SPR_MIRROR_ARROW,              STR_MIRROR_IMAGE_TIP                      ),
+    MakeWidget({  4, 109}, {192, 12}, WindowWidgetType::Button,  WindowColour::Primary, STR_SELECT_A_DIFFERENT_DESIGN, STR_GO_BACK_TO_DESIGN_SELECTION_WINDOW_TIP),
+    MakeWidget({  0,   0}, {  1,  1}, WindowWidgetType::Empty,   WindowColour::Primary),
     { WIDGETS_END },
 };
 
@@ -79,36 +79,18 @@ static void window_track_place_unknown14(rct_window *w);
 static void window_track_place_invalidate(rct_window *w);
 static void window_track_place_paint(rct_window *w, rct_drawpixelinfo *dpi);
 
-static rct_window_event_list window_track_place_events = {
-    window_track_place_close,
-    window_track_place_mouseup,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    window_track_place_update,
-    nullptr,
-    nullptr,
-    window_track_place_toolupdate,
-    window_track_place_tooldown,
-    nullptr,
-    nullptr,
-    window_track_place_toolabort,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    window_track_place_unknown14,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    window_track_place_invalidate,
-    window_track_place_paint,
-    nullptr
-};
+static rct_window_event_list window_track_place_events([](auto& events)
+{
+    events.close = &window_track_place_close;
+    events.mouse_up = &window_track_place_mouseup;
+    events.update = &window_track_place_update;
+    events.tool_update = &window_track_place_toolupdate;
+    events.tool_down = &window_track_place_tooldown;
+    events.tool_abort = &window_track_place_toolabort;
+    events.viewport_rotate = &window_track_place_unknown14;
+    events.invalidate = &window_track_place_invalidate;
+    events.paint = &window_track_place_paint;
+});
 // clang-format on
 
 static std::vector<uint8_t> _window_track_place_mini_preview;
@@ -160,10 +142,10 @@ rct_window* window_track_place_open(const track_design_file_ref* tdFileRef)
 
     _window_track_place_mini_preview.resize(TRACK_MINI_PREVIEW_SIZE);
 
-    rct_window* w = window_create(ScreenCoordsXY(0, 29), 200, 124, &window_track_place_events, WC_TRACK_DESIGN_PLACE, 0);
+    rct_window* w = WindowCreate(ScreenCoordsXY(0, 29), 200, 124, &window_track_place_events, WC_TRACK_DESIGN_PLACE, 0);
     w->widgets = window_track_place_widgets;
     w->enabled_widgets = 1 << WIDX_CLOSE | 1 << WIDX_ROTATE | 1 << WIDX_MIRROR | 1 << WIDX_SELECT_DIFFERENT_DESIGN;
-    window_init_scroll_widgets(w);
+    WindowInitScrollWidgets(w);
     tool_set(w, WIDX_PRICE, TOOL_CROSSHAIR);
     input_set_flag(INPUT_FLAG_6, true);
     window_push_others_right(w);
@@ -242,9 +224,9 @@ static void window_track_place_update(rct_window* w)
             window_close(w);
 }
 
-static GameActionResult::Ptr FindValidTrackDesignPlaceHeight(CoordsXYZ& loc, uint32_t flags)
+static GameActions::Result::Ptr FindValidTrackDesignPlaceHeight(CoordsXYZ& loc, uint32_t flags)
 {
-    GameActionResult::Ptr res;
+    GameActions::Result::Ptr res;
     for (int32_t i = 0; i < 7; i++, loc.z += 8)
     {
         auto tdAction = TrackDesignAction(CoordsXYZD{ loc.x, loc.y, loc.z, _currentTrackPieceDirection }, *_trackDesign);
@@ -253,7 +235,7 @@ static GameActionResult::Ptr FindValidTrackDesignPlaceHeight(CoordsXYZ& loc, uin
 
         // If successful dont keep trying.
         // If failure due to no money then increasing height only makes problem worse
-        if (res->Error == GA_ERROR::OK || res->Error == GA_ERROR::INSUFFICIENT_FUNDS)
+        if (res->Error == GameActions::Status::Ok || res->Error == GameActions::Status::InsufficientFunds)
         {
             return res;
         }
@@ -275,7 +257,7 @@ static void window_track_place_toolupdate(rct_window* w, rct_widgetindex widgetI
     gMapSelectFlags &= ~MAP_SELECT_FLAG_ENABLE_ARROW;
 
     // Get the tool map position
-    CoordsXY mapCoords = sub_68A15E(screenCoords);
+    CoordsXY mapCoords = ViewportInteractionGetTileStartAtCursor(screenCoords);
     if (mapCoords.isNull())
     {
         window_track_place_clear_provisional();
@@ -300,13 +282,13 @@ static void window_track_place_toolupdate(rct_window* w, rct_widgetindex widgetI
         window_track_place_clear_provisional();
         auto res = FindValidTrackDesignPlaceHeight(trackLoc, GAME_COMMAND_FLAG_NO_SPEND | GAME_COMMAND_FLAG_GHOST);
 
-        if (res->Error == GA_ERROR::OK)
+        if (res->Error == GameActions::Status::Ok)
         {
             // Valid location found. Place the ghost at the location.
             auto tdAction = TrackDesignAction({ trackLoc, _currentTrackPieceDirection }, *_trackDesign);
             tdAction.SetFlags(GAME_COMMAND_FLAG_NO_SPEND | GAME_COMMAND_FLAG_GHOST);
             tdAction.SetCallback([trackLoc](const GameAction*, const TrackDesignActionResult* result) {
-                if (result->Error == GA_ERROR::OK)
+                if (result->Error == GameActions::Status::Ok)
                 {
                     _window_track_place_ride_index = result->rideIndex;
                     _windowTrackPlaceLastValid = trackLoc;
@@ -314,7 +296,7 @@ static void window_track_place_toolupdate(rct_window* w, rct_widgetindex widgetI
                 }
             });
             res = GameActions::Execute(&tdAction);
-            cost = res->Error == GA_ERROR::OK ? res->Cost : MONEY32_UNDEFINED;
+            cost = res->Error == GameActions::Status::Ok ? res->Cost : MONEY32_UNDEFINED;
         }
     }
 
@@ -340,7 +322,7 @@ static void window_track_place_tooldown(rct_window* w, rct_widgetindex widgetInd
     gMapSelectFlags &= ~MAP_SELECT_FLAG_ENABLE_CONSTRUCT;
     gMapSelectFlags &= ~MAP_SELECT_FLAG_ENABLE_ARROW;
 
-    const CoordsXY mapCoords = sub_68A15E(screenCoords);
+    const CoordsXY mapCoords = ViewportInteractionGetTileStartAtCursor(screenCoords);
     if (mapCoords.isNull())
         return;
 
@@ -349,17 +331,17 @@ static void window_track_place_tooldown(rct_window* w, rct_widgetindex widgetInd
     CoordsXYZ trackLoc = { mapCoords, mapZ };
 
     auto res = FindValidTrackDesignPlaceHeight(trackLoc, 0);
-    if (res->Error == GA_ERROR::OK)
+    if (res->Error == GameActions::Status::Ok)
     {
         auto tdAction = TrackDesignAction({ trackLoc, _currentTrackPieceDirection }, *_trackDesign);
         tdAction.SetCallback([trackLoc](const GameAction*, const TrackDesignActionResult* result) {
-            if (result->Error == GA_ERROR::OK)
+            if (result->Error == GameActions::Status::Ok)
             {
                 auto ride = get_ride(result->rideIndex);
                 if (ride != nullptr)
                 {
                     window_close_by_class(WC_ERROR);
-                    audio_play_sound_at_location(SoundId::PlaceItem, trackLoc);
+                    OpenRCT2::Audio::Play3D(OpenRCT2::Audio::SoundId::PlaceItem, trackLoc);
 
                     _currentRideIndex = result->rideIndex;
                     if (track_design_are_entrance_and_exit_placed())
@@ -380,7 +362,7 @@ static void window_track_place_tooldown(rct_window* w, rct_widgetindex widgetInd
             }
             else
             {
-                audio_play_sound_at_location(SoundId::Error, result->Position);
+                OpenRCT2::Audio::Play3D(OpenRCT2::Audio::SoundId::Error, result->Position);
             }
         });
         GameActions::Execute(&tdAction);
@@ -388,7 +370,7 @@ static void window_track_place_tooldown(rct_window* w, rct_widgetindex widgetInd
     }
 
     // Unable to build track
-    audio_play_sound_at_location(SoundId::Error, trackLoc);
+    OpenRCT2::Audio::Play3D(OpenRCT2::Audio::SoundId::Error, trackLoc);
 
     auto windowManager = GetContext()->GetUiContext()->GetWindowManager();
     windowManager->ShowError(res->GetErrorTitle(), res->GetErrorMessage());
@@ -453,7 +435,7 @@ void TrackPlaceRestoreProvisional()
         auto tdAction = TrackDesignAction({ _windowTrackPlaceLastValid, _currentTrackPieceDirection }, *_trackDesign);
         tdAction.SetFlags(GAME_COMMAND_FLAG_NO_SPEND | GAME_COMMAND_FLAG_GHOST);
         auto res = GameActions::Execute(&tdAction);
-        if (res->Error != GA_ERROR::OK)
+        if (res->Error != GameActions::Status::Ok)
         {
             _window_track_place_last_was_valid = false;
         }
@@ -497,7 +479,7 @@ static void window_track_place_paint(rct_window* w, rct_drawpixelinfo* dpi)
 {
     auto ft = Formatter::Common();
     ft.Add<char*>(_trackDesign->name.c_str());
-    window_draw_widgets(w, dpi);
+    WindowDrawWidgets(w, dpi);
 
     // Draw mini tile preview
     rct_drawpixelinfo clippedDpi;
@@ -562,9 +544,9 @@ static void window_track_place_draw_mini_preview_track(
     for (const auto& trackElement : td6->track_elements)
     {
         int32_t trackType = trackElement.type;
-        if (trackType == TRACK_ELEM_INVERTED_90_DEG_UP_TO_FLAT_QUARTER_LOOP_ALIAS)
+        if (trackType == TrackElemType::InvertedUp90ToFlatQuarterLoopAlias)
         {
-            trackType = TRACK_ELEM_MULTIDIM_INVERTED_90_DEG_UP_TO_FLAT_QUARTER_LOOP;
+            trackType = TrackElemType::MultiDimInvertedUp90ToFlatQuarterLoop;
         }
 
         // Follow a single track piece shape

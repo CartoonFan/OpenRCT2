@@ -54,6 +54,7 @@ static const std::unordered_map<char32_t, int32_t> codepointOffsetMap = {
     { UnicodeChar::i_with_dot_uc, SPR_G2_I_WITH_DOT_UPPER - SPR_CHAR_START },
     { UnicodeChar::i_without_dot, SPR_G2_I_WITHOUT_DOT_LOWER - SPR_CHAR_START },
     { UnicodeChar::j, SPR_G2_J - SPR_CHAR_START },
+    { UnicodeChar::l, SPR_G2_L - SPR_CHAR_START },
     { UnicodeChar::l_stroke_uc, CSChar::l_stroke_uc - CS_SPRITE_FONT_OFFSET },
     { UnicodeChar::l_stroke, CSChar::l_stroke - CS_SPRITE_FONT_OFFSET },
     { UnicodeChar::n_acute_uc, CSChar::n_acute_uc - CS_SPRITE_FONT_OFFSET },
@@ -239,10 +240,7 @@ void font_sprite_initialise_characters()
             int32_t width = 0;
             if (g1 != nullptr)
             {
-                if (glyphIndex < (FORMAT_ARGUMENT_CODE_START - 32) || glyphIndex >= (FORMAT_COLOUR_CODE_END - 32))
-                {
-                    width = (g1->width + 2 * g1->x_offset) - 1;
-                }
+                width = g1->width + (2 * g1->x_offset) - 1;
             }
 
             _spriteFontCharacterWidths[fontSize][glyphIndex] = static_cast<uint8_t>(width);

@@ -34,15 +34,15 @@ enum WINDOW_RIDE_DEMOLISH_WIDGET_IDX {
 // 0x009AEBA0
 static rct_widget window_ride_demolish_widgets[] = {
     WINDOW_SHIM_WHITE(STR_DEMOLISH_RIDE, WW, WH),
-    MakeWidget({     10, WH - 22}, {85, 14}, WWT_BUTTON, WindowColour::Primary, STR_DEMOLISH          ),
-    MakeWidget({WW - 95, WH - 22}, {85, 14}, WWT_BUTTON, WindowColour::Primary, STR_SAVE_PROMPT_CANCEL),
+    MakeWidget({     10, WH - 22}, {85, 14}, WindowWidgetType::Button, WindowColour::Primary, STR_DEMOLISH          ),
+    MakeWidget({WW - 95, WH - 22}, {85, 14}, WindowWidgetType::Button, WindowColour::Primary, STR_SAVE_PROMPT_CANCEL),
     { WIDGETS_END }
 };
 
 static rct_widget window_ride_refurbish_widgets[] = {
     WINDOW_SHIM_WHITE(STR_REFURBISH_RIDE, WW, WH),
-    MakeWidget({     10, WH - 22}, {85, 14}, WWT_BUTTON, WindowColour::Primary, STR_REFURBISH         ),
-    MakeWidget({WW - 95, WH - 22}, {85, 14}, WWT_BUTTON, WindowColour::Primary, STR_SAVE_PROMPT_CANCEL),
+    MakeWidget({     10, WH - 22}, {85, 14}, WindowWidgetType::Button, WindowColour::Primary, STR_REFURBISH         ),
+    MakeWidget({WW - 95, WH - 22}, {85, 14}, WindowWidgetType::Button, WindowColour::Primary, STR_SAVE_PROMPT_CANCEL),
     { WIDGETS_END }
 };
 
@@ -52,68 +52,17 @@ static void window_ride_refurbish_mouseup(rct_window *w, rct_widgetindex widgetI
 static void window_ride_refurbish_paint(rct_window *w, rct_drawpixelinfo *dpi);
 
 //0x0098E2E4
-static rct_window_event_list window_ride_demolish_events = {
-    nullptr,
-    window_ride_demolish_mouseup,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    window_ride_demolish_paint,
-    nullptr,
-};
+static rct_window_event_list window_ride_demolish_events([](auto& events)
+{
+    events.mouse_up = &window_ride_demolish_mouseup;
+    events.paint = &window_ride_demolish_paint;
+});
 // clang-format on
 
-static rct_window_event_list window_ride_refurbish_events = {
-    nullptr,
-    window_ride_refurbish_mouseup,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    window_ride_refurbish_paint,
-    nullptr,
-};
+static rct_window_event_list window_ride_refurbish_events([](auto& events) {
+    events.mouse_up = &window_ride_refurbish_mouseup;
+    events.paint = &window_ride_refurbish_paint;
+});
 
 /** Based off of rct2: 0x006B486A */
 rct_window* window_ride_demolish_prompt_open(Ride* ride)
@@ -125,16 +74,16 @@ rct_window* window_ride_demolish_prompt_open(Ride* ride)
     {
         auto windowPos = w->windowPos;
         window_close(w);
-        w = window_create(windowPos, WW, WH, &window_ride_demolish_events, WC_DEMOLISH_RIDE_PROMPT, WF_TRANSPARENT);
+        w = WindowCreate(windowPos, WW, WH, &window_ride_demolish_events, WC_DEMOLISH_RIDE_PROMPT, WF_TRANSPARENT);
     }
     else
     {
-        w = window_create_centred(WW, WH, &window_ride_demolish_events, WC_DEMOLISH_RIDE_PROMPT, WF_TRANSPARENT);
+        w = WindowCreateCentred(WW, WH, &window_ride_demolish_events, WC_DEMOLISH_RIDE_PROMPT, WF_TRANSPARENT);
     }
 
     w->widgets = window_ride_demolish_widgets;
     w->enabled_widgets = (1 << WIDX_CLOSE) | (1 << WIDX_CANCEL) | (1 << WIDX_DEMOLISH);
-    window_init_scroll_widgets(w);
+    WindowInitScrollWidgets(w);
     w->number = ride->id;
     _demolishRideCost = -ride_get_refund_price(ride);
 
@@ -150,16 +99,16 @@ rct_window* window_ride_refurbish_prompt_open(Ride* ride)
     {
         auto windowPos = w->windowPos;
         window_close(w);
-        w = window_create(windowPos, WW, WH, &window_ride_refurbish_events, WC_DEMOLISH_RIDE_PROMPT, WF_TRANSPARENT);
+        w = WindowCreate(windowPos, WW, WH, &window_ride_refurbish_events, WC_DEMOLISH_RIDE_PROMPT, WF_TRANSPARENT);
     }
     else
     {
-        w = window_create_centred(WW, WH, &window_ride_refurbish_events, WC_DEMOLISH_RIDE_PROMPT, WF_TRANSPARENT);
+        w = WindowCreateCentred(WW, WH, &window_ride_refurbish_events, WC_DEMOLISH_RIDE_PROMPT, WF_TRANSPARENT);
     }
 
     w->widgets = window_ride_refurbish_widgets;
     w->enabled_widgets = (1 << WIDX_CLOSE) | (1 << WIDX_CANCEL) | (1 << WIDX_REFURBISH);
-    window_init_scroll_widgets(w);
+    WindowInitScrollWidgets(w);
     w->number = ride->id;
     _demolishRideCost = -ride_get_refund_price(ride);
 
@@ -210,34 +159,34 @@ static void window_ride_refurbish_mouseup(rct_window* w, rct_widgetindex widgetI
  */
 static void window_ride_demolish_paint(rct_window* w, rct_drawpixelinfo* dpi)
 {
-    window_draw_widgets(w, dpi);
+    WindowDrawWidgets(w, dpi);
 
     auto ride = get_ride(w->number);
     if (ride != nullptr)
     {
         auto stringId = (gParkFlags & PARK_FLAGS_NO_MONEY) ? STR_DEMOLISH_RIDE_ID : STR_DEMOLISH_RIDE_ID_MONEY;
-        auto ft = Formatter::Common();
+        auto ft = Formatter();
         ride->FormatNameTo(ft);
         ft.Add<money32>(_demolishRideCost);
 
         ScreenCoordsXY stringCoords(w->windowPos.x + WW / 2, w->windowPos.y + (WH / 2) - 3);
-        gfx_draw_string_centred_wrapped(dpi, gCommonFormatArgs, stringCoords, WW - 4, stringId, COLOUR_BLACK);
+        gfx_draw_string_centred_wrapped(dpi, ft.Data(), stringCoords, WW - 4, stringId, COLOUR_BLACK);
     }
 }
 
 static void window_ride_refurbish_paint(rct_window* w, rct_drawpixelinfo* dpi)
 {
-    window_draw_widgets(w, dpi);
+    WindowDrawWidgets(w, dpi);
 
     auto ride = get_ride(w->number);
     if (ride != nullptr)
     {
         auto stringId = (gParkFlags & PARK_FLAGS_NO_MONEY) ? STR_REFURBISH_RIDE_ID_NO_MONEY : STR_REFURBISH_RIDE_ID_MONEY;
-        auto ft = Formatter::Common();
+        auto ft = Formatter();
         ride->FormatNameTo(ft);
         ft.Add<money32>(_demolishRideCost / 2);
 
         ScreenCoordsXY stringCoords(w->windowPos.x + WW / 2, w->windowPos.y + (WH / 2) - 3);
-        gfx_draw_string_centred_wrapped(dpi, gCommonFormatArgs, stringCoords, WW - 4, stringId, COLOUR_BLACK);
+        gfx_draw_string_centred_wrapped(dpi, ft.Data(), stringCoords, WW - 4, stringId, COLOUR_BLACK);
     }
 }

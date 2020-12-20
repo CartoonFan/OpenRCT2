@@ -915,7 +915,7 @@ static void vehicle_sprite_paint(
         image_id &= 0x7FFFF;
         image_id |= CONSTRUCTION_MARKER;
     }
-    paint_struct* ps = sub_98197C(
+    paint_struct* ps = PaintAddImageAsParent(
         session, image_id, 0, 0, bb.length_x, bb.length_y, bb.length_z, z, bb.offset_x, bb.offset_y, bb.offset_z + z);
     if (ps != nullptr)
     {
@@ -943,7 +943,7 @@ static void vehicle_sprite_paint(
                     image_id |= CONSTRUCTION_MARKER;
                 }
 
-                sub_98199C(
+                PaintAddImageAsChild(
                     session, image_id, 0, 0, bb.length_x, bb.length_y, bb.length_z, z, bb.offset_x, bb.offset_y,
                     bb.offset_z + z);
                 baseImage_id += vehicleEntry->no_vehicle_images;
@@ -2339,8 +2339,8 @@ static void vehicle_sprite_17(
 {
     if (vehicle->HasUpdateFlag(VEHICLE_UPDATE_FLAG_USE_INVERTED_SPRITES))
     {
-        if ((vehicle->GetTrackType()) != TRACK_ELEM_90_DEG_DOWN_TO_60_DEG_DOWN
-            && (vehicle->GetTrackType()) != TRACK_ELEM_60_DEG_DOWN_TO_90_DEG_DOWN)
+        if ((vehicle->GetTrackType()) != TrackElemType::Down90ToDown60
+            && (vehicle->GetTrackType()) != TrackElemType::Down60ToDown90)
         {
             vehicleEntry--;
         }
@@ -2364,9 +2364,8 @@ static void vehicle_sprite_18(
 {
     if (vehicle->HasUpdateFlag(VEHICLE_UPDATE_FLAG_USE_INVERTED_SPRITES))
     {
-        if ((vehicle->GetTrackType()) != TRACK_ELEM_90_DEG_DOWN
-            && (vehicle->GetTrackType()) != TRACK_ELEM_90_DEG_DOWN_TO_60_DEG_DOWN
-            && (vehicle->GetTrackType()) != TRACK_ELEM_60_DEG_DOWN_TO_90_DEG_DOWN)
+        if ((vehicle->GetTrackType()) != TrackElemType::Down90 && (vehicle->GetTrackType()) != TrackElemType::Down90ToDown60
+            && (vehicle->GetTrackType()) != TrackElemType::Down60ToDown90)
         {
             vehicleEntry--;
         }
@@ -2964,7 +2963,7 @@ static constexpr const vehicle_sprite_func vehicle_sprite_funcs[] = {
  */
 static void vehicle_visual_splash1_effect(paint_session* session, int32_t z, const Vehicle* vehicle)
 {
-    if ((vehicle->GetTrackType()) != TRACK_ELEM_WATER_SPLASH)
+    if ((vehicle->GetTrackType()) != TrackElemType::Watersplash)
     {
         return;
     }
@@ -2982,7 +2981,7 @@ static void vehicle_visual_splash1_effect(paint_session* session, int32_t z, con
     }
     int32_t image_id = 29014 + ((((vehicle->sprite_direction / 8) + session->CurrentRotation) & 3) * 8)
         + ((gCurrentTicks / 2) & 7);
-    sub_98199C(session, image_id, 0, 0, 0, 0, 0, z, 0, 0, z);
+    PaintAddImageAsChild(session, image_id, 0, 0, 0, 0, 0, z, 0, 0, z);
 }
 
 /**
@@ -3005,7 +3004,7 @@ static void vehicle_visual_splash2_effect(paint_session* session, int32_t z, con
     }
     int32_t image_id = 29046 + ((((vehicle->sprite_direction / 8) + session->CurrentRotation) & 3) * 8)
         + ((gCurrentTicks / 2) & 7);
-    sub_98199C(session, image_id, 0, 0, 0, 0, 0, z, 0, 0, z);
+    PaintAddImageAsChild(session, image_id, 0, 0, 0, 0, 0, z, 0, 0, z);
 }
 
 /**
@@ -3028,7 +3027,7 @@ static void vehicle_visual_splash3_effect(paint_session* session, int32_t z, con
     }
     int32_t image_id = 29014 + ((((vehicle->sprite_direction / 8) + session->CurrentRotation) & 3) * 8)
         + ((gCurrentTicks / 2) & 7);
-    sub_98199C(session, image_id, 0, 0, 0, 0, 0, z, 0, 0, z);
+    PaintAddImageAsChild(session, image_id, 0, 0, 0, 0, 0, z, 0, 0, z);
 }
 
 /**
@@ -3056,7 +3055,7 @@ static void vehicle_visual_splash4_effect(paint_session* session, int32_t z, con
     }
     int32_t image_id = 29078 + ((((vehicle->sprite_direction / 8) + session->CurrentRotation) & 3) * 8)
         + ((gCurrentTicks / 2) & 7);
-    sub_98199C(session, image_id, 0, 0, 1, 1, 0, z, 0, 0, z);
+    PaintAddImageAsChild(session, image_id, 0, 0, 1, 1, 0, z, 0, 0, z);
 }
 
 /**
@@ -3088,7 +3087,7 @@ static void vehicle_visual_splash5_effect(paint_session* session, int32_t z, con
     }
     int32_t image_id = 29078 + ((((vehicle->sprite_direction / 8) + session->CurrentRotation) & 3) * 8)
         + ((gCurrentTicks / 2) & 7);
-    sub_98199C(session, image_id, 0, 0, 1, 1, 0, z, 0, 0, z);
+    PaintAddImageAsChild(session, image_id, 0, 0, 1, 1, 0, z, 0, 0, z);
 }
 
 void vehicle_visual_splash_effect(
@@ -3144,7 +3143,7 @@ void vehicle_paint(paint_session* session, const Vehicle* vehicle, int32_t image
     if (vehicle->flags & SPRITE_FLAGS_IS_CRASHED_VEHICLE_SPRITE)
     {
         uint32_t ebx = 22965 + vehicle->animation_frame;
-        sub_98197C(session, ebx, 0, 0, 1, 1, 0, z, 0, 0, z + 2);
+        PaintAddImageAsParent(session, ebx, 0, 0, 1, 1, 0, z, 0, 0, z + 2);
         return;
     }
 

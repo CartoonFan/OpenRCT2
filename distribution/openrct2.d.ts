@@ -35,6 +35,8 @@ declare global {
     var network: Network;
     /** APIs for the park and management of it. */
     var park: Park;
+    /** APIs for the current scenario. */
+    var scenario: Scenario;
     /**
      * APIs for controlling the user interface.
      * These will only be available to servers and clients that are not running headless mode.
@@ -182,6 +184,13 @@ declare global {
         getRandom(min: number, max: number): number;
 
         /**
+         * Formats a new string using the given format string and the arguments.
+         * @param fmt The format string, e.g. "Guests: {COMMA16}"
+         * @param args The arguments to insert into the string.
+         */
+        formatString(fmt: string, ...args: any[]): string;
+
+        /**
          * Registers a new game action that allows clients to interact with the game.
          * @param action The unique name of the action.
          * @param query Logic for validating and returning a price for an action.
@@ -200,6 +209,7 @@ declare global {
          * @param args The action parameters.
          * @param callback The function to be called with the result of the action.
          */
+        queryAction(action: ActionType, args: object, callback: (result: GameActionResult) => void): void;
         queryAction(action: string, args: object, callback: (result: GameActionResult) => void): void;
 
         /**
@@ -209,6 +219,7 @@ declare global {
          * @param args The action parameters.
          * @param callback The function to be called with the result of the action.
          */
+        executeAction(action: ActionType, args: object, callback: (result: GameActionResult) => void): void;
         executeAction(action: string, args: object, callback: (result: GameActionResult) => void): void;
 
         /**
@@ -309,9 +320,89 @@ declare global {
         "research" |
         "interest";
 
+    type ActionType =
+        "balloonpress" |
+        "bannerplace" |
+        "bannerremove" |
+        "bannersetcolour" |
+        "bannersetname" |
+        "bannersetstyle" |
+        "clearscenery" |
+        "climateset" |
+        "footpathplace" |
+        "footpathplacefromtrack" |
+        "footpathremove" |
+        "footpathadditionplace" |
+        "footpathadditionremove" |
+        "guestsetflags" |
+        "guestsetname" |
+        "landbuyrights" |
+        "landlower" |
+        "landraise" |
+        "landsetheight" |
+        "landsetrights" |
+        "landsmoothaction" |
+        "largesceneryplace" |
+        "largesceneryremove" |
+        "largescenerysetcolour" |
+        "loadorquit" |
+        "mazeplacetrack" |
+        "mazesettrack" |
+        "networkmodifygroup" |
+        "parkentranceremove" |
+        "parkmarketing" |
+        "parksetdate" |
+        "parksetloan" |
+        "parksetname" |
+        "parksetparameter" |
+        "parksetresearchfunding" |
+        "pausetoggle" |
+        "peeppickup" |
+        "placeparkentrance" |
+        "placepeepspawn" |
+        "playerkick" |
+        "playersetgroup" |
+        "ridecreate" |
+        "ridedemolish" |
+        "rideentranceexitplace" |
+        "rideentranceexitremove" |
+        "ridesetappearance" |
+        "ridesetcolourscheme" |
+        "ridesetname" |
+        "ridesetprice" |
+        "ridesetsetting" |
+        "ridesetstatus" |
+        "ridesetvehicles" |
+        "scenariosetsetting" |
+        "setcheataction" |
+        "setparkentrancefee" |
+        "signsetname" |
+        "smallsceneryplace" |
+        "smallsceneryremove" |
+        "stafffire" |
+        "staffhire" |
+        "staffsetcolour" |
+        "staffsetcostume" |
+        "staffsetname" |
+        "staffsetorders" |
+        "staffsetpatrolarea" |
+        "surfacesetstyle" |
+        "tilemodify" |
+        "trackdesign" |
+        "trackplace" |
+        "trackremove" |
+        "tracksetbrakespeed" |
+        "wallplace" |
+        "wallremove" |
+        "wallsetcolour" |
+        "waterlower" |
+        "waterraise" |
+        "watersetheight";
+
     interface GameActionEventArgs {
         readonly player: number;
-        readonly type: string;
+        readonly type: number;
+        readonly action: string;
         readonly isClientOnly: boolean;
         readonly args: object;
         result: GameActionResult;
@@ -422,6 +513,7 @@ declare global {
         type: TileElementType;
         baseHeight: number;
         clearanceHeight: number;
+        occupiedQuadrants: number;
         isHidden: boolean; /** Take caution when changing this field, it may invalidate TileElements you have stored in your script. */
     }
 
@@ -470,6 +562,7 @@ declare global {
         primaryColour: number;
         secondaryColour: number;
         direction: Direction;
+        quadrant: number;
     }
 
     interface EntranceElement extends BaseTileElement {
@@ -1342,6 +1435,21 @@ declare global {
         subject?: number;
     }
 
+    type ParkFlags =
+        "difficultGuestGeneration" |
+        "difficultParkRating" |
+        "forbidHighConstruction" |
+        "forbidLandscapeChanges" |
+        "forbidMarketingCampaigns" |
+        "forbidTreeRemoval" |
+        "freeParkEntry" |
+        "noMoney" |
+        "open" |
+        "preferLessIntenseRides" |
+        "preferMoreIntenseRides" |
+        "scenarioCompleteNameInput" |
+        "unlockAllPrices";
+
     interface Park {
         cash: number;
         rating: number;
@@ -1353,11 +1461,170 @@ declare global {
          */
         entranceFee: number;
 
+        /**
+         * The number of guests within the park, not including any outside the park but still
+         * on the map.
+         */
+        readonly guests: number;
+
+        /**
+         * The park value, will be updated every 512 ticks.
+         */
+        value: number;
+
+        /**
+         * The company value, will be updated every 512 ticks.
+         * Calculation is: `park.value + park.cash - park.bankLoan`
+         */
+        companyValue: number;
+
+        /**
+         * The total number of guests that have entered the park.
+         */
+        totalAdmissions: number;
+
+        /**
+         * The total amount of income gained from admissions into the park.
+         */
+        totalIncomeFromAdmissions: number;
+
+        /**
+         * The purchase price of one tile for park ownership.
+         */
+        landPrice: number;
+
+        /**
+         * The purchase price of one tile for construction rights.
+         */
+        constructionRightsPrice: number;
+
+        /**
+         * The number of tiles on the map with park ownership or construction rights.
+         * Updated every 4096 ticks.
+         */
+        readonly parkSize: number;
+
         name: string;
         messages: ParkMessage[];
 
+        /**
+         * Gets whether a given flag is set or not.
+         * @param key The flag to test.
+         */
+        getFlag(flag: ParkFlags): boolean;
+
+        /**
+         * Sets the given flag to the given value.
+         * @param key The flag to set.
+         * @param value Whether to set or clear the flag.
+         */
+        setFlag(flag: ParkFlags, value: boolean): void;
+
         postMessage(message: string): void;
         postMessage(message: ParkMessageDesc): void;
+    }
+
+    type ScenarioObjectiveType =
+        "none" |
+        "guestsBy" |
+        "parkValueBy" |
+        "haveFun" |
+        "buildTheBest" |
+        "10Rollercoasters" |
+        "guestsAndRating" |
+        "monthlyRideIncome" |
+        "10RollercoastersLength" |
+        "finish5Rollercoasters" |
+        "repayLoanAndParkValue" |
+        "monthlyFoodIncome";
+
+    interface ScenarioObjective {
+        /**
+         * The objective type.
+         */
+        type: ScenarioObjective;
+
+        /**
+         * The required number of guests.
+         */
+        guests: number;
+
+        /**
+         * The year the objective must be completed by the end of.
+         */
+        year: number;
+
+        /**
+         * The minimum length required for each rollercoaster.
+         */
+        length: number;
+
+        /**
+         * The minimum excitement rating required for each rollercoaster.
+         */
+        excitement: number;
+
+        /**
+         * The minimum park value required.
+         */
+        parkValue: number;
+
+        /**
+         * The minimum monthly income from rides / food.
+         */
+        monthlyIncome: number;
+    }
+
+    type ScenarioStatus = "inProgress" | "completed" | "failed";
+
+    interface Scenario {
+        /**
+         * The name of the scenario. This is not necessarily the name of the park.
+         */
+        name: string;
+
+        /**
+         * The description of the scenario, shown above the scenario objective.
+         */
+        details: string;
+
+        /**
+         * The entered player name if the scenario is complete.
+         */
+        completedBy: string;
+
+        /**
+         * The filename of the scenario that is being played. Used to match the
+         * completion score with the scenario file.
+         */
+        filename: string;
+
+        /**
+         * The criteria required to complete the scenario.
+         */
+        objective: ScenarioObjective;
+
+        /**
+         * The number of consecutive days the park rating has been under the threshold for.
+         * This is reset when the park rating rises above the threshold again.
+         * Also used to post warning messages.
+         */
+        parkRatingWarningDays: number;
+
+        /**
+         * The company value when the scenario was completed.
+         */
+        completedCompanyValue?: number;
+
+        /**
+         * The current status of the scenario.
+         */
+        status: ScenarioStatus;
+
+        /**
+         * The current highest recorded company value.
+         */
+        companyValueRecord: number;
     }
 
     interface Cheats {
@@ -1524,7 +1791,7 @@ declare global {
      * Represents the type of a widget, e.g. button or label.
      */
     type WidgetType =
-        "button" | "checkbox" | "dropdown" | "groupbox" | "label" | "listview" | "spinner" | "viewport";
+        "button" | "checkbox" | "colourpicker" | "dropdown" | "groupbox" | "label" | "listview" | "spinner" | "viewport";
 
     interface Widget {
         type: WidgetType;
@@ -1555,6 +1822,11 @@ declare global {
         onChange: (isChecked: boolean) => void;
     }
 
+    interface ColourPickerWidget extends Widget {
+        colour: number;
+        onChange: (colour: number) => void;
+    }
+
     interface DropdownWidget extends Widget {
         items: string[];
         selectedIndex: number;
@@ -1581,7 +1853,12 @@ declare global {
         maxWidth?: number;
     }
 
-    type ListViewItem = string[];
+    interface ListViewItemSeperator {
+        type: 'seperator';
+        text?: string;
+    }
+
+    type ListViewItem = ListViewItemSeperator | string[];
 
     interface RowColumn {
         row: number;
@@ -1649,10 +1926,11 @@ declare global {
         widgets?: Widget[];
         colours?: number[];
         tabs?: WindowTabDesc[];
+        tabIndex?: number;
 
         onClose?: () => void;
         onUpdate?: () => void;
-        tabChange?: () => void;
+        onTabChange?: () => void;
     }
 
     interface ImageAnimation {

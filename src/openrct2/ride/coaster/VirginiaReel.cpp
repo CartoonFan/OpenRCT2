@@ -180,7 +180,7 @@ void vehicle_visual_virginia_reel(
     {
         image_id = (image_id & 0x7FFFF) | CONSTRUCTION_MARKER;
     }
-    sub_98197C(
+    PaintAddImageAsParent(
         session, image_id, 0, 0, bb->length_x, bb->length_y, bb->length_z, z, bb->offset_x, bb->offset_y, bb->offset_z + z);
 
     if (session->DPI.zoom_level < 2 && vehicle->num_peeps > 0 && !vehicle->IsGhost())
@@ -196,7 +196,7 @@ void vehicle_visual_virginia_reel(
             if (riding_peep_sprites[i] != 0xFF)
             {
                 image_id = (baseImage_id + ((i + 1) * 72)) | SPRITE_ID_PALETTE_COLOUR_1(riding_peep_sprites[i]);
-                sub_98199C(
+                PaintAddImageAsChild(
                     session, image_id, 0, 0, bb->length_x, bb->length_y, bb->length_z, z, bb->offset_x, bb->offset_y,
                     bb->offset_z + z);
             }
@@ -220,12 +220,12 @@ static void paint_virginia_reel_track_flat(
     uint32_t imageId = sprites[direction] | session->TrackColours[SCHEME_TRACK];
     if (direction & 1)
     {
-        sub_98197C(session, imageId, 0, 0, 27, 32, 2, height, 2, 0, height);
+        PaintAddImageAsParent(session, imageId, 0, 0, 27, 32, 2, height, 2, 0, height);
         paint_util_push_tunnel_right(session, height, TUNNEL_SQUARE_FLAT);
     }
     else
     {
-        sub_98197C(session, imageId, 0, 0, 32, 27, 2, height, 0, 2, height);
+        PaintAddImageAsParent(session, imageId, 0, 0, 32, 27, 2, height, 0, 2, height);
         paint_util_push_tunnel_left(session, height, TUNNEL_SQUARE_FLAT);
     }
 
@@ -251,11 +251,11 @@ static void paint_virginia_reel_track_25_deg_up(
 
     if (direction & 1)
     {
-        ps = sub_98197C(session, imageId, 0, 0, 27, 32, 2, height, 2, 0, height);
+        ps = PaintAddImageAsParent(session, imageId, 0, 0, 27, 32, 2, height, 2, 0, height);
     }
     else
     {
-        ps = sub_98197C(session, imageId, 0, 0, 32, 27, 2, height, 0, 2, height);
+        ps = PaintAddImageAsParent(session, imageId, 0, 0, 32, 27, 2, height, 0, 2, height);
     }
 
     if (direction == 1 || direction == 2)
@@ -303,27 +303,27 @@ static void paint_virginia_reel_track_flat_to_25_deg_up(
     switch (direction)
     {
         case 0:
-            sub_98197C(session, imageId, 0, 0, 32, 27, 2, height, 0, 2, height);
+            PaintAddImageAsParent(session, imageId, 0, 0, 32, 27, 2, height, 0, 2, height);
 
             wooden_a_supports_paint_setup(session, 0, 1, height, session->TrackColours[SCHEME_SUPPORTS], nullptr);
             paint_util_push_tunnel_left(session, height, TUNNEL_SQUARE_FLAT);
             break;
         case 1:
-            ps = sub_98197C(session, imageId, 0, 0, 27, 32, 2, height, 2, 0, height);
+            ps = PaintAddImageAsParent(session, imageId, 0, 0, 27, 32, 2, height, 2, 0, height);
             session->WoodenSupportsPrependTo = ps;
 
             wooden_a_supports_paint_setup(session, 1, 2, height, session->TrackColours[SCHEME_SUPPORTS], nullptr);
             paint_util_push_tunnel_right(session, height, TUNNEL_SQUARE_8);
             break;
         case 2:
-            ps = sub_98197C(session, imageId, 0, 0, 32, 27, 2, height, 0, 2, height);
+            ps = PaintAddImageAsParent(session, imageId, 0, 0, 32, 27, 2, height, 0, 2, height);
             session->WoodenSupportsPrependTo = ps;
 
             wooden_a_supports_paint_setup(session, 0, 3, height, session->TrackColours[SCHEME_SUPPORTS], nullptr);
             paint_util_push_tunnel_left(session, height, TUNNEL_SQUARE_8);
             break;
         case 3:
-            sub_98197C(session, imageId, 0, 0, 27, 32, 2, height, 2, 0, height);
+            PaintAddImageAsParent(session, imageId, 0, 0, 27, 32, 2, height, 2, 0, height);
 
             wooden_a_supports_paint_setup(session, 1, 4, height, session->TrackColours[SCHEME_SUPPORTS], nullptr);
             paint_util_push_tunnel_right(session, height, TUNNEL_SQUARE_FLAT);
@@ -350,11 +350,11 @@ static void paint_virginia_reel_track_25_deg_up_to_flat(
 
     if (direction & 1)
     {
-        ps = sub_98197C(session, imageId, 0, 0, 27, 32, 2, height, 2, 0, height);
+        ps = PaintAddImageAsParent(session, imageId, 0, 0, 27, 32, 2, height, 2, 0, height);
     }
     else
     {
-        ps = sub_98197C(session, imageId, 0, 0, 32, 27, 2, height, 0, 2, height);
+        ps = PaintAddImageAsParent(session, imageId, 0, 0, 32, 27, 2, height, 0, 2, height);
     }
 
     if (direction == 1 || direction == 2)
@@ -420,20 +420,20 @@ static void paint_virginia_reel_station(
     if (direction == 0 || direction == 2)
     {
         imageId = SPR_STATION_BASE_B_SW_NE | session->TrackColours[SCHEME_MISC];
-        sub_98197C(session, imageId, 0, 0, 32, 28, 2, height - 2, 0, 2, height);
+        PaintAddImageAsParent(session, imageId, 0, 0, 32, 28, 2, height - 2, 0, 2, height);
 
         imageId = SPR_VIRGINIA_REEL_FLAT_SW_NE | session->TrackColours[SCHEME_TRACK];
-        sub_98199C(session, imageId, 0, 0, 32, 20, 2, height, 0, 0, height);
+        PaintAddImageAsChild(session, imageId, 0, 0, 32, 20, 2, height, 0, 0, height);
 
         paint_util_push_tunnel_left(session, height, TUNNEL_SQUARE_FLAT);
     }
     else if (direction == 1 || direction == 3)
     {
         imageId = SPR_STATION_BASE_B_NW_SE | session->TrackColours[SCHEME_MISC];
-        sub_98197C(session, imageId, 0, 0, 28, 32, 2, height - 2, 2, 0, height);
+        PaintAddImageAsParent(session, imageId, 0, 0, 28, 32, 2, height - 2, 2, 0, height);
 
         imageId = SPR_VIRGINIA_REEL_FLAT_NW_SE | session->TrackColours[SCHEME_TRACK];
-        sub_98199C(session, imageId, 0, 0, 20, 32, 2, height, 0, 0, height);
+        PaintAddImageAsChild(session, imageId, 0, 0, 20, 32, 2, height, 0, 0, height);
 
         paint_util_push_tunnel_right(session, height, TUNNEL_SQUARE_FLAT);
     }
@@ -532,40 +532,40 @@ static void paint_virginia_reel_track_right_quarter_turn_1_tile(
 /**
  * rct2: 0x00811184
  */
-TRACK_PAINT_FUNCTION get_track_paint_function_virginia_reel(int32_t trackType, int32_t direction)
+TRACK_PAINT_FUNCTION get_track_paint_function_virginia_reel(int32_t trackType)
 {
     switch (trackType)
     {
-        case TRACK_ELEM_FLAT:
+        case TrackElemType::Flat:
             return paint_virginia_reel_track_flat;
 
-        case TRACK_ELEM_END_STATION:
-        case TRACK_ELEM_BEGIN_STATION:
-        case TRACK_ELEM_MIDDLE_STATION:
+        case TrackElemType::EndStation:
+        case TrackElemType::BeginStation:
+        case TrackElemType::MiddleStation:
             return paint_virginia_reel_station;
 
-        case TRACK_ELEM_25_DEG_UP:
+        case TrackElemType::Up25:
             return paint_virginia_reel_track_25_deg_up;
-        case TRACK_ELEM_FLAT_TO_25_DEG_UP:
+        case TrackElemType::FlatToUp25:
             return paint_virginia_reel_track_flat_to_25_deg_up;
-        case TRACK_ELEM_25_DEG_UP_TO_FLAT:
+        case TrackElemType::Up25ToFlat:
             return paint_virginia_reel_track_25_deg_up_to_flat;
 
-        case TRACK_ELEM_25_DEG_DOWN:
+        case TrackElemType::Down25:
             return paint_virginia_reel_track_25_deg_down;
-        case TRACK_ELEM_FLAT_TO_25_DEG_DOWN:
+        case TrackElemType::FlatToDown25:
             return paint_virginia_reel_track_flat_to_25_deg_down;
-        case TRACK_ELEM_25_DEG_DOWN_TO_FLAT:
+        case TrackElemType::Down25ToFlat:
             return paint_virginia_reel_track_25_deg_down_to_flat;
 
-        case TRACK_ELEM_LEFT_QUARTER_TURN_3_TILES:
+        case TrackElemType::LeftQuarterTurn3Tiles:
             return paint_virginia_reel_track_left_quarter_turn_3_tiles;
-        case TRACK_ELEM_RIGHT_QUARTER_TURN_3_TILES:
+        case TrackElemType::RightQuarterTurn3Tiles:
             return paint_virginia_reel_track_right_quarter_turn_3_tiles;
 
-        case TRACK_ELEM_LEFT_QUARTER_TURN_1_TILE:
+        case TrackElemType::LeftQuarterTurn1Tile:
             return paint_virginia_reel_track_left_quarter_turn_1_tile;
-        case TRACK_ELEM_RIGHT_QUARTER_TURN_1_TILE:
+        case TrackElemType::RightQuarterTurn1Tile:
             return paint_virginia_reel_track_right_quarter_turn_1_tile;
     }
 

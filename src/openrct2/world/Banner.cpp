@@ -33,43 +33,21 @@
 
 static Banner _banners[MAX_BANNERS];
 
-namespace
-{
-    template<uint32_t TFrom, uint32_t TTo> struct CodePointToUtf8
-    {
-        constexpr CodePointToUtf8()
-        {
-            for (uint32_t i = TFrom; i <= TTo; ++i)
-            {
-                utf8_write_codepoint(m_colors[i - TFrom], i);
-            }
-        }
-
-        constexpr auto operator()(uint8_t colourId) const
-        {
-            return m_colors[colourId];
-        }
-
-        using Utf8Colour = utf8[5]; // A 32bit codepoint uses at most 4 bytes in utf8
-        Utf8Colour m_colors[TTo - TFrom + 1]{};
-    };
-} // namespace
-
-static constexpr CodePointToUtf8<FORMAT_COLOUR_CODE_START, FORMAT_COLOUR_CODE_END> colourToUtf8;
-
 std::string Banner::GetText() const
 {
-    uint8_t args[32]{};
-    Formatter ft(args);
+    Formatter ft;
     FormatTextTo(ft);
-    return format_string(STR_STRINGID, args);
+    return format_string(STR_STRINGID, ft.Data());
 }
 
 void Banner::FormatTextTo(Formatter& ft, bool addColour) const
 {
     if (addColour)
     {
-        ft.Add<rct_string_id>(STR_STRING_STRINGID).Add<const char*>(colourToUtf8(text_colour));
+        auto formatToken = FormatTokenFromTextColour(text_colour);
+        auto tokenText = FormatTokenToString(formatToken, true);
+        ft.Add<rct_string_id>(STR_STRING_STRINGID);
+        ft.Add<const char*>(tokenText.data());
     }
 
     FormatTextTo(ft);
@@ -79,7 +57,7 @@ void Banner::FormatTextTo(Formatter& ft) const
 {
     if (flags & BANNER_FLAG_NO_ENTRY)
     {
-        ft.Add<rct_string_id>(STR_NO_ENTRY).NumBytes();
+        ft.Add<rct_string_id>(STR_NO_ENTRY);
     }
     else if (flags & BANNER_FLAG_LINKED_TO_RIDE)
     {
@@ -90,16 +68,16 @@ void Banner::FormatTextTo(Formatter& ft) const
         }
         else
         {
-            ft.Add<rct_string_id>(STR_DEFAULT_SIGN).NumBytes();
+            ft.Add<rct_string_id>(STR_DEFAULT_SIGN);
         }
     }
     else if (text.empty())
     {
-        ft.Add<rct_string_id>(STR_DEFAULT_SIGN).NumBytes();
+        ft.Add<rct_string_id>(STR_DEFAULT_SIGN);
     }
     else
     {
-        ft.Add<rct_string_id>(STR_STRING).Add<const char*>(text.c_str()).NumBytes();
+        ft.Add<rct_string_id>(STR_STRING).Add<const char*>(text.c_str());
     }
 }
 
@@ -380,18 +358,18 @@ void BannerElement::SetPosition(uint8_t newPosition)
 
 uint8_t BannerElement::GetAllowedEdges() const
 {
-    return flags & 0b00001111;
+    return AllowedEdges & 0b00001111;
 }
 
 void BannerElement::SetAllowedEdges(uint8_t newEdges)
 {
-    flags &= ~0b00001111;
-    flags |= (newEdges & 0b00001111);
+    AllowedEdges &= ~0b00001111;
+    AllowedEdges |= (newEdges & 0b00001111);
 }
 
 void BannerElement::ResetAllowedEdges()
 {
-    flags |= 0b00001111;
+    AllowedEdges |= 0b00001111;
 }
 
 Banner* GetBanner(BannerIndex id)

@@ -19,15 +19,15 @@
 struct rct_drawpixelinfo;
 struct TextInputSession;
 
-enum CONSOLE_INPUT
+enum class ConsoleInput : uint8_t
 {
-    CONSOLE_INPUT_NONE,
-    CONSOLE_INPUT_LINE_CLEAR,
-    CONSOLE_INPUT_LINE_EXECUTE,
-    CONSOLE_INPUT_HISTORY_PREVIOUS,
-    CONSOLE_INPUT_HISTORY_NEXT,
-    CONSOLE_INPUT_SCROLL_PREVIOUS,
-    CONSOLE_INPUT_SCROLL_NEXT,
+    None,
+    LineClear,
+    LineExecute,
+    HistoryPrevious,
+    HistoryNext,
+    ScrollPrevious,
+    ScrollNext,
 };
 
 class InteractiveConsole
@@ -46,7 +46,7 @@ public:
     virtual void Clear() abstract;
     virtual void Close() abstract;
     virtual void Hide() abstract;
-    virtual void WriteLine(const std::string& s, uint32_t colourFormat) abstract;
+    virtual void WriteLine(const std::string& s, FormatToken colourFormat) abstract;
 };
 
 class StdInOutConsole final : public InteractiveConsole
@@ -68,5 +68,5 @@ public:
     {
         InteractiveConsole::WriteLine(s);
     }
-    void WriteLine(const std::string& s, uint32_t colourFormat) override;
+    void WriteLine(const std::string& s, FormatToken colourFormat) override;
 };

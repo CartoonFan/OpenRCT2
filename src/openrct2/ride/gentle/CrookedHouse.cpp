@@ -57,7 +57,7 @@ static void paint_crooked_house_structure(
     uint32_t image_id = (direction + rideEntry->vehicles[0].base_image_id) | session->TrackColours[SCHEME_MISC];
 
     rct_crooked_house_bound_box boundBox = crooked_house_data[segment];
-    sub_98197C(
+    PaintAddImageAsParent(
         session, image_id, x_offset, y_offset, boundBox.length_x, boundBox.length_y, 127, height + 3, boundBox.offset_x,
         boundBox.offset_y, height + 3);
 }
@@ -123,7 +123,7 @@ static void paint_crooked_house(
     paint_util_set_general_support_height(session, height + 128, 0x20);
 }
 
-TRACK_PAINT_FUNCTION get_track_paint_function_crooked_house(int32_t trackType, int32_t direction)
+TRACK_PAINT_FUNCTION get_track_paint_function_crooked_house(int32_t trackType)
 {
     if (trackType != FLAT_TRACK_ELEM_3_X_3)
     {

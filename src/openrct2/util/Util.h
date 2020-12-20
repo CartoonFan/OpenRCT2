@@ -15,6 +15,7 @@
 #include <cstdio>
 #include <ctime>
 #include <optional>
+#include <type_traits>
 #include <vector>
 
 int32_t squaredmetres_to_squaredfeet(int32_t squaredMetres);
@@ -37,6 +38,7 @@ bool sse41_available();
 bool avx2_available();
 
 int32_t bitscanforward(int32_t source);
+int32_t bitscanforward(int64_t source);
 void bitcount_init();
 int32_t bitcount(uint32_t source);
 int32_t strcicmp(char const* a, char const* b);
@@ -68,5 +70,21 @@ float flerp(float a, float b, float t);
 uint8_t soft_light(uint8_t a, uint8_t b);
 
 size_t strcatftime(char* buffer, size_t bufferSize, const char* format, const struct tm* tp);
+
+template<typename T>[[nodiscard]] constexpr uint64_t EnumToFlag(T v)
+{
+    static_assert(std::is_enum_v<T>);
+    return 1ULL << static_cast<std::underlying_type_t<T>>(v);
+}
+
+template<typename... T>[[nodiscard]] constexpr uint64_t EnumsToFlags(T... types)
+{
+    return (EnumToFlag(types) | ...);
+}
+
+template<typename TEnum> constexpr auto EnumValue(TEnum enumerator) noexcept
+{
+    return static_cast<std::underlying_type_t<TEnum>>(enumerator);
+}
 
 #endif

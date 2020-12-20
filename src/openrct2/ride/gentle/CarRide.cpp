@@ -152,11 +152,11 @@ static void paint_car_ride_track_flat(
 
     if (direction == 0 || direction == 2)
     {
-        sub_98196C(session, imageId, 0, 6, 32, 20, 1, height);
+        PaintAddImageAsParent(session, imageId, 0, 6, 32, 20, 1, height);
     }
     else
     {
-        sub_98196C(session, imageId, 6, 0, 20, 32, 1, height);
+        PaintAddImageAsParent(session, imageId, 6, 0, 20, 32, 1, height);
     }
 
     if (direction == 0 || direction == 2)
@@ -183,11 +183,11 @@ static void paint_car_ride_track_25_deg_up(
 
     if (direction == 0 || direction == 2)
     {
-        sub_98197C(session, imageId, 0, 2, 32, 20, 1, height, 0, 6, height);
+        PaintAddImageAsParent(session, imageId, 0, 2, 32, 20, 1, height, 0, 6, height);
     }
     else
     {
-        sub_98197C(session, imageId, 2, 0, 20, 32, 1, height, 6, 0, height);
+        PaintAddImageAsParent(session, imageId, 2, 0, 20, 32, 1, height, 6, 0, height);
     }
 
     switch (direction)
@@ -221,11 +221,11 @@ static void paint_car_ride_track_flat_to_25_deg_up(
 
     if (direction == 0 || direction == 2)
     {
-        sub_98197C(session, imageId, 0, 2, 32, 20, 1, height, 0, 6, height);
+        PaintAddImageAsParent(session, imageId, 0, 2, 32, 20, 1, height, 0, 6, height);
     }
     else
     {
-        sub_98197C(session, imageId, 2, 0, 20, 32, 1, height, 6, 0, height);
+        PaintAddImageAsParent(session, imageId, 2, 0, 20, 32, 1, height, 6, 0, height);
     }
 
     switch (direction)
@@ -259,11 +259,11 @@ static void paint_car_ride_track_25_deg_up_to_flat(
 
     if (direction == 0 || direction == 2)
     {
-        sub_98197C(session, imageId, 0, 2, 32, 20, 1, height, 0, 6, height);
+        PaintAddImageAsParent(session, imageId, 0, 2, 32, 20, 1, height, 0, 6, height);
     }
     else
     {
-        sub_98197C(session, imageId, 2, 0, 20, 32, 1, height, 6, 0, height);
+        PaintAddImageAsParent(session, imageId, 2, 0, 20, 32, 1, height, 6, 0, height);
     }
 
     switch (direction)
@@ -322,22 +322,22 @@ static void paint_car_ride_station(
     if (direction == 0 || direction == 2)
     {
         imageId = SPR_STATION_BASE_B_SW_NE | session->TrackColours[SCHEME_MISC];
-        sub_98197C(session, imageId, 0, 0, 32, 28, 1, height - 2, 0, 2, height);
+        PaintAddImageAsParent(session, imageId, 0, 0, 32, 28, 1, height - 2, 0, 2, height);
     }
     else if (direction == 1 || direction == 3)
     {
         imageId = SPR_STATION_BASE_B_NW_SE | session->TrackColours[SCHEME_MISC];
-        sub_98197C(session, imageId, 0, 0, 28, 32, 1, height - 2, 2, 0, height);
+        PaintAddImageAsParent(session, imageId, 0, 0, 28, 32, 1, height - 2, 2, 0, height);
     }
 
     imageId = car_ride_track_pieces_flat[direction] | session->TrackColours[SCHEME_TRACK];
     if (direction == 0 || direction == 2)
     {
-        sub_98199C(session, imageId, 0, 6, 32, 20, 1, height, 0, 0, height);
+        PaintAddImageAsChild(session, imageId, 0, 6, 32, 20, 1, height, 0, 0, height);
     }
     else
     {
-        sub_98199C(session, imageId, 6, 0, 20, 32, 1, height, 0, 0, height);
+        PaintAddImageAsChild(session, imageId, 6, 0, 20, 32, 1, height, 0, 0, height);
     }
 
     if (direction == 0 || direction == 2)
@@ -423,16 +423,16 @@ static void paint_car_ride_track_left_quarter_turn_1_tile(
     switch (direction)
     {
         case 0:
-            sub_98197C(session, imageId, 6, 0, 26, 24, 1, height, 6, 2, height);
+            PaintAddImageAsParent(session, imageId, 6, 0, 26, 24, 1, height, 6, 2, height);
             break;
         case 1:
-            sub_98196C(session, imageId, 0, 0, 26, 26, 1, height);
+            PaintAddImageAsParent(session, imageId, 0, 0, 26, 26, 1, height);
             break;
         case 2:
-            sub_98197C(session, imageId, 0, 6, 24, 26, 1, height, 2, 6, height);
+            PaintAddImageAsParent(session, imageId, 0, 6, 24, 26, 1, height, 2, 6, height);
             break;
         case 3:
-            sub_98196C(session, imageId, 6, 6, 24, 24, 1, height);
+            PaintAddImageAsParent(session, imageId, 6, 6, 24, 24, 1, height);
             break;
     }
 
@@ -461,11 +461,11 @@ static void paint_car_ride_track_spinning_tunnel(
 
     if (direction == 0 || direction == 2)
     {
-        sub_98196C(session, imageId, 0, 6, 32, 20, 1, height);
+        PaintAddImageAsParent(session, imageId, 0, 6, 32, 20, 1, height);
     }
     else
     {
-        sub_98196C(session, imageId, 6, 0, 20, 32, 1, height);
+        PaintAddImageAsParent(session, imageId, 6, 0, 20, 32, 1, height);
     }
 
     track_paint_util_spinning_tunnel_paint(session, 1, height, direction);
@@ -495,16 +495,16 @@ static void paint_car_ride_track_60_deg_up(
     switch (direction)
     {
         case 0:
-            sub_98197C(session, imageId, 0, 0, 32, 20, 1, height, 0, 6, height);
+            PaintAddImageAsParent(session, imageId, 0, 0, 32, 20, 1, height, 0, 6, height);
             break;
         case 1:
-            sub_98197C(session, imageId, 0, 0, 1, 32, 98, height, 27, 0, height);
+            PaintAddImageAsParent(session, imageId, 0, 0, 1, 32, 98, height, 27, 0, height);
             break;
         case 2:
-            sub_98197C(session, imageId, 0, 0, 32, 1, 98, height, 0, 27, height);
+            PaintAddImageAsParent(session, imageId, 0, 0, 32, 1, 98, height, 0, 27, height);
             break;
         case 3:
-            sub_98197C(session, imageId, 0, 0, 20, 32, 1, height, 6, 0, height);
+            PaintAddImageAsParent(session, imageId, 0, 0, 20, 32, 1, height, 6, 0, height);
             break;
     }
 
@@ -543,11 +543,11 @@ static void paint_car_ride_track_25_deg_up_to_60_deg_up(
 
     if (direction == 0 || direction == 2)
     {
-        sub_98197C(session, imageId, 0, 0, 32, 20, 1, height, 0, 6, height);
+        PaintAddImageAsParent(session, imageId, 0, 0, 32, 20, 1, height, 0, 6, height);
     }
     else
     {
-        sub_98197C(session, imageId, 0, 0, 20, 32, 1, height, 6, 0, height);
+        PaintAddImageAsParent(session, imageId, 0, 0, 20, 32, 1, height, 6, 0, height);
     }
 
     if (car_ride_track_pieces_25_deg_up_to_60_deg_up[direction][1] != 0)
@@ -556,11 +556,11 @@ static void paint_car_ride_track_25_deg_up_to_60_deg_up(
 
         if (direction == 0 || direction == 2)
         {
-            sub_98197C(session, imageId, 0, 0, 32, 1, 66, height, 0, 27, height);
+            PaintAddImageAsParent(session, imageId, 0, 0, 32, 1, 66, height, 0, 27, height);
         }
         else
         {
-            sub_98197C(session, imageId, 0, 0, 1, 32, 66, height, 27, 0, height);
+            PaintAddImageAsParent(session, imageId, 0, 0, 1, 32, 66, height, 27, 0, height);
         }
     }
 
@@ -599,11 +599,11 @@ static void paint_car_ride_track_60_deg_up_to_25_deg_up(
 
     if (direction == 0 || direction == 2)
     {
-        sub_98197C(session, imageId, 0, 0, 32, 20, 1, height, 0, 6, height);
+        PaintAddImageAsParent(session, imageId, 0, 0, 32, 20, 1, height, 0, 6, height);
     }
     else
     {
-        sub_98197C(session, imageId, 0, 0, 20, 32, 1, height, 6, 0, height);
+        PaintAddImageAsParent(session, imageId, 0, 0, 20, 32, 1, height, 6, 0, height);
     }
 
     if (car_ride_track_pieces_60_deg_up_to_25_deg_up[direction][1] != 0)
@@ -612,11 +612,11 @@ static void paint_car_ride_track_60_deg_up_to_25_deg_up(
 
         if (direction == 0 || direction == 2)
         {
-            sub_98197C(session, imageId, 0, 0, 32, 1, 66, height, 0, 27, height);
+            PaintAddImageAsParent(session, imageId, 0, 0, 32, 1, 66, height, 0, 27, height);
         }
         else
         {
-            sub_98197C(session, imageId, 0, 0, 1, 32, 66, height, 27, 0, height);
+            PaintAddImageAsParent(session, imageId, 0, 0, 1, 32, 66, height, 27, 0, height);
         }
     }
 
@@ -679,11 +679,11 @@ static void paint_car_ride_track_log_bumps(
 
     if (direction == 0 || direction == 2)
     {
-        sub_98196C(session, imageId, 0, 6, 32, 20, 1, height);
+        PaintAddImageAsParent(session, imageId, 0, 6, 32, 20, 1, height);
     }
     else
     {
-        sub_98196C(session, imageId, 6, 0, 20, 32, 1, height);
+        PaintAddImageAsParent(session, imageId, 6, 0, 20, 32, 1, height);
     }
 
     if (direction == 0 || direction == 2)
@@ -704,58 +704,58 @@ static void paint_car_ride_track_log_bumps(
 /**
  * rct2: 0x006F7000
  */
-TRACK_PAINT_FUNCTION get_track_paint_function_car_ride(int32_t trackType, int32_t direction)
+TRACK_PAINT_FUNCTION get_track_paint_function_car_ride(int32_t trackType)
 {
     switch (trackType)
     {
-        case TRACK_ELEM_FLAT:
+        case TrackElemType::Flat:
             return paint_car_ride_track_flat;
 
-        case TRACK_ELEM_END_STATION:
-        case TRACK_ELEM_BEGIN_STATION:
-        case TRACK_ELEM_MIDDLE_STATION:
+        case TrackElemType::EndStation:
+        case TrackElemType::BeginStation:
+        case TrackElemType::MiddleStation:
             return paint_car_ride_station;
 
-        case TRACK_ELEM_25_DEG_UP:
+        case TrackElemType::Up25:
             return paint_car_ride_track_25_deg_up;
-        case TRACK_ELEM_60_DEG_UP:
+        case TrackElemType::Up60:
             return paint_car_ride_track_60_deg_up;
-        case TRACK_ELEM_FLAT_TO_25_DEG_UP:
+        case TrackElemType::FlatToUp25:
             return paint_car_ride_track_flat_to_25_deg_up;
-        case TRACK_ELEM_25_DEG_UP_TO_60_DEG_UP:
+        case TrackElemType::Up25ToUp60:
             return paint_car_ride_track_25_deg_up_to_60_deg_up;
-        case TRACK_ELEM_60_DEG_UP_TO_25_DEG_UP:
+        case TrackElemType::Up60ToUp25:
             return paint_car_ride_track_60_deg_up_to_25_deg_up;
-        case TRACK_ELEM_25_DEG_UP_TO_FLAT:
+        case TrackElemType::Up25ToFlat:
             return paint_car_ride_track_25_deg_up_to_flat;
 
-        case TRACK_ELEM_25_DEG_DOWN:
+        case TrackElemType::Down25:
             return paint_car_ride_track_25_deg_down;
-        case TRACK_ELEM_60_DEG_DOWN:
+        case TrackElemType::Down60:
             return paint_car_ride_track_60_deg_down;
-        case TRACK_ELEM_FLAT_TO_25_DEG_DOWN:
+        case TrackElemType::FlatToDown25:
             return paint_car_ride_track_flat_to_25_deg_down;
-        case TRACK_ELEM_25_DEG_DOWN_TO_60_DEG_DOWN:
+        case TrackElemType::Down25ToDown60:
             return paint_car_ride_track_25_deg_down_to_60_deg_down;
-        case TRACK_ELEM_60_DEG_DOWN_TO_25_DEG_DOWN:
+        case TrackElemType::Down60ToDown25:
             return paint_car_ride_track_60_deg_down_to_25_deg_down;
-        case TRACK_ELEM_25_DEG_DOWN_TO_FLAT:
+        case TrackElemType::Down25ToFlat:
             return paint_car_ride_track_25_deg_down_to_flat;
 
-        case TRACK_ELEM_LEFT_QUARTER_TURN_3_TILES:
+        case TrackElemType::LeftQuarterTurn3Tiles:
             return paint_car_ride_track_left_quarter_turn_3_tiles;
-        case TRACK_ELEM_RIGHT_QUARTER_TURN_3_TILES:
+        case TrackElemType::RightQuarterTurn3Tiles:
             return paint_car_ride_track_right_quarter_turn_3_tiles;
 
-        case TRACK_ELEM_LEFT_QUARTER_TURN_1_TILE:
+        case TrackElemType::LeftQuarterTurn1Tile:
             return paint_car_ride_track_left_quarter_turn_1_tile;
-        case TRACK_ELEM_RIGHT_QUARTER_TURN_1_TILE:
+        case TrackElemType::RightQuarterTurn1Tile:
             return paint_car_ride_track_right_quarter_turn_1_tile;
 
-        case TRACK_ELEM_RAPIDS:
+        case TrackElemType::Rapids:
             return paint_car_ride_track_log_bumps;
 
-        case TRACK_ELEM_SPINNING_TUNNEL:
+        case TrackElemType::SpinningTunnel:
             return paint_car_ride_track_spinning_tunnel;
     }
 

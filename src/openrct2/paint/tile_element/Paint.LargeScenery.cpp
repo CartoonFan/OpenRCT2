@@ -169,17 +169,17 @@ static void large_scenery_sign_paint_line(
         int32_t image_id = (textImage + glyph_offset + glyph_type) | textColour;
         if (direction == 3)
         {
-            paint_attach_to_previous_ps(session, image_id, x_offset, -div_to_minus_infinity(acc, 2));
+            PaintAttachToPreviousPS(session, image_id, x_offset, -div_to_minus_infinity(acc, 2));
         }
         else
         {
             if (text->flags & LARGE_SCENERY_TEXT_FLAG_VERTICAL)
             {
-                paint_attach_to_previous_ps(session, image_id, x_offset, div_to_minus_infinity(acc, 2));
+                PaintAttachToPreviousPS(session, image_id, x_offset, div_to_minus_infinity(acc, 2));
             }
             else
             {
-                paint_attach_to_previous_attach(session, image_id, x_offset, div_to_minus_infinity(acc, 2));
+                PaintAttachToPreviousAttach(session, image_id, x_offset, div_to_minus_infinity(acc, 2));
             }
         }
         x_offset += large_scenery_sign_get_glyph(text, codepoint)->width;
@@ -242,7 +242,7 @@ void large_scenery_paint(paint_session* session, uint8_t direction, uint16_t hei
     {
         if (!track_design_save_contains_tile_element(tileElement))
         {
-            sequenceNum = SPRITE_ID_PALETTE_COLOUR_1(PALETTE_46);
+            sequenceNum = SPRITE_ID_PALETTE_COLOUR_1(EnumValue(FilterPaletteID::Palette46));
             image_id &= 0x7FFFF;
             dword_F4387C = sequenceNum;
             image_id |= dword_F4387C;
@@ -276,7 +276,7 @@ void large_scenery_paint(paint_session* session, uint8_t direction, uint16_t hei
     boxlength.x = s98E3C4[esi].length.x;
     boxlength.y = s98E3C4[esi].length.y;
     boxlength.z = ah;
-    sub_98197C(session, image_id, 0, 0, boxlength.x, boxlength.y, ah, height, boxoffset.x, boxoffset.y, boxoffset.z);
+    PaintAddImageAsParent(session, image_id, 0, 0, boxlength.x, boxlength.y, ah, height, boxoffset.x, boxoffset.y, boxoffset.z);
     if (entry->large_scenery.scrolling_mode == SCROLLING_MODE_NONE || direction == 1 || direction == 2)
     {
         large_scenery_paint_supports(session, direction, height, tileElement, dword_F4387C, tile);
@@ -301,7 +301,6 @@ void large_scenery_paint(paint_session* session, uint8_t direction, uint16_t hei
         }
         // 6B8331:
         // Draw sign text:
-        Formatter::Common().Add<uint32_t>(0).Add<uint32_t>(0);
         int32_t textColour = tileElement->AsLargeScenery()->GetSecondaryColour();
         if (dword_F4387C)
         {
@@ -311,10 +310,10 @@ void large_scenery_paint(paint_session* session, uint8_t direction, uint16_t hei
         auto banner = tileElement->AsLargeScenery()->GetBanner();
         if (banner != nullptr)
         {
-            auto ft = Formatter::Common();
+            auto ft = Formatter();
             banner->FormatTextTo(ft);
             utf8 signString[256];
-            format_string(signString, sizeof(signString), STR_STRINGID, gCommonFormatArgs);
+            format_string(signString, sizeof(signString), STR_STRINGID, ft.Data());
             rct_large_scenery_text* text = entry->large_scenery.text;
             int32_t y_offset = (text->offset[(direction & 1)].y * 2);
             if (text->flags & LARGE_SCENERY_TEXT_FLAG_VERTICAL)
@@ -429,23 +428,23 @@ void large_scenery_paint(paint_session* session, uint8_t direction, uint16_t hei
     auto banner = tileElement->AsLargeScenery()->GetBanner();
     if (banner != nullptr)
     {
-        auto ft = Formatter::Common();
+        auto ft = Formatter();
         banner->FormatTextTo(ft);
         utf8 signString[256];
         if (gConfigGeneral.upper_case_banners)
         {
-            format_string_to_upper(signString, sizeof(signString), STR_SCROLLING_SIGN_TEXT, gCommonFormatArgs);
+            format_string_to_upper(signString, sizeof(signString), STR_SCROLLING_SIGN_TEXT, ft.Data());
         }
         else
         {
-            format_string(signString, sizeof(signString), STR_SCROLLING_SIGN_TEXT, gCommonFormatArgs);
+            format_string(signString, sizeof(signString), STR_SCROLLING_SIGN_TEXT, ft.Data());
         }
 
         gCurrentFontSpriteBase = FONT_SPRITE_BASE_TINY;
 
         uint16_t stringWidth = gfx_get_string_width(signString);
         uint16_t scroll = stringWidth > 0 ? (gCurrentTicks / 2) % stringWidth : 0;
-        sub_98199C(
+        PaintAddImageAsChild(
             session, scrolling_text_setup(session, STR_SCROLLING_SIGN_TEXT, ft, scroll, scrollMode, textColour), 0, 0, 1, 1, 21,
             height + 25, boxoffset.x, boxoffset.y, boxoffset.z);
     }

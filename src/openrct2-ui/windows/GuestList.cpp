@@ -69,17 +69,17 @@ static constexpr const rct_string_id viewNames[VIEW_COUNT] = {
 
 static rct_widget window_guest_list_widgets[] = {
     WINDOW_SHIM(WINDOW_TITLE, WW, WH),
-    MakeWidget({  0, 43}, {350, 287}, WWT_RESIZE,   WindowColour::Secondary                                                   ), // tab content panel
-    MakeWidget({  5, 59}, { 80,  12}, WWT_DROPDOWN, WindowColour::Secondary, STR_ARG_4_PAGE_X                                 ), // page dropdown
-    MakeWidget({ 73, 60}, { 11,  10}, WWT_BUTTON,   WindowColour::Secondary, STR_DROPDOWN_GLYPH                               ), // page dropdown button
-    MakeWidget({120, 59}, {142,  12}, WWT_DROPDOWN, WindowColour::Secondary, 0xFFFFFFFF,         STR_INFORMATION_TYPE_TIP     ), // information type dropdown
-    MakeWidget({250, 60}, { 11,  10}, WWT_BUTTON,   WindowColour::Secondary, STR_DROPDOWN_GLYPH, STR_INFORMATION_TYPE_TIP     ), // information type dropdown button
-    MakeWidget({273, 46}, { 24,  24}, WWT_FLATBTN,  WindowColour::Secondary, SPR_MAP,            STR_SHOW_GUESTS_ON_MAP_TIP   ), // map
-    MakeWidget({297, 46}, { 24,  24}, WWT_FLATBTN,  WindowColour::Secondary, SPR_G2_SEARCH,      STR_GUESTS_FILTER_BY_NAME_TIP), // filter by name
-    MakeWidget({321, 46}, { 24,  24}, WWT_FLATBTN,  WindowColour::Secondary, SPR_TRACK_PEEP,     STR_TRACKED_GUESTS_ONLY_TIP  ), // tracking
+    MakeWidget({  0, 43}, {350, 287}, WindowWidgetType::Resize,   WindowColour::Secondary                                                   ), // tab content panel
+    MakeWidget({  5, 59}, { 80,  12}, WindowWidgetType::DropdownMenu, WindowColour::Secondary, STR_ARG_4_PAGE_X                                 ), // page dropdown
+    MakeWidget({ 73, 60}, { 11,  10}, WindowWidgetType::Button,   WindowColour::Secondary, STR_DROPDOWN_GLYPH                               ), // page dropdown button
+    MakeWidget({120, 59}, {142,  12}, WindowWidgetType::DropdownMenu, WindowColour::Secondary, 0xFFFFFFFF,         STR_INFORMATION_TYPE_TIP     ), // information type dropdown
+    MakeWidget({250, 60}, { 11,  10}, WindowWidgetType::Button,   WindowColour::Secondary, STR_DROPDOWN_GLYPH, STR_INFORMATION_TYPE_TIP     ), // information type dropdown button
+    MakeWidget({273, 46}, { 24,  24}, WindowWidgetType::FlatBtn,  WindowColour::Secondary, SPR_MAP,            STR_SHOW_GUESTS_ON_MAP_TIP   ), // map
+    MakeWidget({297, 46}, { 24,  24}, WindowWidgetType::FlatBtn,  WindowColour::Secondary, SPR_G2_SEARCH,      STR_GUESTS_FILTER_BY_NAME_TIP), // filter by name
+    MakeWidget({321, 46}, { 24,  24}, WindowWidgetType::FlatBtn,  WindowColour::Secondary, SPR_TRACK_PEEP,     STR_TRACKED_GUESTS_ONLY_TIP  ), // tracking
     MakeTab   ({  3, 17},                                                                        STR_INDIVIDUAL_GUESTS_TIP    ), // tab 1
     MakeTab   ({ 34, 17},                                                                        STR_SUMMARISED_GUESTS_TIP    ), // tab 2
-    MakeWidget({  3, 72}, {344, 255}, WWT_SCROLL,   WindowColour::Secondary, SCROLL_BOTH                                      ), // guest list
+    MakeWidget({  3, 72}, {344, 255}, WindowWidgetType::Scroll,   WindowColour::Secondary, SCROLL_BOTH                                      ), // guest list
     { WIDGETS_END },
 };
 
@@ -102,36 +102,21 @@ static void window_guest_list_paint(rct_window *w, rct_drawpixelinfo *dpi);
 static void window_guest_list_scrollpaint(rct_window *w, rct_drawpixelinfo *dpi, int32_t scrollIndex);
 static void window_guest_list_textinput(rct_window *w, rct_widgetindex widgetIndex, char *text);
 
-static rct_window_event_list window_guest_list_events = {
-    nullptr,
-    window_guest_list_mouseup,
-    window_guest_list_resize,
-    window_guest_list_mousedown,
-    window_guest_list_dropdown,
-    nullptr,
-    window_guest_list_update,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    window_guest_list_scrollgetsize,
-    window_guest_list_scrollmousedown,
-    nullptr,
-    window_guest_list_scrollmouseover,
-    window_guest_list_textinput,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    window_guest_list_invalidate,
-    window_guest_list_paint,
-    window_guest_list_scrollpaint
-};
+static rct_window_event_list window_guest_list_events([](auto& events)
+{
+    events.mouse_up = &window_guest_list_mouseup;
+    events.resize = &window_guest_list_resize;
+    events.mouse_down = &window_guest_list_mousedown;
+    events.dropdown = &window_guest_list_dropdown;
+    events.update = &window_guest_list_update;
+    events.get_scroll_size = &window_guest_list_scrollgetsize;
+    events.scroll_mousedown = &window_guest_list_scrollmousedown;
+    events.scroll_mouseover = &window_guest_list_scrollmouseover;
+    events.text_input = &window_guest_list_textinput;
+    events.invalidate = &window_guest_list_invalidate;
+    events.paint = &window_guest_list_paint;
+    events.scroll_paint = &window_guest_list_scrollpaint;
+});
 // clang-format on
 
 struct FilterArguments
@@ -204,13 +189,13 @@ rct_window* window_guest_list_open()
     if (window != nullptr)
         return window;
 
-    window = window_create_auto_pos(350, 330, &window_guest_list_events, WC_GUEST_LIST, WF_10 | WF_RESIZABLE);
+    window = WindowCreateAutoPos(350, 330, &window_guest_list_events, WC_GUEST_LIST, WF_10 | WF_RESIZABLE);
     window->widgets = window_guest_list_widgets;
     window->enabled_widgets = (1 << WIDX_CLOSE) | (1 << WIDX_PAGE_DROPDOWN) | (1 << WIDX_PAGE_DROPDOWN_BUTTON)
         | (1 << WIDX_INFO_TYPE_DROPDOWN) | (1 << WIDX_INFO_TYPE_DROPDOWN_BUTTON) | (1 << WIDX_MAP) | (1 << WIDX_TRACKING)
         | (1 << WIDX_TAB_1) | (1 << WIDX_TAB_2) | (1 << WIDX_FILTER_BY_NAME);
 
-    window_init_scroll_widgets(window);
+    WindowInitScrollWidgets(window);
     _window_guest_list_highlighted_index = 0xFFFF;
     window->list_information_type = 0;
     _window_guest_list_selected_tab = PAGE_INDIVIDUAL;
@@ -219,10 +204,10 @@ rct_window* window_guest_list_open()
     _window_guest_list_num_pages = 1;
     _window_guest_list_tracking_only = false;
     _window_guest_list_filter_name[0] = '\0';
-    window_guest_list_widgets[WIDX_TRACKING].type = WWT_FLATBTN;
-    window_guest_list_widgets[WIDX_FILTER_BY_NAME].type = WWT_FLATBTN;
-    window_guest_list_widgets[WIDX_PAGE_DROPDOWN].type = WWT_EMPTY;
-    window_guest_list_widgets[WIDX_PAGE_DROPDOWN_BUTTON].type = WWT_EMPTY;
+    window_guest_list_widgets[WIDX_TRACKING].type = WindowWidgetType::FlatBtn;
+    window_guest_list_widgets[WIDX_FILTER_BY_NAME].type = WindowWidgetType::FlatBtn;
+    window_guest_list_widgets[WIDX_PAGE_DROPDOWN].type = WindowWidgetType::Empty;
+    window_guest_list_widgets[WIDX_PAGE_DROPDOWN_BUTTON].type = WindowWidgetType::Empty;
     window->min_width = 350;
     window->min_height = 330;
     window->max_width = 500;
@@ -288,7 +273,7 @@ rct_window* window_guest_list_open_with_filter(GuestListFilterType type, int32_t
     {
         case GuestListFilterType::GuestsOnRide:
         {
-            auto ride = get_ride(index & 0xFF);
+            auto ride = get_ride(index);
             if (ride != nullptr)
             {
                 ft.Add<rct_string_id>(ride_type_has_flag(ride->type, RIDE_TYPE_FLAG_IN_RIDE) ? STR_IN_RIDE : STR_ON_RIDE);
@@ -303,7 +288,7 @@ rct_window* window_guest_list_open_with_filter(GuestListFilterType type, int32_t
         }
         case GuestListFilterType::GuestsInQueue:
         {
-            auto ride = get_ride(index & 0xFF);
+            auto ride = get_ride(index);
             if (ride != nullptr)
             {
                 ft.Add<rct_string_id>(STR_QUEUING_FOR);
@@ -318,7 +303,7 @@ rct_window* window_guest_list_open_with_filter(GuestListFilterType type, int32_t
         }
         case GuestListFilterType::GuestsThinkingAboutRide:
         {
-            auto ride = get_ride(index & 0xFF);
+            auto ride = get_ride(index);
             if (ride != nullptr)
             {
                 ft.Add<rct_string_id>(STR_NONE);
@@ -426,15 +411,15 @@ static void window_guest_list_mousedown(rct_window* w, rct_widgetindex widgetInd
             _window_guest_list_selected_tab = widgetIndex - WIDX_TAB_1;
             _window_guest_list_selected_page = 0;
             _window_guest_list_num_pages = 1;
-            window_guest_list_widgets[WIDX_TRACKING].type = WWT_EMPTY;
-            window_guest_list_widgets[WIDX_FILTER_BY_NAME].type = WWT_EMPTY;
+            window_guest_list_widgets[WIDX_TRACKING].type = WindowWidgetType::Empty;
+            window_guest_list_widgets[WIDX_FILTER_BY_NAME].type = WindowWidgetType::Empty;
             if (_window_guest_list_selected_tab == PAGE_INDIVIDUAL)
             {
-                window_guest_list_widgets[WIDX_TRACKING].type = WWT_FLATBTN;
-                window_guest_list_widgets[WIDX_FILTER_BY_NAME].type = WWT_FLATBTN;
+                window_guest_list_widgets[WIDX_TRACKING].type = WindowWidgetType::FlatBtn;
+                window_guest_list_widgets[WIDX_FILTER_BY_NAME].type = WindowWidgetType::FlatBtn;
             }
-            window_guest_list_widgets[WIDX_PAGE_DROPDOWN].type = WWT_EMPTY;
-            window_guest_list_widgets[WIDX_PAGE_DROPDOWN_BUTTON].type = WWT_EMPTY;
+            window_guest_list_widgets[WIDX_PAGE_DROPDOWN].type = WindowWidgetType::Empty;
+            window_guest_list_widgets[WIDX_PAGE_DROPDOWN_BUTTON].type = WindowWidgetType::Empty;
             w->list_information_type = 0;
             _window_guest_list_selected_filter = -1;
             w->Invalidate();
@@ -444,9 +429,9 @@ static void window_guest_list_mousedown(rct_window* w, rct_widgetindex widgetInd
         case WIDX_PAGE_DROPDOWN_BUTTON:
             widget = &w->widgets[widgetIndex - 1];
 
-            window_dropdown_show_text_custom_width(
+            WindowDropdownShowTextCustomWidth(
                 { w->windowPos.x + widget->left, w->windowPos.y + widget->top }, widget->height() + 1, w->colours[1], 0,
-                DROPDOWN_FLAG_STAY_OPEN, _window_guest_list_num_pages, widget->width() - 3);
+                Dropdown::Flag::StayOpen, _window_guest_list_num_pages, widget->width() - 3);
 
             for (i = 0; i < _window_guest_list_num_pages; i++)
             {
@@ -455,7 +440,7 @@ static void window_guest_list_mousedown(rct_window* w, rct_widgetindex widgetInd
                 args[0] = STR_PAGE_X;
                 args[1] = i + 1;
             }
-            dropdown_set_checked(_window_guest_list_selected_page, true);
+            Dropdown::SetChecked(_window_guest_list_selected_page, true);
             break;
         case WIDX_INFO_TYPE_DROPDOWN_BUTTON:
             widget = &w->widgets[widgetIndex - 1];
@@ -466,11 +451,11 @@ static void window_guest_list_mousedown(rct_window* w, rct_widgetindex widgetInd
                 gDropdownItemsArgs[i] = viewNames[i];
             }
 
-            window_dropdown_show_text_custom_width(
+            WindowDropdownShowTextCustomWidth(
                 { w->windowPos.x + widget->left, w->windowPos.y + widget->top }, widget->height() + 1, w->colours[1], 0,
-                DROPDOWN_FLAG_STAY_OPEN, 2, widget->width() - 3);
+                Dropdown::Flag::StayOpen, 2, widget->width() - 3);
 
-            dropdown_set_checked(_window_guest_list_selected_view, true);
+            Dropdown::SetChecked(_window_guest_list_selected_view, true);
             break;
     }
 }
@@ -599,7 +584,7 @@ static void window_guest_list_scrollmousedown(rct_window* w, int32_t scrollIndex
                 _window_guest_list_filter_arguments = _window_guest_list_groups_arguments[i];
                 _window_guest_list_selected_filter = _window_guest_list_selected_view;
                 _window_guest_list_selected_tab = PAGE_INDIVIDUAL;
-                window_guest_list_widgets[WIDX_TRACKING].type = WWT_FLATBTN;
+                window_guest_list_widgets[WIDX_TRACKING].type = WindowWidgetType::FlatBtn;
                 w->Invalidate();
                 w->scrolls[0].v_top = 0;
                 window_guest_list_refresh_list();
@@ -637,9 +622,9 @@ static void window_guest_list_invalidate(rct_window* w)
     w->pressed_widgets |= (1LL << (_window_guest_list_selected_tab + WIDX_TAB_1));
 
     window_guest_list_widgets[WIDX_INFO_TYPE_DROPDOWN].text = viewNames[_window_guest_list_selected_view];
-    window_guest_list_widgets[WIDX_MAP].type = WWT_EMPTY;
+    window_guest_list_widgets[WIDX_MAP].type = WindowWidgetType::Empty;
     if (_window_guest_list_selected_tab == PAGE_INDIVIDUAL && _window_guest_list_selected_filter != -1)
-        window_guest_list_widgets[WIDX_MAP].type = WWT_FLATBTN;
+        window_guest_list_widgets[WIDX_MAP].type = WindowWidgetType::FlatBtn;
 
     window_guest_list_widgets[WIDX_BACKGROUND].right = w->width - 1;
     window_guest_list_widgets[WIDX_BACKGROUND].bottom = w->height - 1;
@@ -659,16 +644,16 @@ static void window_guest_list_invalidate(rct_window* w)
 
     if (_window_guest_list_num_pages > 1)
     {
-        window_guest_list_widgets[WIDX_PAGE_DROPDOWN].type = WWT_DROPDOWN;
-        window_guest_list_widgets[WIDX_PAGE_DROPDOWN_BUTTON].type = WWT_BUTTON;
+        window_guest_list_widgets[WIDX_PAGE_DROPDOWN].type = WindowWidgetType::DropdownMenu;
+        window_guest_list_widgets[WIDX_PAGE_DROPDOWN_BUTTON].type = WindowWidgetType::Button;
         auto ft = Formatter::Common();
         ft.Increment(4);
         ft.Add<uint16_t>(_window_guest_list_selected_page + 1);
     }
     else
     {
-        window_guest_list_widgets[WIDX_PAGE_DROPDOWN].type = WWT_EMPTY;
-        window_guest_list_widgets[WIDX_PAGE_DROPDOWN_BUTTON].type = WWT_EMPTY;
+        window_guest_list_widgets[WIDX_PAGE_DROPDOWN].type = WindowWidgetType::Empty;
+        window_guest_list_widgets[WIDX_PAGE_DROPDOWN_BUTTON].type = WindowWidgetType::Empty;
     }
 }
 
@@ -682,10 +667,10 @@ static void window_guest_list_paint(rct_window* w, rct_drawpixelinfo* dpi)
     rct_string_id format;
 
     // Widgets
-    window_draw_widgets(w, dpi);
+    WindowDrawWidgets(w, dpi);
     // Tab 1 image
     i = (_window_guest_list_selected_tab == 0 ? w->list_information_type & 0x0FFFFFFFC : 0);
-    i += g_peep_animation_entries[PEEP_SPRITE_TYPE_NORMAL].sprite_animation->base_image + 1;
+    i += GetPeepAnimation(PeepSpriteType::Normal).base_image + 1;
     i |= 0xA1600000;
     gfx_draw_sprite(
         dpi, i,
@@ -724,16 +709,20 @@ static void window_guest_list_paint(rct_window* w, rct_drawpixelinfo* dpi)
     {
         format = STR_ALL_GUESTS_SUMMARISED;
     }
-    gfx_draw_string_left_clipped(dpi, format, _window_guest_list_filter_arguments.args, COLOUR_BLACK, screenCoords, 310);
+
+    {
+        Formatter ft(_window_guest_list_filter_arguments.args);
+        DrawTextEllipsised(dpi, screenCoords, 310, format, ft, COLOUR_BLACK);
+    }
 
     // Number of guests (list items)
     if (_window_guest_list_selected_tab == PAGE_INDIVIDUAL)
     {
         screenCoords = w->windowPos + ScreenCoordsXY{ 4, window_guest_list_widgets[WIDX_GUEST_LIST].bottom + 2 };
-        auto ft = Formatter::Common();
+        auto ft = Formatter();
         ft.Add<int32_t>(static_cast<int32_t>(GuestList.size()));
         gfx_draw_string_left(
-            dpi, (GuestList.size() == 1 ? STR_FORMAT_NUM_GUESTS_SINGULAR : STR_FORMAT_NUM_GUESTS_PLURAL), gCommonFormatArgs,
+            dpi, (GuestList.size() == 1 ? STR_FORMAT_NUM_GUESTS_SINGULAR : STR_FORMAT_NUM_GUESTS_PLURAL), ft.Data(),
             COLOUR_BLACK, screenCoords);
     }
 }
@@ -770,7 +759,7 @@ static void window_guest_list_scrollpaint(rct_window* w, rct_drawpixelinfo* dpi,
                     format = STR_BLACK_STRING;
                     if (i == _window_guest_list_highlighted_index)
                     {
-                        gfx_filter_rect(dpi, 0, y, 800, y + SCROLLABLE_ROW_HEIGHT - 1, PALETTE_DARKEN_1);
+                        gfx_filter_rect(dpi, 0, y, 800, y + SCROLLABLE_ROW_HEIGHT - 1, FilterPaletteID::PaletteDarken1);
                         format = STR_WINDOW_COLOUR_2_STRINGID;
                     }
 
@@ -780,9 +769,9 @@ static void window_guest_list_scrollpaint(rct_window* w, rct_drawpixelinfo* dpi,
                     {
                         continue;
                     }
-                    auto ft = Formatter::Common();
+                    auto ft = Formatter();
                     peep->FormatNameTo(ft);
-                    gfx_draw_string_left_clipped(dpi, format, gCommonFormatArgs, COLOUR_BLACK, { 0, y }, 113);
+                    DrawTextEllipsised(dpi, { 0, y }, 113, format, ft, COLOUR_BLACK);
 
                     switch (_window_guest_list_selected_view)
                     {
@@ -795,24 +784,25 @@ static void window_guest_list_scrollpaint(rct_window* w, rct_drawpixelinfo* dpi,
                                 gfx_draw_sprite(dpi, STR_ENTER_SELECTION_SIZE, { 112, y + 1 }, 0);
 
                             // Action
-                            ft = Formatter::Common();
+                            ft = Formatter();
                             peep->FormatActionTo(ft);
-                            gfx_draw_string_left_clipped(dpi, format, gCommonFormatArgs, COLOUR_BLACK, { 133, y }, 314);
+                            DrawTextEllipsised(dpi, { 133, y }, 314, format, ft, COLOUR_BLACK);
                             break;
                         case VIEW_THOUGHTS:
                             // For each thought
                             for (uint32_t j = 0; j < PEEP_MAX_THOUGHTS; j++)
                             {
                                 thought = &peep->Thoughts[j];
-                                if (thought->type == PEEP_THOUGHT_TYPE_NONE)
+                                if (thought->type == PeepThoughtType::None)
                                     break;
                                 if (thought->freshness == 0)
                                     continue;
                                 if (thought->freshness > 5)
                                     break;
 
-                                peep_thought_set_format_args(&peep->Thoughts[j]);
-                                gfx_draw_string_left_clipped(dpi, format, gCommonFormatArgs, COLOUR_BLACK, { 118, y }, 329);
+                                ft = Formatter();
+                                peep_thought_set_format_args(&peep->Thoughts[j], ft);
+                                DrawTextEllipsised(dpi, { 118, y }, 329, format, ft, COLOUR_BLACK);
                                 break;
                             }
                             break;
@@ -842,7 +832,7 @@ static void window_guest_list_scrollpaint(rct_window* w, rct_drawpixelinfo* dpi,
                     format = STR_BLACK_STRING;
                     if (i == _window_guest_list_highlighted_index)
                     {
-                        gfx_filter_rect(dpi, 0, y, 800, y + SUMMARISED_GUEST_ROW_HEIGHT, PALETTE_DARKEN_1);
+                        gfx_filter_rect(dpi, 0, y, 800, y + SUMMARISED_GUEST_ROW_HEIGHT, FilterPaletteID::PaletteDarken1);
                         format = STR_WINDOW_COLOUR_2_STRINGID;
                     }
 
@@ -854,16 +844,14 @@ static void window_guest_list_scrollpaint(rct_window* w, rct_drawpixelinfo* dpi,
                             { static_cast<int32_t>(j) * 8, y + 12 }, 0);
 
                     // Draw action
-                    std::memcpy(
-                        gCommonFormatArgs, _window_guest_list_groups_arguments[i].args,
-                        std::min(sizeof(gCommonFormatArgs), sizeof(_window_guest_list_groups_arguments[i].args)));
-                    gfx_draw_string_left_clipped(dpi, format, gCommonFormatArgs, COLOUR_BLACK, { 0, y }, 414);
+                    Formatter ft(_window_guest_list_groups_arguments[i].args);
+                    DrawTextEllipsised(dpi, { 0, y }, 414, format, ft, COLOUR_BLACK);
 
                     // Draw guest count
-                    auto ft = Formatter::Common();
+                    ft = Formatter();
                     ft.Add<rct_string_id>(STR_GUESTS_COUNT_COMMA_SEP);
                     ft.Add<uint32_t>(numGuests);
-                    gfx_draw_string_right(dpi, format, gCommonFormatArgs, COLOUR_BLACK, { 326, y });
+                    DrawTextBasic(dpi, { 326, y }, format, ft, COLOUR_BLACK, TextAlignment::RIGHT);
                 }
                 y += SUMMARISED_GUEST_ROW_HEIGHT;
             }
@@ -924,11 +912,9 @@ static FilterArguments get_arguments_from_peep(const Peep* peep)
         case VIEW_THOUGHTS:
         {
             auto thought = &peep->Thoughts[0];
-            if (thought->freshness <= 5 && thought->type != PEEP_THOUGHT_TYPE_NONE)
+            if (thought->freshness <= 5 && thought->type != PeepThoughtType::None)
             {
-                std::memset(gCommonFormatArgs, 0, sizeof(gCommonFormatArgs));
-                peep_thought_set_format_args(thought);
-                std::memcpy(result.args, gCommonFormatArgs, std::min(sizeof(gCommonFormatArgs), sizeof(result.args)));
+                peep_thought_set_format_args(thought, ft);
             }
             break;
         }
@@ -1065,11 +1051,10 @@ static bool guest_should_be_visible(Peep* peep)
     if (_window_guest_list_filter_name[0] != '\0')
     {
         char name[256]{};
-        uint8_t args[32]{};
 
-        Formatter ft(args);
+        Formatter ft;
         peep->FormatNameTo(ft);
-        format_string(name, sizeof(name), STR_STRINGID, args);
+        format_string(name, sizeof(name), STR_STRINGID, ft.Data());
         if (strcasestr(name, _window_guest_list_filter_name) == nullptr)
         {
             return false;

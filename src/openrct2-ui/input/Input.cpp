@@ -27,58 +27,58 @@
 
 using namespace OpenRCT2::Ui;
 
-static void input_handle_console(int32_t key)
+static void InputHandleConsole(int32_t key)
 {
-    CONSOLE_INPUT input = CONSOLE_INPUT_NONE;
+    ConsoleInput input = ConsoleInput::None;
     switch (key)
     {
         case SDL_SCANCODE_ESCAPE:
-            input = CONSOLE_INPUT_LINE_CLEAR;
+            input = ConsoleInput::LineClear;
             break;
         case SDL_SCANCODE_RETURN:
         case SDL_SCANCODE_KP_ENTER:
-            input = CONSOLE_INPUT_LINE_EXECUTE;
+            input = ConsoleInput::LineExecute;
             break;
         case SDL_SCANCODE_UP:
-            input = CONSOLE_INPUT_HISTORY_PREVIOUS;
+            input = ConsoleInput::HistoryPrevious;
             break;
         case SDL_SCANCODE_DOWN:
-            input = CONSOLE_INPUT_HISTORY_NEXT;
+            input = ConsoleInput::HistoryNext;
             break;
         case SDL_SCANCODE_PAGEUP:
-            input = CONSOLE_INPUT_SCROLL_PREVIOUS;
+            input = ConsoleInput::ScrollPrevious;
             break;
         case SDL_SCANCODE_PAGEDOWN:
-            input = CONSOLE_INPUT_SCROLL_NEXT;
+            input = ConsoleInput::ScrollNext;
             break;
     }
-    if (input != CONSOLE_INPUT_NONE)
+    if (input != ConsoleInput::None)
     {
         auto& console = GetInGameConsole();
         console.Input(input);
     }
 }
 
-static void input_handle_chat(int32_t key)
+static void InputHandleChat(int32_t key)
 {
-    CHAT_INPUT input = CHAT_INPUT_NONE;
+    ChatInput input = ChatInput::None;
     switch (key)
     {
         case SDL_SCANCODE_ESCAPE:
-            input = CHAT_INPUT_CLOSE;
+            input = ChatInput::Close;
             break;
         case SDL_SCANCODE_RETURN:
         case SDL_SCANCODE_KP_ENTER:
-            input = CHAT_INPUT_SEND;
+            input = ChatInput::Send;
             break;
     }
-    if (input != CHAT_INPUT_NONE)
+    if (input != ChatInput::None)
     {
         chat_input(input);
     }
 }
 
-static void game_handle_key_scroll()
+static void GameHandleKeyScroll()
 {
     rct_window* mainWindow;
 
@@ -99,16 +99,16 @@ static void game_handle_key_scroll()
         return;
 
     const uint8_t* keysState = context_get_keys_state();
-    auto scrollCoords = get_keyboard_map_scroll(keysState);
+    auto scrollCoords = GetKeyboardMapScroll(keysState);
 
     if (scrollCoords.x != 0 || scrollCoords.y != 0)
     {
         window_unfollow_sprite(mainWindow);
     }
-    input_scroll_viewport(scrollCoords);
+    InputScrollViewport(scrollCoords);
 }
 
-static int32_t input_scancode_to_rct_keycode(int32_t sdl_key)
+static int32_t InputScancodeToRCTKeycode(int32_t sdl_key)
 {
     char keycode = static_cast<char>(SDL_GetKeyFromScancode(static_cast<SDL_Scancode>(sdl_key)));
 
@@ -121,7 +121,7 @@ static int32_t input_scancode_to_rct_keycode(int32_t sdl_key)
     return keycode;
 }
 
-void input_handle_keyboard(bool isTitle)
+void InputHandleKeyboard(bool isTitle)
 {
     if (gOpenRCT2Headless)
     {
@@ -138,7 +138,7 @@ void input_handle_keyboard(bool isTitle)
             {
                 if (!(gInputPlaceObjectModifier & (PLACE_OBJECT_MODIFIER_SHIFT_Z | PLACE_OBJECT_MODIFIER_COPY_Z)))
                 {
-                    game_handle_edge_scroll();
+                    GameHandleEdgeScroll();
                 }
             }
         }
@@ -166,7 +166,7 @@ void input_handle_keyboard(bool isTitle)
 #endif
         if (!isTitle)
         {
-            game_handle_key_scroll();
+            GameHandleKeyScroll();
         }
     }
 
@@ -180,7 +180,7 @@ void input_handle_keyboard(bool isTitle)
 
     // Handle key input
     int32_t key;
-    while (!gOpenRCT2Headless && (key = get_next_key()) != 0)
+    while (!gOpenRCT2Headless && (key = GetNextKey()) != 0)
     {
         if (key == 255)
             continue;
@@ -197,12 +197,12 @@ void input_handle_keyboard(bool isTitle)
         }
         else if (console.IsOpen())
         {
-            input_handle_console(key);
+            InputHandleConsole(key);
             continue;
         }
         else if (!isTitle && gChatOpen)
         {
-            input_handle_chat(key);
+            InputHandleChat(key);
             continue;
         }
 
@@ -211,7 +211,7 @@ void input_handle_keyboard(bool isTitle)
         rct_window* w = window_find_by_class(WC_TEXTINPUT);
         if (w != nullptr)
         {
-            char keychar = input_scancode_to_rct_keycode(key & 0xFF);
+            char keychar = InputScancodeToRCTKeycode(key & 0xFF);
             window_text_input_key(w, keychar);
         }
         else if (!gUsingWidgetTextBox)
@@ -219,13 +219,13 @@ void input_handle_keyboard(bool isTitle)
             w = window_find_by_class(WC_CHANGE_KEYBOARD_SHORTCUT);
             if (w != nullptr)
             {
-                keyboard_shortcuts_set(key);
+                KeyboardShortcutsSet(key);
                 window_close_by_class(WC_CHANGE_KEYBOARD_SHORTCUT);
                 window_invalidate_by_class(WC_KEYBOARD_SHORTCUT_LIST);
             }
             else
             {
-                keyboard_shortcut_handle(key);
+                KeyboardShortcutHandle(key);
             }
         }
     }

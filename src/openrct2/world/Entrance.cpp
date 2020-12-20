@@ -12,9 +12,9 @@
 #include "../Cheats.h"
 #include "../Game.h"
 #include "../OpenRCT2.h"
-#include "../actions/ParkEntranceRemoveAction.hpp"
-#include "../actions/RideEntranceExitPlaceAction.hpp"
-#include "../actions/RideEntranceExitRemoveAction.hpp"
+#include "../actions/ParkEntranceRemoveAction.h"
+#include "../actions/RideEntranceExitPlaceAction.h"
+#include "../actions/RideEntranceExitRemoveAction.h"
 #include "../localisation/StringIds.h"
 #include "../management/Finance.h"
 #include "../network/network.h"
@@ -43,7 +43,7 @@ static money32 RideEntranceExitPlaceGhost(
     rideEntranceExitPlaceAction.SetFlags(GAME_COMMAND_FLAG_ALLOW_DURING_PAUSED | GAME_COMMAND_FLAG_GHOST);
     auto res = GameActions::Execute(&rideEntranceExitPlaceAction);
 
-    return res->Error == GA_ERROR::OK ? res->Cost : MONEY32_UNDEFINED;
+    return res->Error == GameActions::Status::Ok ? res->Cost : MONEY32_UNDEFINED;
 }
 
 /**
@@ -146,7 +146,7 @@ void maze_entrance_hedge_replacement(const CoordsXYE& entrance)
             continue;
         if (tileElement->GetBaseZ() != z)
             continue;
-        if (tileElement->AsTrack()->GetTrackType() != TRACK_ELEM_MAZE)
+        if (tileElement->AsTrack()->GetTrackType() != TrackElemType::Maze)
             continue;
 
         // Each maze element is split into 4 sections with 4 different walls
@@ -183,7 +183,7 @@ void maze_entrance_hedge_removal(const CoordsXYE& entrance)
             continue;
         if (tileElement->GetBaseZ() != z)
             continue;
-        if (tileElement->AsTrack()->GetTrackType() != TRACK_ELEM_MAZE)
+        if (tileElement->AsTrack()->GetTrackType() != TrackElemType::Maze)
             continue;
 
         // Each maze element is split into 4 sections with 4 different walls

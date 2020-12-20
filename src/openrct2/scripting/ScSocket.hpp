@@ -13,6 +13,7 @@
 #    ifndef DISABLE_NETWORK
 
 #        include "../Context.h"
+#        include "../config/Config.h"
 #        include "../network/Socket.h"
 #        include "Duktape.hpp"
 #        include "ScriptEngine.h"
@@ -81,6 +82,22 @@ namespace OpenRCT2::Scripting
         static bool IsLocalhostAddress(std::string_view s)
         {
             return s == "localhost" || s == "127.0.0.1" || s == "::";
+        }
+
+        static bool IsOnWhiteList(std::string_view host)
+        {
+            constexpr char delimiter = ',';
+            size_t start_pos = 0;
+            size_t end_pos = 0;
+            while ((end_pos = gConfigPlugin.allowed_hosts.find(delimiter, start_pos)) != std::string::npos)
+            {
+                if (host == gConfigPlugin.allowed_hosts.substr(start_pos, end_pos - start_pos))
+                {
+                    return true;
+                }
+                start_pos = end_pos + 1;
+            }
+            return host == gConfigPlugin.allowed_hosts.substr(start_pos, gConfigPlugin.allowed_hosts.length() - start_pos);
         }
 
     public:
@@ -166,7 +183,7 @@ namespace OpenRCT2::Scripting
             {
                 duk_error(ctx, DUK_ERR_ERROR, "Socket is already connecting.");
             }
-            else if (!IsLocalhostAddress(host))
+            else if (!IsLocalhostAddress(host) && !IsOnWhiteList(host))
             {
                 duk_error(ctx, DUK_ERR_ERROR, "For security reasons, only connecting to localhost is allowed.");
             }
@@ -302,14 +319,14 @@ namespace OpenRCT2::Scripting
                 auto status = _socket->GetStatus();
                 if (_connecting)
                 {
-                    if (status == SOCKET_STATUS_CONNECTED)
+                    if (status == SocketStatus::Connected)
                     {
                         _connecting = false;
                         _wasConnected = true;
                         _eventList.Raise(EVENT_CONNECT_ONCE, GetPlugin(), {}, false);
                         _eventList.RemoveAllListeners(EVENT_CONNECT_ONCE);
                     }
-                    else if (status == SOCKET_STATUS_CLOSED)
+                    else if (status == SocketStatus::Closed)
                     {
                         _connecting = false;
 
@@ -324,7 +341,7 @@ namespace OpenRCT2::Scripting
                         _eventList.Raise(EVENT_ERROR, GetPlugin(), { dukErr }, true);
                     }
                 }
-                else if (status == SOCKET_STATUS_CONNECTED)
+                else if (status == SocketStatus::Connected)
                 {
                     char buffer[2048];
                     size_t bytesRead{};
@@ -388,7 +405,7 @@ namespace OpenRCT2::Scripting
         {
             if (_socket != nullptr)
             {
-                return _socket->GetStatus() == SOCKET_STATUS_LISTENING;
+                return _socket->GetStatus() == SocketStatus::Listening;
             }
             return false;
         }
@@ -413,7 +430,7 @@ namespace OpenRCT2::Scripting
                     _socket = CreateTcpSocket();
                 }
 
-                if (_socket->GetStatus() == SOCKET_STATUS_LISTENING)
+                if (_socket->GetStatus() == SocketStatus::Listening)
                 {
                     duk_error(ctx, DUK_ERR_ERROR, "Server is already listening.");
                 }
@@ -488,7 +505,7 @@ namespace OpenRCT2::Scripting
             if (_socket == nullptr)
                 return;
 
-            if (_socket->GetStatus() == SOCKET_STATUS_LISTENING)
+            if (_socket->GetStatus() == SocketStatus::Listening)
             {
                 auto client = _socket->Accept();
                 if (client != nullptr)

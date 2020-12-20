@@ -14,10 +14,11 @@
 #include "../GameStateSnapshots.h"
 #include "../OpenRCT2.h"
 #include "../PlatformEnvironment.h"
-#include "../actions/LoadOrQuitAction.hpp"
-#include "../actions/NetworkModifyGroupAction.hpp"
-#include "../actions/PeepPickupAction.hpp"
+#include "../actions/LoadOrQuitAction.h"
+#include "../actions/NetworkModifyGroupAction.h"
+#include "../actions/PeepPickupAction.h"
 #include "../core/Guard.hpp"
+#include "../core/Json.hpp"
 #include "../platform/Platform2.h"
 #include "../scripting/ScriptEngine.h"
 #include "../ui/UiContext.h"
@@ -33,7 +34,7 @@
 // This string specifies which version of network stream current build uses.
 // It is used for making sure only compatible builds get connected, even within
 // single OpenRCT2 version.
-#define NETWORK_STREAM_VERSION "4"
+#define NETWORK_STREAM_VERSION "8"
 #define NETWORK_STREAM_ID OPENRCT2_VERSION "-" NETWORK_STREAM_VERSION
 
 static Peep* _pickup_peep = nullptr;
@@ -51,8 +52,7 @@ static constexpr uint32_t CHUNK_SIZE = 1024 * 63;
 #    include "../actions/GameAction.h"
 #    include "../config/Config.h"
 #    include "../core/Console.hpp"
-#    include "../core/FileStream.hpp"
-#    include "../core/Json.hpp"
+#    include "../core/FileStream.h"
 #    include "../core/MemoryStream.h"
 #    include "../core/Nullable.hpp"
 #    include "../core/Path.hpp"
@@ -234,7 +234,7 @@ void NetworkBase::CloseConnection()
 
     mode = NETWORK_MODE_NONE;
     status = NETWORK_STATUS_NONE;
-    _lastConnectStatus = SOCKET_STATUS_CLOSED;
+    _lastConnectStatus = SocketStatus::Closed;
 }
 
 bool NetworkBase::BeginClient(const std::string& host, uint16_t port)
@@ -260,7 +260,7 @@ bool NetworkBase::BeginClient(const std::string& host, uint16_t port)
     _serverState.gamestateSnapshotsEnabled = false;
 
     status = NETWORK_STATUS_CONNECTING;
-    _lastConnectStatus = SOCKET_STATUS_CLOSED;
+    _lastConnectStatus = SocketStatus::Closed;
     _clientMapLoaded = false;
     _serverTickData.clear();
 
@@ -414,7 +414,7 @@ int32_t NetworkBase::GetStatus()
     return status;
 }
 
-int32_t NetworkBase::GetAuthStatus()
+NetworkAuth NetworkBase::GetAuthStatus()
 {
     if (GetMode() == NETWORK_MODE_CLIENT)
     {
@@ -422,9 +422,9 @@ int32_t NetworkBase::GetAuthStatus()
     }
     else if (GetMode() == NETWORK_MODE_SERVER)
     {
-        return NETWORK_AUTH_OK;
+        return NetworkAuth::Ok;
     }
-    return NETWORK_AUTH_NONE;
+    return NetworkAuth::None;
 }
 
 uint32_t NetworkBase::GetServerTick()
@@ -543,11 +543,11 @@ void NetworkBase::UpdateClient()
         {
             switch (_serverConnection->Socket->GetStatus())
             {
-                case SOCKET_STATUS_RESOLVING:
+                case SocketStatus::Resolving:
                 {
-                    if (_lastConnectStatus != SOCKET_STATUS_RESOLVING)
+                    if (_lastConnectStatus != SocketStatus::Resolving)
                     {
-                        _lastConnectStatus = SOCKET_STATUS_RESOLVING;
+                        _lastConnectStatus = SocketStatus::Resolving;
                         char str_resolving[256];
                         format_string(str_resolving, 256, STR_MULTIPLAYER_RESOLVING, nullptr);
 
@@ -558,11 +558,11 @@ void NetworkBase::UpdateClient()
                     }
                     break;
                 }
-                case SOCKET_STATUS_CONNECTING:
+                case SocketStatus::Connecting:
                 {
-                    if (_lastConnectStatus != SOCKET_STATUS_CONNECTING)
+                    if (_lastConnectStatus != SocketStatus::Connecting)
                     {
-                        _lastConnectStatus = SOCKET_STATUS_CONNECTING;
+                        _lastConnectStatus = SocketStatus::Connecting;
                         char str_connecting[256];
                         format_string(str_connecting, 256, STR_MULTIPLAYER_CONNECTING, nullptr);
 
@@ -575,7 +575,7 @@ void NetworkBase::UpdateClient()
                     }
                     break;
                 }
-                case SOCKET_STATUS_CONNECTED:
+                case SocketStatus::Connected:
                 {
                     status = NETWORK_STATUS_CONNECTED;
                     _serverConnection->ResetLastPacketTime();
@@ -599,7 +599,7 @@ void NetworkBase::UpdateClient()
 
                     Close();
                     context_force_close_window_by_class(WC_NETWORK_STATUS);
-                    context_show_error(STR_UNABLE_TO_CONNECT_TO_SERVER, STR_NONE);
+                    context_show_error(STR_UNABLE_TO_CONNECT_TO_SERVER, STR_NONE, {});
                     break;
                 }
             }
@@ -610,7 +610,7 @@ void NetworkBase::UpdateClient()
             if (!ProcessConnection(*_serverConnection))
             {
                 // Do not show disconnect message window when password window closed/canceled
-                if (_serverConnection->AuthStatus == NETWORK_AUTH_REQUIREPASSWORD)
+                if (_serverConnection->AuthStatus == NetworkAuth::RequirePassword)
                 {
                     context_force_close_window_by_class(WC_NETWORK_STATUS);
                 }
@@ -695,23 +695,18 @@ NetworkGroup* NetworkBase::GetGroupByID(uint8_t id)
 
 const char* NetworkBase::FormatChat(NetworkPlayer* fromplayer, const char* text)
 {
-    static char formatted[1024];
-    char* lineCh = formatted;
-    formatted[0] = 0;
+    static std::string formatted;
+    formatted.clear();
+    formatted += "{OUTLINE}";
     if (fromplayer)
     {
-        lineCh = utf8_write_codepoint(lineCh, FORMAT_OUTLINE);
-        lineCh = utf8_write_codepoint(lineCh, FORMAT_BABYBLUE);
-        safe_strcpy(lineCh, static_cast<const char*>(fromplayer->Name.c_str()), sizeof(formatted) - (lineCh - formatted));
-        safe_strcat(lineCh, ": ", sizeof(formatted) - (lineCh - formatted));
-        lineCh = strchr(lineCh, '\0');
+        formatted += "{BABYBLUE}";
+        formatted += fromplayer->Name;
+        formatted += ": ";
     }
-    lineCh = utf8_write_codepoint(lineCh, FORMAT_OUTLINE);
-    lineCh = utf8_write_codepoint(lineCh, FORMAT_WHITE);
-    char* ptrtext = lineCh;
-    safe_strcpy(lineCh, text, 800);
-    utf8_remove_format_codes(ptrtext, true);
-    return formatted;
+    formatted += "{WHITE}";
+    formatted += text;
+    return formatted.c_str();
 }
 
 void NetworkBase::SendPacketToClients(const NetworkPacket& packet, bool front, bool gameCmd)
@@ -960,24 +955,23 @@ void NetworkBase::SaveGroups()
         platform_get_user_directory(path, nullptr, sizeof(path));
         safe_strcat_path(path, "groups.json", sizeof(path));
 
-        json_t* jsonGroupsCfg = json_object();
-        json_t* jsonGroups = json_array();
+        json_t jsonGroups = json_t::array();
         for (auto& group : group_list)
         {
-            json_array_append_new(jsonGroups, group->ToJson());
+            jsonGroups.push_back(group->ToJson());
         }
-        json_object_set_new(jsonGroupsCfg, "default_group", json_integer(default_group));
-        json_object_set_new(jsonGroupsCfg, "groups", jsonGroups);
+        json_t jsonGroupsCfg = {
+            { "default_group", default_group },
+            { "groups", jsonGroups },
+        };
         try
         {
-            Json::WriteToFile(path, jsonGroupsCfg, JSON_INDENT(4) | JSON_PRESERVE_ORDER);
+            Json::WriteToFile(path, jsonGroupsCfg);
         }
         catch (const std::exception& ex)
         {
             log_error("Unable to save %s: %s", path, ex.what());
         }
-
-        json_decref(jsonGroupsCfg);
     }
 }
 
@@ -993,7 +987,7 @@ void NetworkBase::SetupDefaultGroups()
     // Spectator group
     auto spectator = std::make_unique<NetworkGroup>();
     spectator->SetName("Spectator");
-    spectator->ToggleActionPermission(NETWORK_PERMISSION_CHAT);
+    spectator->ToggleActionPermission(NetworkPermission::Chat);
     spectator->Id = 1;
     group_list.push_back(std::move(spectator));
 
@@ -1001,13 +995,13 @@ void NetworkBase::SetupDefaultGroups()
     auto user = std::make_unique<NetworkGroup>();
     user->SetName("User");
     user->ActionsAllowed.fill(0xFF);
-    user->ToggleActionPermission(NETWORK_PERMISSION_KICK_PLAYER);
-    user->ToggleActionPermission(NETWORK_PERMISSION_MODIFY_GROUPS);
-    user->ToggleActionPermission(NETWORK_PERMISSION_SET_PLAYER_GROUP);
-    user->ToggleActionPermission(NETWORK_PERMISSION_CHEAT);
-    user->ToggleActionPermission(NETWORK_PERMISSION_PASSWORDLESS_LOGIN);
-    user->ToggleActionPermission(NETWORK_PERMISSION_MODIFY_TILE);
-    user->ToggleActionPermission(NETWORK_PERMISSION_EDIT_SCENARIO_OPTIONS);
+    user->ToggleActionPermission(NetworkPermission::KickPlayer);
+    user->ToggleActionPermission(NetworkPermission::ModifyGroups);
+    user->ToggleActionPermission(NetworkPermission::SetPlayerGroup);
+    user->ToggleActionPermission(NetworkPermission::Cheat);
+    user->ToggleActionPermission(NetworkPermission::PasswordlessLogin);
+    user->ToggleActionPermission(NetworkPermission::ModifyTile);
+    user->ToggleActionPermission(NetworkPermission::EditScenarioOptions);
     user->Id = 2;
     group_list.push_back(std::move(user));
 
@@ -1023,12 +1017,12 @@ void NetworkBase::LoadGroups()
     platform_get_user_directory(path, nullptr, sizeof(path));
     safe_strcat_path(path, "groups.json", sizeof(path));
 
-    json_t* json = nullptr;
+    json_t jsonGroupConfig;
     if (Platform::FileExists(path))
     {
         try
         {
-            json = Json::ReadFromFile(path);
+            jsonGroupConfig = Json::ReadFromFile(path);
         }
         catch (const std::exception& e)
         {
@@ -1036,28 +1030,26 @@ void NetworkBase::LoadGroups()
         }
     }
 
-    if (json == nullptr)
+    if (!jsonGroupConfig.is_object())
     {
         SetupDefaultGroups();
     }
     else
     {
-        json_t* json_groups = json_object_get(json, "groups");
-        size_t groupCount = json_array_size(json_groups);
-        for (size_t i = 0; i < groupCount; i++)
+        json_t jsonGroups = jsonGroupConfig["groups"];
+        if (jsonGroups.is_array())
         {
-            json_t* jsonGroup = json_array_get(json_groups, i);
-
-            auto newgroup = std::make_unique<NetworkGroup>(NetworkGroup::FromJson(jsonGroup));
-            group_list.push_back(std::move(newgroup));
+            for (auto& jsonGroup : jsonGroups)
+            {
+                group_list.emplace_back(std::make_unique<NetworkGroup>(NetworkGroup::FromJson(jsonGroup)));
+            }
         }
-        json_t* jsonDefaultGroup = json_object_get(json, "default_group");
-        default_group = static_cast<uint8_t>(json_integer_value(jsonDefaultGroup));
+
+        default_group = Json::GetNumber<uint8_t>(jsonGroupConfig["default_group"]);
         if (GetGroupByID(default_group) == nullptr)
         {
             default_group = 0;
         }
-        json_decref(json);
     }
 
     // Host group should always contain all permissions.
@@ -1095,7 +1087,6 @@ void NetworkBase::AppendLog(std::ostream& fs, const std::string& s)
         if (strftime(buffer, sizeof(buffer), "[%Y/%m/%d %H:%M:%S] ", tmInfo) != 0)
         {
             String::Append(buffer, sizeof(buffer), s.c_str());
-            utf8_remove_formatting(buffer, false);
             String::Append(buffer, sizeof(buffer), PLATFORM_NEWLINE);
 
             fs.write(buffer, strlen(buffer));
@@ -1211,7 +1202,7 @@ void NetworkBase::Client_Send_TOKEN()
 {
     log_verbose("requesting token");
     NetworkPacket packet(NetworkCommand::Token);
-    _serverConnection->AuthStatus = NETWORK_AUTH_REQUESTED;
+    _serverConnection->AuthStatus = NetworkAuth::Requested;
     _serverConnection->QueuePacket(std::move(packet));
 }
 
@@ -1226,7 +1217,7 @@ void NetworkBase::Client_Send_AUTH(
     assert(signature.size() <= static_cast<size_t>(UINT32_MAX));
     packet << static_cast<uint32_t>(signature.size());
     packet.Write(signature.data(), signature.size());
-    _serverConnection->AuthStatus = NETWORK_AUTH_REQUESTED;
+    _serverConnection->AuthStatus = NetworkAuth::Requested;
     _serverConnection->QueuePacket(std::move(packet));
 }
 
@@ -1336,7 +1327,7 @@ NetworkStats_t NetworkBase::GetStats() const
     {
         for (auto& connection : client_connection_list)
         {
-            for (size_t n = 0; n < NETWORK_STATISTICS_GROUP_MAX; n++)
+            for (size_t n = 0; n < EnumValue(NetworkStatisticsGroup::Max); n++)
             {
                 stats.bytesReceived[n] += connection->Stats.bytesReceived[n];
                 stats.bytesSent[n] += connection->Stats.bytesSent[n];
@@ -1355,12 +1346,12 @@ void NetworkBase::Server_Send_AUTH(NetworkConnection& connection)
     }
     NetworkPacket packet(NetworkCommand::Auth);
     packet << static_cast<uint32_t>(connection.AuthStatus) << new_playerid;
-    if (connection.AuthStatus == NETWORK_AUTH_BADVERSION)
+    if (connection.AuthStatus == NetworkAuth::BadVersion)
     {
         packet.WriteString(network_get_version().c_str());
     }
     connection.QueuePacket(std::move(packet));
-    if (connection.AuthStatus != NETWORK_AUTH_OK && connection.AuthStatus != NETWORK_AUTH_REQUIREPASSWORD)
+    if (connection.AuthStatus != NetworkAuth::Ok && connection.AuthStatus != NetworkAuth::RequirePassword)
     {
         connection.Socket->Disconnect();
     }
@@ -1594,37 +1585,35 @@ void NetworkBase::Server_Send_SETDISCONNECTMSG(NetworkConnection& connection, co
     connection.QueuePacket(std::move(packet));
 }
 
-json_t* NetworkBase::GetServerInfoAsJson() const
+json_t NetworkBase::GetServerInfoAsJson() const
 {
-    json_t* obj = json_object();
-    json_object_set_new(obj, "name", json_string(gConfigNetwork.server_name.c_str()));
-    json_object_set_new(obj, "requiresPassword", json_boolean(_password.size() > 0));
-    json_object_set_new(obj, "version", json_string(network_get_version().c_str()));
-    json_object_set_new(obj, "players", json_integer(player_list.size()));
-    json_object_set_new(obj, "maxPlayers", json_integer(gConfigNetwork.maxplayers));
-    json_object_set_new(obj, "description", json_string(gConfigNetwork.server_description.c_str()));
-    json_object_set_new(obj, "greeting", json_string(gConfigNetwork.server_greeting.c_str()));
-    json_object_set_new(obj, "dedicated", json_boolean(gOpenRCT2Headless));
-    return obj;
+    json_t jsonObj = {
+        { "name", gConfigNetwork.server_name },         { "requiresPassword", _password.size() > 0 },
+        { "version", network_get_version() },           { "players", player_list.size() },
+        { "maxPlayers", gConfigNetwork.maxplayers },    { "description", gConfigNetwork.server_description },
+        { "greeting", gConfigNetwork.server_greeting }, { "dedicated", gOpenRCT2Headless },
+    };
+    return jsonObj;
 }
 
 void NetworkBase::Server_Send_GAMEINFO(NetworkConnection& connection)
 {
     NetworkPacket packet(NetworkCommand::GameInfo);
 #    ifndef DISABLE_HTTP
-    json_t* obj = GetServerInfoAsJson();
+    json_t jsonObj = GetServerInfoAsJson();
 
     // Provider details
-    json_t* jsonProvider = json_object();
-    json_object_set_new(jsonProvider, "name", json_string(gConfigNetwork.provider_name.c_str()));
-    json_object_set_new(jsonProvider, "email", json_string(gConfigNetwork.provider_email.c_str()));
-    json_object_set_new(jsonProvider, "website", json_string(gConfigNetwork.provider_website.c_str()));
-    json_object_set_new(obj, "provider", jsonProvider);
+    json_t jsonProvider = {
+        { "name", gConfigNetwork.provider_name },
+        { "email", gConfigNetwork.provider_email },
+        { "website", gConfigNetwork.provider_website },
+    };
 
-    packet.WriteString(json_dumps(obj, 0));
+    jsonObj["provider"] = jsonProvider;
+
+    packet.WriteString(jsonObj.dump().c_str());
     packet << _serverState.gamestateSnapshotsEnabled;
 
-    json_decref(obj);
 #    endif
     connection.QueuePacket(std::move(packet));
 }
@@ -1717,7 +1706,7 @@ void NetworkBase::ProcessPacket(NetworkConnection& connection, NetworkPacket& pa
     if (it != handlerList.end())
     {
         auto commandHandler = it->second;
-        if (connection.AuthStatus == NETWORK_AUTH_OK || !packet.CommandRequiresAuth())
+        if (connection.AuthStatus == NetworkAuth::Ok || !packet.CommandRequiresAuth())
         {
             (this->*commandHandler)(connection, packet);
         }
@@ -1857,9 +1846,8 @@ void NetworkBase::ProcessPlayerList()
                         {
                             _serverConnection->Player = player;
                         }
+                        newPlayers.push_back(player->Id);
                     }
-
-                    newPlayers.push_back(player->Id);
                 }
                 else
                 {
@@ -2222,39 +2210,39 @@ void NetworkBase::Client_Handle_AUTH(NetworkConnection& connection, NetworkPacke
 {
     uint32_t auth_status;
     packet >> auth_status >> const_cast<uint8_t&>(player_id);
-    connection.AuthStatus = static_cast<NETWORK_AUTH>(auth_status);
+    connection.AuthStatus = static_cast<NetworkAuth>(auth_status);
     switch (connection.AuthStatus)
     {
-        case NETWORK_AUTH_OK:
+        case NetworkAuth::Ok:
             Client_Send_GAMEINFO();
             break;
-        case NETWORK_AUTH_BADNAME:
+        case NetworkAuth::BadName:
             connection.SetLastDisconnectReason(STR_MULTIPLAYER_BAD_PLAYER_NAME);
             connection.Socket->Disconnect();
             break;
-        case NETWORK_AUTH_BADVERSION:
+        case NetworkAuth::BadVersion:
         {
             const char* version = packet.ReadString();
             connection.SetLastDisconnectReason(STR_MULTIPLAYER_INCORRECT_SOFTWARE_VERSION, &version);
             connection.Socket->Disconnect();
             break;
         }
-        case NETWORK_AUTH_BADPASSWORD:
+        case NetworkAuth::BadPassword:
             connection.SetLastDisconnectReason(STR_MULTIPLAYER_BAD_PASSWORD);
             connection.Socket->Disconnect();
             break;
-        case NETWORK_AUTH_VERIFICATIONFAILURE:
+        case NetworkAuth::VerificationFailure:
             connection.SetLastDisconnectReason(STR_MULTIPLAYER_VERIFICATION_FAILURE);
             connection.Socket->Disconnect();
             break;
-        case NETWORK_AUTH_FULL:
+        case NetworkAuth::Full:
             connection.SetLastDisconnectReason(STR_MULTIPLAYER_SERVER_FULL);
             connection.Socket->Disconnect();
             break;
-        case NETWORK_AUTH_REQUIREPASSWORD:
+        case NetworkAuth::RequirePassword:
             context_open_window_view(WV_NETWORK_PASSWORD);
             break;
-        case NETWORK_AUTH_UNKNOWN_KEY_DISALLOWED:
+        case NetworkAuth::UnknownKeyDisallowed:
             connection.SetLastDisconnectReason(STR_MULTIPLAYER_UNKNOWN_KEY_DISALLOWED);
             connection.Socket->Disconnect();
             break;
@@ -2346,7 +2334,7 @@ void NetworkBase::Client_Handle_OBJECTS_LIST(NetworkConnection& connection, Netw
         uint32_t flags = 0;
         packet >> checksum >> flags;
 
-        const auto* object = repo.FindObject(objectName);
+        const auto* object = repo.FindObjectLegacy(objectName);
         // This could potentially request the object if checksums don't match, but since client
         // won't replace its version with server-provided one, we don't do that.
         if (object == nullptr)
@@ -2448,11 +2436,11 @@ void NetworkBase::Client_Handle_GAMESTATE(NetworkConnection& connection, Network
             {
                 log_info("Wrote desync report to '%s'", outputFile.c_str());
 
-                uint8_t args[32]{};
-                Formatter(args).Add<char*>(uniqueFileName);
+                auto ft = Formatter();
+                ft.Add<char*>(uniqueFileName);
 
                 char str_desync[1024];
-                format_string(str_desync, sizeof(str_desync), STR_DESYNC_REPORT, args);
+                format_string(str_desync, sizeof(str_desync), STR_DESYNC_REPORT, ft.Data());
 
                 auto intent = Intent(WC_NETWORK_STATUS);
                 intent.putExtra(INTENT_EXTRA_MESSAGE, std::string{ str_desync });
@@ -2488,7 +2476,7 @@ void NetworkBase::Server_Handle_MAPREQUEST(NetworkConnection& connection, Networ
         // This is required, as packet does not have null terminator
         std::string s(name, name + 8);
         log_verbose("Client requested object %s", s.c_str());
-        const ObjectRepositoryItem* item = repo.FindObject(s.c_str());
+        const ObjectRepositoryItem* item = repo.FindObjectLegacy(s.c_str());
         if (item == nullptr)
         {
             log_warning("Client tried getting non-existent object %s from us.", s.c_str());
@@ -2507,7 +2495,7 @@ void NetworkBase::Server_Handle_MAPREQUEST(NetworkConnection& connection, Networ
 
 void NetworkBase::Server_Handle_AUTH(NetworkConnection& connection, NetworkPacket& packet)
 {
-    if (connection.AuthStatus != NETWORK_AUTH_OK)
+    if (connection.AuthStatus != NetworkAuth::Ok)
     {
         const char* gameversion = packet.ReadString();
         const char* name = packet.ReadString();
@@ -2517,7 +2505,7 @@ void NetworkBase::Server_Handle_AUTH(NetworkConnection& connection, NetworkPacke
         packet >> sigsize;
         if (pubkey == nullptr)
         {
-            connection.AuthStatus = NETWORK_AUTH_VERIFICATIONFAILURE;
+            connection.AuthStatus = NetworkAuth::VerificationFailure;
         }
         else
         {
@@ -2548,70 +2536,70 @@ void NetworkBase::Server_Handle_AUTH(NetworkConnection& connection, NetworkPacke
                     if (gConfigNetwork.known_keys_only && _userManager.GetUserByHash(hash) == nullptr)
                     {
                         log_verbose("Hash %s, not known", hash.c_str());
-                        connection.AuthStatus = NETWORK_AUTH_UNKNOWN_KEY_DISALLOWED;
+                        connection.AuthStatus = NetworkAuth::UnknownKeyDisallowed;
                     }
                     else
                     {
-                        connection.AuthStatus = NETWORK_AUTH_VERIFIED;
+                        connection.AuthStatus = NetworkAuth::Verified;
                     }
                 }
                 else
                 {
-                    connection.AuthStatus = NETWORK_AUTH_VERIFICATIONFAILURE;
+                    connection.AuthStatus = NetworkAuth::VerificationFailure;
                     log_verbose("Signature verification failed!");
                 }
             }
             catch (const std::exception&)
             {
-                connection.AuthStatus = NETWORK_AUTH_VERIFICATIONFAILURE;
+                connection.AuthStatus = NetworkAuth::VerificationFailure;
                 log_verbose("Signature verification failed, invalid data!");
             }
         }
 
         bool passwordless = false;
-        if (connection.AuthStatus == NETWORK_AUTH_VERIFIED)
+        if (connection.AuthStatus == NetworkAuth::Verified)
         {
             const NetworkGroup* group = GetGroupByID(GetGroupIDByHash(connection.Key.PublicKeyHash()));
             passwordless = group->CanPerformCommand(MISC_COMMAND_PASSWORDLESS_LOGIN);
         }
         if (!gameversion || network_get_version() != gameversion)
         {
-            connection.AuthStatus = NETWORK_AUTH_BADVERSION;
+            connection.AuthStatus = NetworkAuth::BadVersion;
         }
         else if (!name)
         {
-            connection.AuthStatus = NETWORK_AUTH_BADNAME;
+            connection.AuthStatus = NetworkAuth::BadName;
         }
         else if (!passwordless)
         {
             if ((!password || strlen(password) == 0) && !_password.empty())
             {
-                connection.AuthStatus = NETWORK_AUTH_REQUIREPASSWORD;
+                connection.AuthStatus = NetworkAuth::RequirePassword;
             }
             else if (password && _password != password)
             {
-                connection.AuthStatus = NETWORK_AUTH_BADPASSWORD;
+                connection.AuthStatus = NetworkAuth::BadPassword;
             }
         }
 
         if (static_cast<size_t>(gConfigNetwork.maxplayers) <= player_list.size())
         {
-            connection.AuthStatus = NETWORK_AUTH_FULL;
+            connection.AuthStatus = NetworkAuth::Full;
         }
-        else if (connection.AuthStatus == NETWORK_AUTH_VERIFIED)
+        else if (connection.AuthStatus == NetworkAuth::Verified)
         {
             const std::string hash = connection.Key.PublicKeyHash();
             if (ProcessPlayerAuthenticatePluginHooks(connection, name, hash))
             {
-                connection.AuthStatus = NETWORK_AUTH_OK;
+                connection.AuthStatus = NetworkAuth::Ok;
                 Server_Client_Joined(name, hash, connection);
             }
             else
             {
-                connection.AuthStatus = NETWORK_AUTH_VERIFICATIONFAILURE;
+                connection.AuthStatus = NetworkAuth::VerificationFailure;
             }
         }
-        else if (connection.AuthStatus != NETWORK_AUTH_REQUIREPASSWORD)
+        else if (connection.AuthStatus != NetworkAuth::RequirePassword)
         {
             log_error("Unknown failure (%d) while authenticating client", connection.AuthStatus);
         }
@@ -2708,7 +2696,7 @@ void NetworkBase::Client_Handle_MAP([[maybe_unused]] NetworkConnection& connecti
         else
         {
             // Something went wrong, game is not loaded. Return to main screen.
-            auto loadOrQuitAction = LoadOrQuitAction(LoadOrQuitModes::OpenSavePrompt, PM_SAVE_BEFORE_QUIT);
+            auto loadOrQuitAction = LoadOrQuitAction(LoadOrQuitModes::OpenSavePrompt, PromptMode::SaveBeforeQuit);
             GameActions::Execute(&loadOrQuitAction);
         }
         if (has_to_free)
@@ -3121,7 +3109,7 @@ void NetworkBase::Client_Handle_SHOWERROR([[maybe_unused]] NetworkConnection& co
 {
     rct_string_id title, message;
     packet >> title >> message;
-    context_show_error(title, message);
+    context_show_error(title, message, {});
 }
 
 void NetworkBase::Client_Handle_GROUPLIST([[maybe_unused]] NetworkConnection& connection, NetworkPacket& packet)
@@ -3178,32 +3166,27 @@ void NetworkBase::Client_Send_GAMEINFO()
     _serverConnection->QueuePacket(std::move(packet));
 }
 
-static std::string json_stdstring_value(const json_t* string)
-{
-    const char* cstr = json_string_value(string);
-    return cstr == nullptr ? std::string() : std::string(cstr);
-}
-
 void NetworkBase::Client_Handle_GAMEINFO([[maybe_unused]] NetworkConnection& connection, NetworkPacket& packet)
 {
     const char* jsonString = packet.ReadString();
     packet >> _serverState.gamestateSnapshotsEnabled;
 
-    json_error_t error;
-    json_t* root = json_loads(jsonString, 0, &error);
+    json_t jsonData = Json::FromString(jsonString);
 
-    ServerName = json_stdstring_value(json_object_get(root, "name"));
-    ServerDescription = json_stdstring_value(json_object_get(root, "description"));
-    ServerGreeting = json_stdstring_value(json_object_get(root, "greeting"));
-
-    json_t* jsonProvider = json_object_get(root, "provider");
-    if (jsonProvider != nullptr)
+    if (jsonData.is_object())
     {
-        ServerProviderName = json_stdstring_value(json_object_get(jsonProvider, "name"));
-        ServerProviderEmail = json_stdstring_value(json_object_get(jsonProvider, "email"));
-        ServerProviderWebsite = json_stdstring_value(json_object_get(jsonProvider, "website"));
+        ServerName = Json::GetString(jsonData["name"]);
+        ServerDescription = Json::GetString(jsonData["description"]);
+        ServerGreeting = Json::GetString(jsonData["greeting"]);
+
+        json_t jsonProvider = jsonData["provider"];
+        if (jsonProvider.is_object())
+        {
+            ServerProviderName = Json::GetString(jsonProvider["name"]);
+            ServerProviderEmail = Json::GetString(jsonProvider["email"]);
+            ServerProviderWebsite = Json::GetString(jsonProvider["website"]);
+        }
     }
-    json_decref(root);
 
     network_chat_show_server_greeting();
 }
@@ -3283,7 +3266,7 @@ void network_send_tick()
     gNetwork.Server_Send_TICK();
 }
 
-int32_t network_get_authstatus()
+NetworkAuth network_get_authstatus()
 {
     return gNetwork.GetAuthStatus();
 }
@@ -3380,7 +3363,7 @@ void network_set_player_last_action(uint32_t index, int32_t command)
 {
     Guard::IndexInRange(index, gNetwork.player_list);
 
-    gNetwork.player_list[index]->LastAction = NetworkActions::FindCommand(command);
+    gNetwork.player_list[index]->LastAction = static_cast<int32_t>(NetworkActions::FindCommand(command));
     gNetwork.player_list[index]->LastActionTime = platform_get_ticks();
 }
 
@@ -3478,22 +3461,17 @@ void network_chat_show_connected_message()
 // Display server greeting if one exists
 void network_chat_show_server_greeting()
 {
-    const char* greeting = network_get_server_greeting();
+    auto greeting = network_get_server_greeting();
     if (!str_is_null_or_empty(greeting))
     {
-        static char greeting_formatted[CHAT_INPUT_SIZE];
-        char* lineCh = greeting_formatted;
-        greeting_formatted[0] = 0;
-        lineCh = utf8_write_codepoint(lineCh, FORMAT_OUTLINE);
-        lineCh = utf8_write_codepoint(lineCh, FORMAT_GREEN);
-        char* ptrtext = lineCh;
-        safe_strcpy(lineCh, greeting, CHAT_INPUT_SIZE - 24); // Limit to 1000 characters so we don't overflow the buffer
-        utf8_remove_format_codes(ptrtext, true);
-        chat_history_add(greeting_formatted);
+        thread_local std::string greeting_formatted;
+        greeting_formatted.assign("{OUTLINE}{GREEN}");
+        greeting_formatted += greeting;
+        chat_history_add(greeting_formatted.c_str());
     }
 }
 
-GameActionResult::Ptr network_set_player_group(
+GameActions::Result::Ptr network_set_player_group(
     NetworkPlayerId_t actionPlayerId, NetworkPlayerId_t playerId, uint8_t groupId, bool isExecuting)
 {
     NetworkPlayer* player = gNetwork.GetPlayerByID(playerId);
@@ -3501,22 +3479,23 @@ GameActionResult::Ptr network_set_player_group(
     NetworkGroup* fromgroup = gNetwork.GetGroupByID(actionPlayerId);
     if (player == nullptr)
     {
-        return std::make_unique<GameActionResult>(GA_ERROR::INVALID_PARAMETERS, STR_CANT_DO_THIS);
+        return std::make_unique<GameActions::Result>(GameActions::Status::InvalidParameters, STR_CANT_DO_THIS);
     }
 
     if (!gNetwork.GetGroupByID(groupId))
     {
-        return std::make_unique<GameActionResult>(GA_ERROR::INVALID_PARAMETERS, STR_CANT_DO_THIS);
+        return std::make_unique<GameActions::Result>(GameActions::Status::InvalidParameters, STR_CANT_DO_THIS);
     }
 
     if (player->Flags & NETWORK_PLAYER_FLAG_ISSERVER)
     {
-        return std::make_unique<GameActionResult>(GA_ERROR::INVALID_PARAMETERS, STR_CANT_CHANGE_GROUP_THAT_THE_HOST_BELONGS_TO);
+        return std::make_unique<GameActions::Result>(
+            GameActions::Status::InvalidParameters, STR_CANT_CHANGE_GROUP_THAT_THE_HOST_BELONGS_TO);
     }
 
     if (groupId == 0 && fromgroup && fromgroup->Id != 0)
     {
-        return std::make_unique<GameActionResult>(GA_ERROR::INVALID_PARAMETERS, STR_CANT_SET_TO_THIS_GROUP);
+        return std::make_unique<GameActions::Result>(GameActions::Status::InvalidParameters, STR_CANT_SET_TO_THIS_GROUP);
     }
 
     if (isExecuting)
@@ -3547,10 +3526,10 @@ GameActionResult::Ptr network_set_player_group(
         format_string(log_msg, 256, STR_LOG_SET_PLAYER_GROUP, args);
         network_append_server_log(log_msg);
     }
-    return std::make_unique<GameActionResult>();
+    return std::make_unique<GameActions::Result>();
 }
 
-GameActionResult::Ptr network_modify_groups(
+GameActions::Result::Ptr network_modify_groups(
     NetworkPlayerId_t actionPlayerId, ModifyGroupType type, uint8_t groupId, const std::string& name, uint32_t permissionIndex,
     PermissionState permissionState, bool isExecuting)
 {
@@ -3563,7 +3542,7 @@ GameActionResult::Ptr network_modify_groups(
                 NetworkGroup* newgroup = gNetwork.AddGroup();
                 if (newgroup == nullptr)
                 {
-                    return std::make_unique<GameActionResult>(GA_ERROR::UNKNOWN, STR_CANT_DO_THIS);
+                    return std::make_unique<GameActions::Result>(GameActions::Status::Unknown, STR_CANT_DO_THIS);
                 }
             }
         }
@@ -3572,14 +3551,15 @@ GameActionResult::Ptr network_modify_groups(
         {
             if (groupId == 0)
             {
-                return std::make_unique<GameActionResult>(GA_ERROR::DISALLOWED, STR_THIS_GROUP_CANNOT_BE_MODIFIED);
+                return std::make_unique<GameActions::Result>(
+                    GameActions::Status::Disallowed, STR_THIS_GROUP_CANNOT_BE_MODIFIED);
             }
             for (const auto& it : gNetwork.player_list)
             {
                 if ((it.get())->Group == groupId)
                 {
-                    return std::make_unique<GameActionResult>(
-                        GA_ERROR::DISALLOWED, STR_CANT_REMOVE_GROUP_THAT_PLAYERS_BELONG_TO);
+                    return std::make_unique<GameActions::Result>(
+                        GameActions::Status::Disallowed, STR_CANT_REMOVE_GROUP_THAT_PLAYERS_BELONG_TO);
                 }
             }
             if (isExecuting)
@@ -3592,17 +3572,19 @@ GameActionResult::Ptr network_modify_groups(
         {
             if (groupId == 0)
             { // cant change admin group permissions
-                return std::make_unique<GameActionResult>(GA_ERROR::DISALLOWED, STR_THIS_GROUP_CANNOT_BE_MODIFIED);
+                return std::make_unique<GameActions::Result>(
+                    GameActions::Status::Disallowed, STR_THIS_GROUP_CANNOT_BE_MODIFIED);
             }
             NetworkGroup* mygroup = nullptr;
             NetworkPlayer* player = gNetwork.GetPlayerByID(actionPlayerId);
+            auto networkPermission = static_cast<NetworkPermission>(permissionIndex);
             if (player != nullptr && permissionState == PermissionState::Toggle)
             {
                 mygroup = gNetwork.GetGroupByID(player->Group);
-                if (mygroup == nullptr || !mygroup->CanPerformAction(permissionIndex))
+                if (mygroup == nullptr || !mygroup->CanPerformAction(networkPermission))
                 {
-                    return std::make_unique<GameActionResult>(
-                        GA_ERROR::DISALLOWED, STR_CANT_MODIFY_PERMISSION_THAT_YOU_DO_NOT_HAVE_YOURSELF);
+                    return std::make_unique<GameActions::Result>(
+                        GameActions::Status::Disallowed, STR_CANT_MODIFY_PERMISSION_THAT_YOU_DO_NOT_HAVE_YOURSELF);
                 }
             }
             if (isExecuting)
@@ -3626,7 +3608,7 @@ GameActionResult::Ptr network_modify_groups(
                     }
                     else
                     {
-                        group->ToggleActionPermission(permissionIndex);
+                        group->ToggleActionPermission(networkPermission);
                     }
                 }
             }
@@ -3639,13 +3621,13 @@ GameActionResult::Ptr network_modify_groups(
 
             if (strcmp(oldName, name.c_str()) == 0)
             {
-                return std::make_unique<GameActionResult>();
+                return std::make_unique<GameActions::Result>();
             }
 
             if (name.empty())
             {
-                return std::make_unique<GameActionResult>(
-                    GA_ERROR::INVALID_PARAMETERS, STR_CANT_RENAME_GROUP, STR_INVALID_GROUP_NAME);
+                return std::make_unique<GameActions::Result>(
+                    GameActions::Status::InvalidParameters, STR_CANT_RENAME_GROUP, STR_INVALID_GROUP_NAME);
             }
 
             if (isExecuting)
@@ -3661,7 +3643,7 @@ GameActionResult::Ptr network_modify_groups(
         {
             if (groupId == 0)
             {
-                return std::make_unique<GameActionResult>(GA_ERROR::DISALLOWED, STR_CANT_SET_TO_THIS_GROUP);
+                return std::make_unique<GameActions::Result>(GameActions::Status::Disallowed, STR_CANT_SET_TO_THIS_GROUP);
             }
             if (isExecuting)
             {
@@ -3671,27 +3653,27 @@ GameActionResult::Ptr network_modify_groups(
         break;
         default:
             log_error("Invalid Modify Group Type: %u", static_cast<uint8_t>(type));
-            return std::make_unique<GameActionResult>(GA_ERROR::INVALID_PARAMETERS, STR_NONE);
+            return std::make_unique<GameActions::Result>(GameActions::Status::InvalidParameters, STR_NONE);
     }
 
     gNetwork.SaveGroups();
 
-    return std::make_unique<GameActionResult>();
+    return std::make_unique<GameActions::Result>();
 }
 
-GameActionResult::Ptr network_kick_player(NetworkPlayerId_t playerId, bool isExecuting)
+GameActions::Result::Ptr network_kick_player(NetworkPlayerId_t playerId, bool isExecuting)
 {
     NetworkPlayer* player = gNetwork.GetPlayerByID(playerId);
     if (player == nullptr)
     {
         // Player might be already removed by the PLAYERLIST command, need to refactor non-game commands executing too
         // early.
-        return std::make_unique<GameActionResult>(GA_ERROR::UNKNOWN, STR_NONE);
+        return std::make_unique<GameActions::Result>(GameActions::Status::Unknown, STR_NONE);
     }
 
     if (player && player->Flags & NETWORK_PLAYER_FLAG_ISSERVER)
     {
-        return std::make_unique<GameActionResult>(GA_ERROR::DISALLOWED, STR_CANT_KICK_THE_HOST);
+        return std::make_unique<GameActions::Result>(GameActions::Status::Disallowed, STR_CANT_KICK_THE_HOST);
     }
 
     if (isExecuting)
@@ -3706,7 +3688,7 @@ GameActionResult::Ptr network_kick_player(NetworkPlayerId_t playerId, bool isExe
             networkUserManager->Save();
         }
     }
-    return std::make_unique<GameActionResult>();
+    return std::make_unique<GameActions::Result>();
 }
 
 uint8_t network_get_default_group()
@@ -3731,7 +3713,7 @@ rct_string_id network_get_action_name_string_id(uint32_t index)
     }
 }
 
-int32_t network_can_perform_action(uint32_t groupindex, uint32_t index)
+int32_t network_can_perform_action(uint32_t groupindex, NetworkPermission index)
 {
     Guard::IndexInRange(groupindex, gNetwork.group_list);
 
@@ -3976,7 +3958,7 @@ bool network_gamestate_snapshots_enabled()
     return network_get_server_state().gamestateSnapshotsEnabled;
 }
 
-json_t* network_get_server_info_as_json()
+json_t network_get_server_info_as_json()
 {
     return gNetwork.GetServerInfoAsJson();
 }
@@ -3989,9 +3971,9 @@ int32_t network_get_status()
 {
     return NETWORK_STATUS_NONE;
 }
-int32_t network_get_authstatus()
+NetworkAuth network_get_authstatus()
 {
-    return NETWORK_AUTH_NONE;
+    return NetworkAuth::None;
 }
 uint32_t network_get_server_tick()
 {
@@ -4119,20 +4101,20 @@ const char* network_get_group_name(uint32_t index)
     return "";
 };
 
-GameActionResult::Ptr network_set_player_group(
+GameActions::Result::Ptr network_set_player_group(
     NetworkPlayerId_t actionPlayerId, NetworkPlayerId_t playerId, uint8_t groupId, bool isExecuting)
 {
-    return std::make_unique<GameActionResult>();
+    return std::make_unique<GameActions::Result>();
 }
-GameActionResult::Ptr network_modify_groups(
+GameActions::Result::Ptr network_modify_groups(
     NetworkPlayerId_t actionPlayerId, ModifyGroupType type, uint8_t groupId, const std::string& name, uint32_t permissionIndex,
     PermissionState permissionState, bool isExecuting)
 {
-    return std::make_unique<GameActionResult>();
+    return std::make_unique<GameActions::Result>();
 }
-GameActionResult::Ptr network_kick_player(NetworkPlayerId_t playerId, bool isExecuting)
+GameActions::Result::Ptr network_kick_player(NetworkPlayerId_t playerId, bool isExecuting)
 {
-    return std::make_unique<GameActionResult>();
+    return std::make_unique<GameActions::Result>();
 }
 uint8_t network_get_default_group()
 {
@@ -4146,7 +4128,7 @@ rct_string_id network_get_action_name_string_id(uint32_t index)
 {
     return -1;
 }
-int32_t network_can_perform_action(uint32_t groupindex, uint32_t index)
+int32_t network_can_perform_action(uint32_t groupindex, NetworkPermission index)
 {
     return 0;
 }
@@ -4241,8 +4223,8 @@ NetworkServerState_t network_get_server_state()
 {
     return NetworkServerState_t{};
 }
-json_t* network_get_server_info_as_json()
+json_t network_get_server_info_as_json()
 {
-    return nullptr;
+    return {};
 }
 #endif /* DISABLE_NETWORK */

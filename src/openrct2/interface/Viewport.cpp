@@ -15,7 +15,7 @@
 #include "../OpenRCT2.h"
 #include "../config/Config.h"
 #include "../core/Guard.hpp"
-#include "../core/JobPool.hpp"
+#include "../core/JobPool.h"
 #include "../drawing/Drawing.h"
 #include "../drawing/IDrawingEngine.h"
 #include "../paint/Paint.h"
@@ -654,7 +654,7 @@ void viewport_update_smart_sprite_follow(rct_window* window)
         window->viewport_smart_follow_sprite = SPRITE_INDEX_NULL;
         window->viewport_target_sprite = SPRITE_INDEX_NULL;
     }
-    else if (entity->sprite_identifier == SPRITE_IDENTIFIER_PEEP)
+    else if (entity->sprite_identifier == SpriteIdentifier::Peep)
     {
         Peep* peep = TryGetEntity<Peep>(window->viewport_smart_follow_sprite);
         if (peep == nullptr)
@@ -670,11 +670,11 @@ void viewport_update_smart_sprite_follow(rct_window* window)
         else if (peep->AssignedPeepType == PeepType::Staff)
             viewport_update_smart_staff_follow(window, peep);
     }
-    else if (entity->sprite_identifier == SPRITE_IDENTIFIER_VEHICLE)
+    else if (entity->sprite_identifier == SpriteIdentifier::Vehicle)
     {
         viewport_update_smart_vehicle_follow(window);
     }
-    else if (entity->sprite_identifier == SPRITE_IDENTIFIER_MISC || entity->sprite_identifier == SPRITE_IDENTIFIER_LITTER)
+    else if (entity->sprite_identifier == SpriteIdentifier::Misc || entity->sprite_identifier == SpriteIdentifier::Litter)
     {
         window->viewport_focus_sprite.sprite_id = window->viewport_smart_follow_sprite;
         window->viewport_target_sprite = window->viewport_smart_follow_sprite;
@@ -692,7 +692,7 @@ viewport_focus viewport_update_smart_guest_follow(rct_window* window, Peep* peep
     focus.type = VIEWPORT_FOCUS_TYPE_SPRITE;
     focus.sprite.sprite_id = peep->sprite_index;
 
-    if (peep->State == PEEP_STATE_PICKED)
+    if (peep->State == PeepState::Picked)
     {
         focus.sprite.sprite_id = SPRITE_INDEX_NULL;
         window->viewport_smart_follow_sprite = SPRITE_INDEX_NULL;
@@ -702,8 +702,8 @@ viewport_focus viewport_update_smart_guest_follow(rct_window* window, Peep* peep
     else
     {
         bool overallFocus = true;
-        if (peep->State == PEEP_STATE_ON_RIDE || peep->State == PEEP_STATE_ENTERING_RIDE
-            || (peep->State == PEEP_STATE_LEAVING_RIDE && peep->x == LOCATION_NULL))
+        if (peep->State == PeepState::OnRide || peep->State == PeepState::EnteringRide
+            || (peep->State == PeepState::LeavingRide && peep->x == LOCATION_NULL))
         {
             auto ride = get_ride(peep->CurrentRide);
             if (ride != nullptr && (ride->lifecycle_flags & RIDE_LIFECYCLE_ON_TRACK))
@@ -752,7 +752,7 @@ void viewport_update_smart_staff_follow(rct_window* window, Peep* peep)
 
     focus.sprite_id = window->viewport_smart_follow_sprite;
 
-    if (peep->State == PEEP_STATE_PICKED)
+    if (peep->State == PeepState::Picked)
     {
         // focus.sprite.sprite_id = SPRITE_INDEX_NULL;
         window->viewport_smart_follow_sprite = SPRITE_INDEX_NULL;
@@ -857,12 +857,12 @@ static void record_session(const paint_session* session, std::vector<paint_sessi
 
 static void viewport_fill_column(paint_session* session, std::vector<paint_session>* recorded_sessions, size_t record_index)
 {
-    paint_session_generate(session);
+    PaintSessionGenerate(session);
     if (recorded_sessions != nullptr)
     {
         record_session(session, recorded_sessions, record_index);
     }
-    paint_session_arrange(session);
+    PaintSessionArrange(session);
 }
 
 static void viewport_paint_column(paint_session* session)
@@ -880,7 +880,7 @@ static void viewport_paint_column(paint_session* session)
         gfx_clear(&session->DPI, colour);
     }
 
-    paint_draw_structs(session);
+    PaintDrawStructs(session);
 
     if (gConfigGeneral.render_weather_gloom && !gTrackDesignSaveMode && !(session->ViewFlags & VIEWPORT_FLAG_INVISIBLE_SPRITES)
         && !(session->ViewFlags & VIEWPORT_FLAG_HIGHLIGHT_PATH_ISSUES))
@@ -890,10 +890,10 @@ static void viewport_paint_column(paint_session* session)
 
     if (session->PSStringHead != nullptr)
     {
-        paint_draw_money_structs(&session->DPI, session->PSStringHead);
+        PaintDrawMoneyStructs(&session->DPI, session->PSStringHead);
     }
 
-    paint_session_free(session);
+    PaintSessionFree(session);
 }
 
 /**
@@ -970,7 +970,7 @@ void viewport_paint(
     // Splits the area into 32 pixel columns and renders them
     for (x = alignedX; x < rightBorder; x += 32, index++)
     {
-        paint_session* session = paint_session_alloc(&dpi1, viewFlags);
+        paint_session* session = PaintSessionAlloc(&dpi1, viewFlags);
         columns.push_back(session);
 
         rct_drawpixelinfo& dpi2 = session->DPI;
@@ -1017,7 +1017,7 @@ void viewport_paint(
 static void viewport_paint_weather_gloom(rct_drawpixelinfo* dpi)
 {
     auto paletteId = climate_get_weather_gloom_palette_id(gClimateCurrent);
-    if (paletteId != PALETTE_NULL)
+    if (paletteId != FilterPaletteID::PaletteNull)
     {
         // Only scale width if zoomed in more than 1:1
         auto zoomLevel = dpi->zoom_level < 0 ? dpi->zoom_level : 0;
@@ -1079,11 +1079,11 @@ std::optional<CoordsXY> screen_pos_to_map_pos(const ScreenCoordsXY& screenCoords
     return { mapCoords->ToTileStart() };
 }
 
-ScreenCoordsXY screen_coord_to_viewport_coord(rct_viewport* viewport, const ScreenCoordsXY& screenCoords)
+[[nodiscard]] ScreenCoordsXY rct_viewport::ScreenToViewportCoord(const ScreenCoordsXY& screenCoords) const
 {
     ScreenCoordsXY ret;
-    ret.x = ((screenCoords.x - viewport->pos.x) * viewport->zoom) + viewport->viewPos.x;
-    ret.y = ((screenCoords.y - viewport->pos.y) * viewport->zoom) + viewport->viewPos.y;
+    ret.x = ((screenCoords.x - pos.x) * zoom) + viewPos.x;
+    ret.y = ((screenCoords.y - pos.y) * zoom) + viewPos.y;
     return ret;
 }
 
@@ -1676,11 +1676,11 @@ InteractionInfo get_map_coordinates_from_pos_window(rct_window* window, const Sc
         dpi.zoom_level = myviewport->zoom;
         dpi.width = 1;
 
-        paint_session* session = paint_session_alloc(&dpi, myviewport->flags);
-        paint_session_generate(session);
-        paint_session_arrange(session);
+        paint_session* session = PaintSessionAlloc(&dpi, myviewport->flags);
+        PaintSessionGenerate(session);
+        PaintSessionArrange(session);
         info = set_interaction_info_from_paint_session(session, flags & 0xFFFF);
-        paint_session_free(session);
+        PaintSessionFree(session);
     }
     return info;
 }
@@ -1691,7 +1691,7 @@ InteractionInfo get_map_coordinates_from_pos_window(rct_window* window, const Sc
 void viewport_invalidate(rct_viewport* viewport, int32_t left, int32_t top, int32_t right, int32_t bottom)
 {
     // if unknown viewport visibility, use the containing window to discover the status
-    if (viewport->visibility == VC_UNKNOWN)
+    if (viewport->visibility == VisibilityCache::Unknown)
     {
         auto windowManager = GetContext()->GetUiContext()->GetWindowManager();
         auto owner = windowManager->GetOwner(viewport);
@@ -1705,7 +1705,7 @@ void viewport_invalidate(rct_viewport* viewport, int32_t left, int32_t top, int3
         }
     }
 
-    if (viewport->visibility == VC_COVERED)
+    if (viewport->visibility == VisibilityCache::Covered)
         return;
 
     int32_t viewportLeft = viewport->viewPos.x;
@@ -1746,12 +1746,10 @@ static rct_viewport* viewport_find_from_point(const ScreenCoordsXY& screenCoords
     if (viewport == nullptr)
         return nullptr;
 
-    if (screenCoords.x < viewport->pos.x || screenCoords.y < viewport->pos.y)
-        return nullptr;
-    if (screenCoords.x >= viewport->pos.x + viewport->width || screenCoords.y >= viewport->pos.y + viewport->height)
-        return nullptr;
+    if (viewport->ContainsScreen(screenCoords))
+        return viewport;
 
-    return viewport;
+    return nullptr;
 }
 
 /**
@@ -1781,7 +1779,7 @@ std::optional<CoordsXY> screen_get_map_xy(const ScreenCoordsXY& screenCoords, rc
         return std::nullopt;
     }
 
-    auto start_vp_pos = screen_coord_to_viewport_coord(myViewport, screenCoords);
+    auto start_vp_pos = myViewport->ScreenToViewportCoord(screenCoords);
     CoordsXY cursorMapPos = info.Loc.ToTileCentre();
 
     // Iterates the cursor location to work out exactly where on the tile it is
@@ -1811,7 +1809,7 @@ std::optional<CoordsXY> screen_get_map_xy_with_z(const ScreenCoordsXY& screenCoo
         return std::nullopt;
     }
 
-    auto vpCoords = screen_coord_to_viewport_coord(viewport, screenCoords);
+    auto vpCoords = viewport->ScreenToViewportCoord(screenCoords);
     auto mapPosition = viewport_coord_to_map_coord(vpCoords, z);
     if (!map_is_location_valid(mapPosition))
     {
@@ -1930,7 +1928,7 @@ void viewport_set_saved_view()
 
 ZoomLevel ZoomLevel::min()
 {
-    if (drawing_engine_get_type() == DRAWING_ENGINE_OPENGL)
+    if (drawing_engine_get_type() == DrawingEngine::OpenGL)
     {
         return -2;
     }

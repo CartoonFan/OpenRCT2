@@ -7,6 +7,8 @@
  * OpenRCT2 is licensed under the GNU General Public License version 3.
  *****************************************************************************/
 
+#include "GuestPathfinding.h"
+
 #include "../core/Guard.hpp"
 #include "../ride/RideData.h"
 #include "../ride/Station.h"
@@ -25,6 +27,17 @@ static int8_t _peepPathFindNumJunctions;
 static int8_t _peepPathFindMaxJunctions;
 static int32_t _peepPathFindTilesChecked;
 static uint8_t _peepPathFindFewestNumSteps;
+
+TileCoordsXYZ gPeepPathFindGoalPosition;
+bool gPeepPathFindIgnoreForeignQueues;
+ride_id_t gPeepPathFindQueueRideIndex;
+
+#if defined(DEBUG_LEVEL_1) && DEBUG_LEVEL_1
+// Use to guard calls to log messages
+bool gPathFindDebug = false;
+// Use to put the peep name in the log message
+utf8 gPathFindDebugPeepName[256];
+#endif // defined(DEBUG_LEVEL_1) && DEBUG_LEVEL_1
 
 static int32_t guest_surface_path_finding(Peep* peep);
 
@@ -122,9 +135,42 @@ static int32_t peep_move_one_tile(Direction direction, Peep* peep)
     peep->DestinationX = newTile.x;
     peep->DestinationY = newTile.y;
     peep->DestinationTolerance = 2;
-    if (peep->State != PEEP_STATE_QUEUING)
+    if (peep->State != PeepState::Queuing)
     {
-        peep->DestinationTolerance = (scenario_rand() & 7) + 2;
+        // When peeps are walking along a path, we would like them to be spread out across the width of the path,
+        // instead of all walking along the exact center line of the path.
+        //
+        // Setting a random DestinationTolerance does not work very well for this. It means that peeps will make
+        // their new pathfinding decision at a random time, and so will distribute a bit when they are turning
+        // corners (which is good); but, as they walk along a straight path, they will - eventually - have had a
+        // low tolerance value which forced them back to the center of the path, where they stay until they turn
+        // a corner.
+        //
+        // What we want instead is to apply that randomness in the direction they are walking ONLY, and keep their
+        // other coordinate constant.
+        //
+        // However, we have also seen some situations where guests end up too far from the center of paths. We've
+        // not identified exactly what causes this yet, but to limit the impact of it, we don't just keep the other
+        // coordinate constant, but instead clamp it to an acceptable range. This brings in 'outlier' guests from
+        // the edges of the path, while allowing guests who are already in an acceptable position to stay there.
+
+        int8_t offset = (scenario_rand() & 7) - 3;
+        if (direction == 0 || direction == 2)
+        {
+            // Peep is moving along X, so apply the offset to the X position of the destination and clamp their current Y
+            peep->DestinationX += offset;
+            const uint16_t centerLine = (peep->y & 0xFFE0) + COORDS_XY_HALF_TILE;
+            peep->DestinationY = std::clamp(
+                peep->y, static_cast<int16_t>(centerLine - 3), static_cast<int16_t>(centerLine + 3));
+        }
+        else
+        {
+            // Peep is moving along Y, so apply the offset to the Y position of the destination and clamp their current X
+            const uint16_t centerLine = (peep->x & 0xFFE0) + COORDS_XY_HALF_TILE;
+            peep->DestinationX = std::clamp(
+                peep->x, static_cast<int16_t>(centerLine - 3), static_cast<int16_t>(centerLine + 3));
+            peep->DestinationY += offset;
+        }
     }
     return 0;
 }
@@ -242,12 +288,12 @@ static uint8_t footpath_element_next_in_direction(TileCoordsXYZ loc, PathElement
             continue;
         if (nextTileElement->GetType() != TILE_ELEMENT_TYPE_PATH)
             continue;
-        if (!is_valid_path_z_and_direction(nextTileElement, loc.z, chosenDirection))
+        if (!IsValidPathZAndDirection(nextTileElement, loc.z, chosenDirection))
             continue;
         if (nextTileElement->AsPath()->IsWide())
             return PATH_SEARCH_WIDE;
         // Only queue tiles that are connected to a ride are returned as ride queues.
-        if (nextTileElement->AsPath()->IsQueue() && nextTileElement->AsPath()->GetRideIndex() != 0xFF)
+        if (nextTileElement->AsPath()->IsQueue() && nextTileElement->AsPath()->GetRideIndex() != RIDE_ID_NULL)
             return PATH_SEARCH_RIDE_QUEUE;
 
         return PATH_SEARCH_OTHER;
@@ -335,7 +381,7 @@ static uint8_t footpath_element_dest_in_dir(
                 }
                 break;
             case TILE_ELEMENT_TYPE_PATH:
-                if (!is_valid_path_z_and_direction(tileElement, loc.z, chosenDirection))
+                if (!IsValidPathZAndDirection(tileElement, loc.z, chosenDirection))
                     continue;
                 if (tileElement->AsPath()->IsWide())
                     return PATH_SEARCH_WIDE;
@@ -455,7 +501,7 @@ static uint8_t peep_pathfind_get_max_number_junctions(Peep* peep)
         return 8;
     }
 
-    if (peep->ItemStandardFlags & PEEP_ITEM_MAP)
+    if (peep->HasItem(ShopItem::Map))
         return 7;
 
     if (peep->PeepFlags & PEEP_FLAGS_LEAVING_PARK)
@@ -637,8 +683,13 @@ static void peep_pathfind_heuristic_search(
 {
     uint8_t searchResult = PATH_SEARCH_FAILED;
 
-    bool currentElementIsWide
-        = (currentTileElement->AsPath()->IsWide() && !staff_can_ignore_wide_flag(peep, loc.ToCoordsXYZ(), currentTileElement));
+    bool currentElementIsWide = currentTileElement->AsPath()->IsWide();
+    if (currentElementIsWide)
+    {
+        const Staff* staff = peep->As<Staff>();
+        if (staff != nullptr && staff->CanIgnoreWideFlag(loc.ToCoordsXYZ(), currentTileElement))
+            currentElementIsWide = false;
+    }
 
     loc += TileDirectionDelta[test_edge];
 
@@ -763,7 +814,7 @@ static void peep_pathfind_heuristic_search(
                  * queue path.
                  * Otherwise, peeps walk on path tiles to get to the goal. */
 
-                if (!is_valid_path_z_and_direction(tileElement, loc.z, test_edge))
+                if (!IsValidPathZAndDirection(tileElement, loc.z, test_edge))
                     continue;
 
                 // Path may be sloped, so set z to path base height.
@@ -772,7 +823,8 @@ static void peep_pathfind_heuristic_search(
                 if (tileElement->AsPath()->IsWide())
                 {
                     /* Check if staff can ignore this wide flag. */
-                    if (!staff_can_ignore_wide_flag(peep, loc.ToCoordsXYZ(), tileElement))
+                    const Staff* staff = peep->As<Staff>();
+                    if (staff == nullptr || !staff->CanIgnoreWideFlag(loc.ToCoordsXYZ(), tileElement))
                     {
                         searchResult = PATH_SEARCH_WIDE;
                         found = true;
@@ -1726,13 +1778,13 @@ static int32_t guest_path_find_park_entrance(Peep* peep, uint8_t edges)
     gPeepPathFindQueueRideIndex = RIDE_ID_NULL;
 
 #if defined(DEBUG_LEVEL_1) && DEBUG_LEVEL_1
-    pathfind_logging_enable(peep);
+    PathfindLoggingEnable(peep);
 #endif // defined(DEBUG_LEVEL_1) && DEBUG_LEVEL_1
 
     Direction chosenDirection = peep_pathfind_choose_direction(TileCoordsXYZ{ peep->NextLoc }, peep);
 
 #if defined(DEBUG_LEVEL_1) && DEBUG_LEVEL_1
-    pathfind_logging_disable();
+    PathfindLoggingDisable();
 #endif // defined(DEBUG_LEVEL_1) && DEBUG_LEVEL_1
 
     if (chosenDirection == INVALID_DIRECTION)
@@ -1929,7 +1981,7 @@ static StationIndex guest_pathfinding_select_random_station(
 int32_t guest_path_finding(Guest* peep)
 {
 #if defined(DEBUG_LEVEL_1) && DEBUG_LEVEL_1
-    pathfind_logging_enable(peep);
+    PathfindLoggingEnable(peep);
     if (gPathFindDebug)
     {
         log_info("Starting guest_path_finding for %s", gPathFindDebugPeepName);
@@ -2006,7 +2058,7 @@ int32_t guest_path_finding(Guest* peep)
                 "Completed guest_path_finding for %s - taking only direction available: %d.", gPathFindDebugPeepName,
                 direction);
         }
-        pathfind_logging_disable();
+        PathfindLoggingDisable();
 #endif // defined(DEBUG_LEVEL_1) && DEBUG_LEVEL_1
         return peep_move_one_tile(direction, peep);
     }
@@ -2022,13 +2074,13 @@ int32_t guest_path_finding(Guest* peep)
         {
             log_info("Completed guest_path_finding for %s - peep is outside the park.", gPathFindDebugPeepName);
         }
-        pathfind_logging_disable();
+        PathfindLoggingDisable();
 #endif // defined(DEBUG_LEVEL_1) && DEBUG_LEVEL_1
         switch (peep->State)
         {
-            case PEEP_STATE_ENTERING_PARK:
+            case PeepState::EnteringPark:
                 return guest_path_find_entering_park(peep, edges);
-            case PEEP_STATE_LEAVING_PARK:
+            case PeepState::LeavingPark:
                 return guest_path_find_leaving_park(peep, edges);
             default:
                 return guest_path_find_aimless(peep, edges);
@@ -2041,7 +2093,7 @@ int32_t guest_path_finding(Guest* peep)
      * In principle, peeps with food are not paying as much attention to
      * where they are going and are consequently more like to walk up
      * dead end paths, paths to ride exits, etc. */
-    if (!peep->HasFood() && (scenario_rand() & 0xFFFF) >= 2184)
+    if (!peep->HasFoodOrDrink() && (scenario_rand() & 0xFFFF) >= 2184)
     {
         uint8_t adjustedEdges = edges;
         for (Direction chosenDirection : ALL_DIRECTIONS)
@@ -2068,7 +2120,7 @@ int32_t guest_path_finding(Guest* peep)
     /* If there are still multiple directions to choose from,
      * peeps with maps will randomly read the map: probability of doing so
      * is much higher when heading for a ride or the park exit. */
-    if (peep->ItemStandardFlags & PEEP_ITEM_MAP)
+    if (peep->HasItem(ShopItem::Map))
     {
         // If at least 2 directions consult map
         if (bitcount(edges) >= 2)
@@ -2092,7 +2144,7 @@ int32_t guest_path_finding(Guest* peep)
         {
             log_info("Completed guest_path_finding for %s - peep is leaving the park.", gPathFindDebugPeepName);
         }
-        pathfind_logging_disable();
+        PathfindLoggingDisable();
 #endif // defined(DEBUG_LEVEL_1) && DEBUG_LEVEL_1
         return guest_path_find_park_entrance(peep, edges);
     }
@@ -2104,7 +2156,7 @@ int32_t guest_path_finding(Guest* peep)
         {
             log_info("Completed guest_path_finding for %s - peep is aimless.", gPathFindDebugPeepName);
         }
-        pathfind_logging_disable();
+        PathfindLoggingDisable();
 #endif // defined(DEBUG_LEVEL_1) && DEBUG_LEVEL_1
         return guest_path_find_aimless(peep, edges);
     }
@@ -2120,7 +2172,7 @@ int32_t guest_path_finding(Guest* peep)
             log_info(
                 "Completed guest_path_finding for %s - peep is heading to closed ride == aimless.", gPathFindDebugPeepName);
         }
-        pathfind_logging_disable();
+        PathfindLoggingDisable();
 #endif // defined(DEBUG_LEVEL_1) && DEBUG_LEVEL_1
         return guest_path_find_aimless(peep, edges);
     }
@@ -2196,14 +2248,14 @@ int32_t guest_path_finding(Guest* peep)
          * This lets the heuristic search "try again" in case the player has
          * edited the path layout or the mechanic was already stuck in the
          * save game (e.g. with a worse version of the pathfinding). */
-        peep_reset_pathfind_goal(peep);
+        peep->ResetPathfindGoal();
 
 #if defined(DEBUG_LEVEL_1) && DEBUG_LEVEL_1
         if (gPathFindDebug)
         {
             log_info("Completed guest_path_finding for %s - failed to choose a direction == aimless.", gPathFindDebugPeepName);
         }
-        pathfind_logging_disable();
+        PathfindLoggingDisable();
 #endif // defined(DEBUG_LEVEL_1) && DEBUG_LEVEL_1
 
         return guest_path_find_aimless(peep, edges);
@@ -2213,7 +2265,85 @@ int32_t guest_path_finding(Guest* peep)
     {
         log_info("Completed guest_path_finding for %s - direction chosen: %d.", gPathFindDebugPeepName, direction);
     }
-    pathfind_logging_disable();
+    PathfindLoggingDisable();
 #endif // defined(DEBUG_LEVEL_1) && DEBUG_LEVEL_1
     return peep_move_one_tile(direction, peep);
 }
+
+bool IsValidPathZAndDirection(TileElement* tileElement, int32_t currentZ, int32_t currentDirection)
+{
+    if (tileElement->AsPath()->IsSloped())
+    {
+        int32_t slopeDirection = tileElement->AsPath()->GetSlopeDirection();
+        if (slopeDirection == currentDirection)
+        {
+            if (currentZ != tileElement->base_height)
+                return false;
+        }
+        else
+        {
+            slopeDirection = direction_reverse(slopeDirection);
+            if (slopeDirection != currentDirection)
+                return false;
+            if (currentZ != tileElement->base_height + 2)
+                return false;
+        }
+    }
+    else
+    {
+        if (currentZ != tileElement->base_height)
+            return false;
+    }
+    return true;
+}
+
+/**
+ *
+ *  rct2: 0x0069A98C
+ */
+void Peep::ResetPathfindGoal()
+{
+#if defined(DEBUG_LEVEL_1) && DEBUG_LEVEL_1
+    if (gPathFindDebug)
+    {
+        log_info("Resetting PathfindGoal for %s", gPathFindDebugPeepName);
+    }
+#endif // defined(DEBUG_LEVEL_1) && DEBUG_LEVEL_1
+
+    PathfindGoal.x = 0xFF;
+    PathfindGoal.y = 0xFF;
+    PathfindGoal.z = 0xFF;
+    PathfindGoal.direction = INVALID_DIRECTION;
+}
+
+#if defined(DEBUG_LEVEL_1) && DEBUG_LEVEL_1
+void PathfindLoggingEnable([[maybe_unused]] Peep* peep)
+{
+#    if defined(PATHFIND_DEBUG) && PATHFIND_DEBUG
+    /* Determine if the pathfinding debugging is wanted for this peep. */
+    format_string(gPathFindDebugPeepName, sizeof(gPathFindDebugPeepName), peep->name_string_idx, &(peep->Id));
+
+    /* For guests, use the existing PEEP_FLAGS_TRACKING flag to
+     * determine for which guest(s) the pathfinding debugging will
+     * be output for. */
+    if (peep->type == PEEP_TYPE_GUEST)
+    {
+        gPathFindDebug = peep->PeepFlags & PEEP_FLAGS_TRACKING;
+    }
+    /* For staff, there is no tracking button (any other similar
+     * suitable existing mechanism?), so fall back to a crude
+     * string comparison with a compile time hardcoded name. */
+    else
+    {
+        gPathFindDebug = strcmp(gPathFindDebugPeepName, "Mechanic Debug") == 0;
+    }
+#    endif // defined(PATHFIND_DEBUG) && PATHFIND_DEBUG
+}
+
+void PathfindLoggingDisable()
+{
+#    if defined(PATHFIND_DEBUG) && PATHFIND_DEBUG
+    gPathFindDebug = false;
+#    endif // defined(PATHFIND_DEBUG) && PATHFIND_DEBUG
+}
+#endif // defined(DEBUG_LEVEL_1) && DEBUG_LEVEL_1

@@ -152,12 +152,12 @@ static paint_struct* paint_monorail_cycles_util_7c(
 {
     if (flip)
     {
-        return sub_98197C(
+        return PaintAddImageAsParent(
             session, image_id, y_offset, x_offset, bound_box_length_y, bound_box_length_x, bound_box_length_z, z_offset,
             bound_box_offset_y, bound_box_offset_x, bound_box_offset_z);
     }
 
-    return sub_98197C(
+    return PaintAddImageAsParent(
         session, image_id, x_offset, y_offset, bound_box_length_x, bound_box_length_y, bound_box_length_z, z_offset,
         bound_box_offset_x, bound_box_offset_y, bound_box_offset_z);
 }
@@ -199,10 +199,10 @@ static void paint_monorail_cycles_station(
     if (direction == 0 || direction == 2)
     {
         imageId = SPR_STATION_BASE_B_SW_NE | session->TrackColours[SCHEME_MISC];
-        sub_98197C(session, imageId, 0, 0, 32, 28, 1, height - 2, 0, 2, height);
+        PaintAddImageAsParent(session, imageId, 0, 0, 32, 28, 1, height - 2, 0, 2, height);
 
         imageId = SPR_MONORAIL_CYCLES_FLAT_SW_NE | session->TrackColours[SCHEME_TRACK];
-        sub_98199C(session, imageId, 0, 0, 32, 20, 1, height, 0, 0, height);
+        PaintAddImageAsChild(session, imageId, 0, 0, 32, 20, 1, height, 0, 0, height);
 
         metal_a_supports_paint_setup(session, METAL_SUPPORTS_BOXED, 5, 0, height, session->TrackColours[SCHEME_SUPPORTS]);
         metal_a_supports_paint_setup(session, METAL_SUPPORTS_BOXED, 8, 0, height, session->TrackColours[SCHEME_SUPPORTS]);
@@ -211,10 +211,10 @@ static void paint_monorail_cycles_station(
     else if (direction == 1 || direction == 3)
     {
         imageId = SPR_STATION_BASE_B_NW_SE | session->TrackColours[SCHEME_MISC];
-        sub_98197C(session, imageId, 0, 0, 28, 32, 1, height - 2, 2, 0, height);
+        PaintAddImageAsParent(session, imageId, 0, 0, 28, 32, 1, height - 2, 2, 0, height);
 
         imageId = SPR_MONORAIL_CYCLES_FLAT_NW_SE | session->TrackColours[SCHEME_TRACK];
-        sub_98199C(session, imageId, 0, 0, 20, 32, 1, height, 0, 0, height);
+        PaintAddImageAsChild(session, imageId, 0, 0, 20, 32, 1, height, 0, 0, height);
 
         metal_a_supports_paint_setup(session, METAL_SUPPORTS_BOXED, 6, 0, height, session->TrackColours[SCHEME_SUPPORTS]);
         metal_a_supports_paint_setup(session, METAL_SUPPORTS_BOXED, 7, 0, height, session->TrackColours[SCHEME_SUPPORTS]);
@@ -631,31 +631,31 @@ static void paint_monorail_cycles_track_s_bend_right(
 /**
  * rct2: 0x0088ac88
  */
-TRACK_PAINT_FUNCTION get_track_paint_function_monorail_cycles(int32_t trackType, int32_t direction)
+TRACK_PAINT_FUNCTION get_track_paint_function_monorail_cycles(int32_t trackType)
 {
     switch (trackType)
     {
-        case TRACK_ELEM_FLAT:
+        case TrackElemType::Flat:
             return paint_monorail_cycles_track_flat;
 
-        case TRACK_ELEM_END_STATION:
-        case TRACK_ELEM_BEGIN_STATION:
-        case TRACK_ELEM_MIDDLE_STATION:
+        case TrackElemType::EndStation:
+        case TrackElemType::BeginStation:
+        case TrackElemType::MiddleStation:
             return paint_monorail_cycles_station;
 
-        case TRACK_ELEM_LEFT_QUARTER_TURN_5_TILES:
+        case TrackElemType::LeftQuarterTurn5Tiles:
             return paint_monorail_cycles_track_left_quarter_turn_5_tiles;
-        case TRACK_ELEM_RIGHT_QUARTER_TURN_5_TILES:
+        case TrackElemType::RightQuarterTurn5Tiles:
             return paint_monorail_cycles_track_right_quarter_turn_5_tiles;
 
-        case TRACK_ELEM_S_BEND_LEFT:
+        case TrackElemType::SBendLeft:
             return paint_monorail_cycles_track_s_bend_left;
-        case TRACK_ELEM_S_BEND_RIGHT:
+        case TrackElemType::SBendRight:
             return paint_monorail_cycles_track_s_bend_right;
 
-        case TRACK_ELEM_LEFT_QUARTER_TURN_3_TILES:
+        case TrackElemType::LeftQuarterTurn3Tiles:
             return paint_monorail_cycles_track_left_quarter_turn_3_tiles;
-        case TRACK_ELEM_RIGHT_QUARTER_TURN_3_TILES:
+        case TrackElemType::RightQuarterTurn3Tiles:
             return paint_monorail_cycles_track_right_quarter_turn_3_tiles;
     }
 

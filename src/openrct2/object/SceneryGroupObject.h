@@ -16,11 +16,13 @@
 
 struct ObjectRepositoryItem;
 
+enum class EntertainerCostume : uint8_t;
+
 class SceneryGroupObject final : public Object
 {
 private:
     rct_scenery_group_entry _legacyType = {};
-    std::vector<rct_object_entry> _items;
+    std::vector<ObjectEntryDescriptor> _items;
 
 public:
     explicit SceneryGroupObject(const rct_object_entry& entry)
@@ -32,7 +34,7 @@ public:
     {
         return &_legacyType;
     }
-    void ReadJson(IReadObjectContext* context, const json_t* root) override;
+    void ReadJson(IReadObjectContext* context, json_t& root) override;
 
     void ReadLegacy(IReadObjectContext* context, OpenRCT2::IStream* stream) override;
     void Load() override;
@@ -44,8 +46,8 @@ public:
     void SetRepositoryItem(ObjectRepositoryItem* item) const override;
 
 private:
-    static std::vector<rct_object_entry> ReadItems(OpenRCT2::IStream* stream);
-    static uint32_t ReadJsonEntertainerCostumes(const json_t* jCostumes);
-    static uint32_t ParseEntertainerCostume(const std::string& s);
-    static std::vector<rct_object_entry> ReadJsonEntries(const json_t* jEntries);
+    static std::vector<ObjectEntryDescriptor> ReadItems(OpenRCT2::IStream* stream);
+    static uint32_t ReadJsonEntertainerCostumes(json_t& jCostumes);
+    static EntertainerCostume ParseEntertainerCostume(const std::string& s);
+    static std::vector<ObjectEntryDescriptor> ReadJsonEntries(json_t& jEntries);
 };

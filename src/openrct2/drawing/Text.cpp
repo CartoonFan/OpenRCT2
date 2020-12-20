@@ -12,7 +12,9 @@
 #include "../localisation/Localisation.h"
 #include "Drawing.h"
 
-static void DrawText(rct_drawpixelinfo* dpi, const ScreenCoordsXY& coords, const TextPaint& paint, const_utf8string text);
+static void DrawText(
+    rct_drawpixelinfo* dpi, const ScreenCoordsXY& coords, const TextPaint& paint, const_utf8string text,
+    bool noFormatting = false);
 static void DrawText(
     rct_drawpixelinfo* dpi, const ScreenCoordsXY& coords, const TextPaint& paint, rct_string_id format, const void* args);
 
@@ -74,9 +76,10 @@ int32_t StaticLayout::GetLineCount()
     return LineCount;
 }
 
-static void DrawText(rct_drawpixelinfo* dpi, const ScreenCoordsXY& coords, const TextPaint& paint, const_utf8string text)
+static void DrawText(
+    rct_drawpixelinfo* dpi, const ScreenCoordsXY& coords, const TextPaint& paint, const_utf8string text, bool noFormatting)
 {
-    int32_t width = gfx_get_string_width(text);
+    int32_t width = noFormatting ? gfx_get_string_width_no_formatting(text) : gfx_get_string_width(text);
 
     auto alignedCoords = coords;
     switch (paint.Alignment)
@@ -91,7 +94,7 @@ static void DrawText(rct_drawpixelinfo* dpi, const ScreenCoordsXY& coords, const
             break;
     }
 
-    ttf_draw_string(dpi, text, paint.Colour, alignedCoords);
+    ttf_draw_string(dpi, text, paint.Colour, alignedCoords, noFormatting);
 
     if (paint.UnderlineText)
     {
@@ -128,34 +131,34 @@ void DrawTextBasic(
     rct_drawpixelinfo* dpi, const ScreenCoordsXY& coords, rct_string_id format, const Formatter& ft, colour_t colour,
     TextAlignment alignment, bool underline)
 {
-    return DrawTextBasic(dpi, coords, format, ft.GetStartBuf(), colour, alignment, underline);
-}
-
-void DrawTextEllipsised(
-    rct_drawpixelinfo* dpi, const ScreenCoordsXY& coords, int32_t width, rct_string_id format, const void* args,
-    colour_t colour, TextAlignment alignment, bool underline)
-{
-    TextPaint textPaint = { colour, FONT_SPRITE_BASE_MEDIUM, underline, alignment };
-    gCurrentFontSpriteBase = FONT_SPRITE_BASE_MEDIUM;
-
-    utf8 buffer[512];
-    format_string(buffer, sizeof(buffer), format, args);
-    gfx_clip_string(buffer, width);
-
-    DrawText(dpi, coords, textPaint, buffer);
+    return DrawTextBasic(dpi, coords, format, ft.Data(), colour, alignment, underline);
 }
 
 void DrawTextEllipsised(
     rct_drawpixelinfo* dpi, const ScreenCoordsXY& coords, int32_t width, rct_string_id format, const Formatter& ft,
     colour_t colour, TextAlignment alignment, bool underline)
 {
-    return DrawTextEllipsised(dpi, coords, width, format, ft.GetStartBuf(), colour, alignment, underline);
+    TextPaint textPaint = { colour, FONT_SPRITE_BASE_MEDIUM, underline, alignment };
+    gCurrentFontSpriteBase = FONT_SPRITE_BASE_MEDIUM;
+
+    utf8 buffer[512];
+    format_string(buffer, sizeof(buffer), format, ft.Data());
+    gfx_clip_string(buffer, width);
+
+    DrawText(dpi, coords, textPaint, buffer);
 }
 
 void gfx_draw_string(rct_drawpixelinfo* dpi, const_utf8string buffer, uint8_t colour, const ScreenCoordsXY& coords)
 {
     TextPaint textPaint = { colour, gCurrentFontSpriteBase, false, TextAlignment::LEFT };
     DrawText(dpi, coords, textPaint, buffer);
+}
+
+void gfx_draw_string_no_formatting(
+    rct_drawpixelinfo* dpi, const_utf8string buffer, uint8_t colour, const ScreenCoordsXY& coords)
+{
+    TextPaint textPaint = { colour, gCurrentFontSpriteBase, false, TextAlignment::LEFT };
+    DrawText(dpi, coords, textPaint, buffer, true);
 }
 
 // Basic
@@ -169,31 +172,6 @@ void gfx_draw_string_centred(
     rct_drawpixelinfo* dpi, rct_string_id format, const ScreenCoordsXY& coords, uint8_t colour, const void* args)
 {
     DrawTextBasic(dpi, coords, format, args, colour, TextAlignment::CENTRE);
-}
-
-void gfx_draw_string_right(
-    rct_drawpixelinfo* dpi, rct_string_id format, void* args, uint8_t colour, const ScreenCoordsXY& coords)
-{
-    DrawTextBasic(dpi, coords, format, args, colour, TextAlignment::RIGHT);
-}
-
-// Ellipsised
-void gfx_draw_string_left_clipped(
-    rct_drawpixelinfo* dpi, rct_string_id format, void* args, uint8_t colour, const ScreenCoordsXY& coords, int32_t width)
-{
-    DrawTextEllipsised(dpi, coords, width, format, args, colour, TextAlignment::LEFT);
-}
-
-void gfx_draw_string_centred_clipped(
-    rct_drawpixelinfo* dpi, rct_string_id format, void* args, uint8_t colour, const ScreenCoordsXY& coords, int32_t width)
-{
-    DrawTextEllipsised(dpi, coords, width, format, args, colour, TextAlignment::CENTRE);
-}
-
-void gfx_draw_string_right_clipped(
-    rct_drawpixelinfo* dpi, rct_string_id format, void* args, uint8_t colour, const ScreenCoordsXY& coords, int32_t width)
-{
-    DrawTextEllipsised(dpi, coords, width, format, args, colour, TextAlignment::RIGHT);
 }
 
 // Wrapping

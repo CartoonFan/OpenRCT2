@@ -16,6 +16,7 @@
 #include "../ride/Ride.h"
 #include "../ride/RideTypes.h"
 #include "../ride/ShopItem.h"
+#include "../util/Util.h"
 #include "../world/Location.hpp"
 #include "../world/SpriteBase.h"
 
@@ -49,7 +50,10 @@ constexpr auto PEEP_CLEARANCE_HEIGHT = 4 * COORDS_Z_STEP;
 class Formatter;
 struct TileElement;
 struct Ride;
-class GameActionResult;
+namespace GameActions
+{
+    class Result;
+}
 using ParkEntranceIndex = uint8_t;
 
 enum class PeepType : uint8_t
@@ -70,296 +74,296 @@ enum class StaffType : uint8_t
     Count
 };
 
-enum PeepThoughtType : uint8_t
+enum class PeepThoughtType : uint8_t
 {
-    PEEP_THOUGHT_TYPE_CANT_AFFORD_0 = 0,      // "I can't afford"
-    PEEP_THOUGHT_TYPE_SPENT_MONEY = 1,        // "I've spent all my money"
-    PEEP_THOUGHT_TYPE_SICK = 2,               // "I feel sick"
-    PEEP_THOUGHT_TYPE_VERY_SICK = 3,          // "I feel very sick"
-    PEEP_THOUGHT_TYPE_MORE_THRILLING = 4,     // "I want to go on something more thrilling than X"
-    PEEP_THOUGHT_TYPE_INTENSE = 5,            // "X looks too intense for me"
-    PEEP_THOUGHT_TYPE_HAVENT_FINISHED = 6,    // "I haven't finished my X yet"
-    PEEP_THOUGHT_TYPE_SICKENING = 7,          // "Just looking at X makes me feel sick"
-    PEEP_THOUGHT_TYPE_BAD_VALUE = 8,          // "I'm not paying that much to go on X"
-    PEEP_THOUGHT_TYPE_GO_HOME = 9,            // "I want to go home"
-    PEEP_THOUGHT_TYPE_GOOD_VALUE = 10,        // "X is really good value"
-    PEEP_THOUGHT_TYPE_ALREADY_GOT = 11,       // "I've already got"
-    PEEP_THOUGHT_TYPE_CANT_AFFORD = 12,       // "I can't afford"
-    PEEP_THOUGHT_TYPE_NOT_HUNGRY = 13,        // "I'm not hungry"
-    PEEP_THOUGHT_TYPE_NOT_THIRSTY = 14,       // "I'm not thirsty"
-    PEEP_THOUGHT_TYPE_DROWNING = 15,          // "Help! I'm drowning!"
-    PEEP_THOUGHT_TYPE_LOST = 16,              // "I'm lost!"
-    PEEP_THOUGHT_TYPE_WAS_GREAT = 17,         // "X was great"
-    PEEP_THOUGHT_TYPE_QUEUING_AGES = 18,      // "I've been queuing for X for ages"
-    PEEP_THOUGHT_TYPE_TIRED = 19,             // "I'm tired"
-    PEEP_THOUGHT_TYPE_HUNGRY = 20,            // "I'm hungry"
-    PEEP_THOUGHT_TYPE_THIRSTY = 21,           // "I'm thirsty"
-    PEEP_THOUGHT_TYPE_TOILET = 22,            // "I need to go to the toilet"
-    PEEP_THOUGHT_TYPE_CANT_FIND = 23,         // "I can't find X"
-    PEEP_THOUGHT_TYPE_NOT_PAYING = 24,        // "I'm not paying that much to use X"
-    PEEP_THOUGHT_TYPE_NOT_WHILE_RAINING = 25, // "I'm not going on X while it's raining"
-    PEEP_THOUGHT_TYPE_BAD_LITTER = 26,        // "The litter here is really bad"
-    PEEP_THOUGHT_TYPE_CANT_FIND_EXIT = 27,    // "I can't find the exit"
-    PEEP_THOUGHT_TYPE_GET_OFF = 28,           // "I want to get off X"
-    PEEP_THOUGHT_TYPE_GET_OUT = 29,           // "I want to get out of X"
-    PEEP_THOUGHT_TYPE_NOT_SAFE = 30,          // "I'm not going on X - it isn't safe"
-    PEEP_THOUGHT_TYPE_PATH_DISGUSTING = 31,   // "This path is disgusting"
-    PEEP_THOUGHT_TYPE_CROWDED = 32,           // "It's too crowded here"
-    PEEP_THOUGHT_TYPE_VANDALISM = 33,         // "The vandalism here is really bad"
-    PEEP_THOUGHT_TYPE_SCENERY = 34,           // "Great scenery!"
-    PEEP_THOUGHT_TYPE_VERY_CLEAN = 35,        // "This park is very clean and tidy"
-    PEEP_THOUGHT_TYPE_FOUNTAINS = 36,         // "The jumping fountains are great"
-    PEEP_THOUGHT_TYPE_MUSIC = 37,             // "The music is nice here"
-    PEEP_THOUGHT_TYPE_BALLOON = 38,           // "This balloon from X is really good value"
-    PEEP_THOUGHT_TYPE_TOY = 39,               // "This cuddly toy from X is really good value"
-    PEEP_THOUGHT_TYPE_MAP = 40,
-    PEEP_THOUGHT_TYPE_PHOTO = 41, // "This on ride photo from X is really good value"
-    PEEP_THOUGHT_TYPE_UMBRELLA = 42,
-    PEEP_THOUGHT_TYPE_DRINK = 43,
-    PEEP_THOUGHT_TYPE_BURGER = 44,
-    PEEP_THOUGHT_TYPE_CHIPS = 45,
-    PEEP_THOUGHT_TYPE_ICE_CREAM = 46,
-    PEEP_THOUGHT_TYPE_CANDYFLOSS = 47,
+    CantAffordRide = 0,   // "I can't afford"
+    SpentMoney = 1,       // "I've spent all my money"
+    Sick = 2,             // "I feel sick"
+    VerySick = 3,         // "I feel very sick"
+    MoreThrilling = 4,    // "I want to go on something more thrilling than X"
+    Intense = 5,          // "X looks too intense for me"
+    HaventFinished = 6,   // "I haven't finished my X yet"
+    Sickening = 7,        // "Just looking at X makes me feel sick"
+    BadValue = 8,         // "I'm not paying that much to go on X"
+    GoHome = 9,           // "I want to go home"
+    GoodValue = 10,       // "X is really good value"
+    AlreadyGot = 11,      // "I've already got"
+    CantAffordItem = 12,  // "I can't afford"
+    NotHungry = 13,       // "I'm not hungry"
+    NotThirsty = 14,      // "I'm not thirsty"
+    Drowning = 15,        // "Help! I'm drowning!"
+    Lost = 16,            // "I'm lost!"
+    WasGreat = 17,        // "X was great"
+    QueuingAges = 18,     // "I've been queuing for X for ages"
+    Tired = 19,           // "I'm tired"
+    Hungry = 20,          // "I'm hungry"
+    Thirsty = 21,         // "I'm thirsty"
+    Toilet = 22,          // "I need to go to the toilet"
+    CantFind = 23,        // "I can't find X"
+    NotPaying = 24,       // "I'm not paying that much to use X"
+    NotWhileRaining = 25, // "I'm not going on X while it's raining"
+    BadLitter = 26,       // "The litter here is really bad"
+    CantFindExit = 27,    // "I can't find the exit"
+    GetOff = 28,          // "I want to get off X"
+    GetOut = 29,          // "I want to get out of X"
+    NotSafe = 30,         // "I'm not going on X - it isn't safe"
+    PathDisgusting = 31,  // "This path is disgusting"
+    Crowded = 32,         // "It's too crowded here"
+    Vandalism = 33,       // "The vandalism here is really bad"
+    Scenery = 34,         // "Great scenery!"
+    VeryClean = 35,       // "This park is very clean and tidy"
+    Fountains = 36,       // "The jumping fountains are great"
+    Music = 37,           // "The music is nice here"
+    Balloon = 38,         // "This balloon from X is really good value"
+    Toy = 39,             // "This cuddly toy from X is really good value"
+    Map = 40,
+    Photo = 41, // "This on ride photo from X is really good value"
+    Umbrella = 42,
+    Drink = 43,
+    Burger = 44,
+    Chips = 45,
+    IceCream = 46,
+    Candyfloss = 47,
 
-    PEEP_THOUGHT_TYPE_PIZZA = 51,
+    Pizza = 51,
 
-    PEEP_THOUGHT_TYPE_POPCORN = 53,
-    PEEP_THOUGHT_TYPE_HOT_DOG = 54,
-    PEEP_THOUGHT_TYPE_TENTACLE = 55,
-    PEEP_THOUGHT_TYPE_HAT = 56,
-    PEEP_THOUGHT_TYPE_TOFFEE_APPLE = 57,
-    PEEP_THOUGHT_TYPE_TSHIRT = 58,
-    PEEP_THOUGHT_TYPE_DOUGHNUT = 59,
-    PEEP_THOUGHT_TYPE_COFFEE = 60,
+    Popcorn = 53,
+    HotDog = 54,
+    Tentacle = 55,
+    Hat = 56,
+    ToffeeApple = 57,
+    Tshirt = 58,
+    Doughnut = 59,
+    Coffee = 60,
 
-    PEEP_THOUGHT_TYPE_CHICKEN = 62,
-    PEEP_THOUGHT_TYPE_LEMONADE = 63,
+    Chicken = 62,
+    Lemonade = 63,
 
-    PEEP_THOUGHT_TYPE_WOW = 67, // "Wow!"
+    Wow = 67, // "Wow!"
 
-    PEEP_THOUGHT_TYPE_WOW2 = 70,         // "Wow!"
-    PEEP_THOUGHT_TYPE_WATCHED = 71,      // "I have the strangest feeling someone is watching me"
-    PEEP_THOUGHT_TYPE_BALLOON_MUCH = 72, // "I'm not paying that much to get a balloon from X"
-    PEEP_THOUGHT_TYPE_TOY_MUCH = 73,
-    PEEP_THOUGHT_TYPE_MAP_MUCH = 74,
-    PEEP_THOUGHT_TYPE_PHOTO_MUCH = 75,
-    PEEP_THOUGHT_TYPE_UMBRELLA_MUCH = 76,
-    PEEP_THOUGHT_TYPE_DRINK_MUCH = 77,
-    PEEP_THOUGHT_TYPE_BURGER_MUCH = 78,
-    PEEP_THOUGHT_TYPE_CHIPS_MUCH = 79,
-    PEEP_THOUGHT_TYPE_ICE_CREAM_MUCH = 80,
-    PEEP_THOUGHT_TYPE_CANDYFLOSS_MUCH = 81,
+    Wow2 = 70,        // "Wow!"
+    Watched = 71,     // "I have the strangest feeling someone is watching me"
+    BalloonMuch = 72, // "I'm not paying that much to get a balloon from X"
+    ToyMuch = 73,
+    MapMuch = 74,
+    PhotoMuch = 75,
+    UmbrellaMuch = 76,
+    DrinkMuch = 77,
+    BurgerMuch = 78,
+    ChipsMuch = 79,
+    IceCreamMuch = 80,
+    CandyflossMuch = 81,
 
-    PEEP_THOUGHT_TYPE_PIZZA_MUCH = 85,
+    PizzaMuch = 85,
 
-    PEEP_THOUGHT_TYPE_POPCORN_MUCH = 87,
-    PEEP_THOUGHT_TYPE_HOT_DOG_MUCH = 88,
-    PEEP_THOUGHT_TYPE_TENTACLE_MUCH = 89,
-    PEEP_THOUGHT_TYPE_HAT_MUCH = 90,
-    PEEP_THOUGHT_TYPE_TOFFEE_APPLE_MUCH = 91,
-    PEEP_THOUGHT_TYPE_TSHIRT_MUCH = 92,
-    PEEP_THOUGHT_TYPE_DOUGHNUT_MUCH = 93,
-    PEEP_THOUGHT_TYPE_COFFEE_MUCH = 94,
+    PopcornMuch = 87,
+    HotDogMuch = 88,
+    TentacleMuch = 89,
+    HatMuch = 90,
+    ToffeeAppleMuch = 91,
+    TshirtMuch = 92,
+    DoughnutMuch = 93,
+    CoffeeMuch = 94,
 
-    PEEP_THOUGHT_TYPE_CHICKEN_MUCH = 96,
-    PEEP_THOUGHT_TYPE_LEMONADE_MUCH = 97,
+    ChickenMuch = 96,
+    LemonadeMuch = 97,
 
-    PEEP_THOUGHT_TYPE_PHOTO2 = 104, // "This on-ride photo from X is really good value"
-    PEEP_THOUGHT_TYPE_PHOTO3 = 105,
-    PEEP_THOUGHT_TYPE_PHOTO4 = 106,
-    PEEP_THOUGHT_TYPE_PRETZEL = 107,
-    PEEP_THOUGHT_TYPE_HOT_CHOCOLATE = 108,
-    PEEP_THOUGHT_TYPE_ICED_TEA = 109,
-    PEEP_THOUGHT_TYPE_FUNNEL_CAKE = 110,
-    PEEP_THOUGHT_TYPE_SUNGLASSES = 111,
-    PEEP_THOUGHT_TYPE_BEEF_NOODLES = 112,
-    PEEP_THOUGHT_TYPE_FRIED_RICE_NOODLES = 113,
-    PEEP_THOUGHT_TYPE_WONTON_SOUP = 114,
-    PEEP_THOUGHT_TYPE_MEATBALL_SOUP = 115,
-    PEEP_THOUGHT_TYPE_FRUIT_JUICE = 116,
-    PEEP_THOUGHT_TYPE_SOYBEAN_MILK = 117,
-    PEEP_THOUGHT_TYPE_SU_JONGKWA = 118,
-    PEEP_THOUGHT_TYPE_SUB_SANDWICH = 119,
-    PEEP_THOUGHT_TYPE_COOKIE = 120,
+    Photo2 = 104, // "This on-ride photo from X is really good value"
+    Photo3 = 105,
+    Photo4 = 106,
+    Pretzel = 107,
+    HotChocolate = 108,
+    IcedTea = 109,
+    FunnelCake = 110,
+    Sunglasses = 111,
+    BeefNoodles = 112,
+    FriedRiceNoodles = 113,
+    WontonSoup = 114,
+    MeatballSoup = 115,
+    FruitJuice = 116,
+    SoybeanMilk = 117,
+    Sujongkwa = 118,
+    SubSandwich = 119,
+    Cookie = 120,
 
-    PEEP_THOUGHT_TYPE_ROAST_SAUSAGE = 124,
+    RoastSausage = 124,
 
-    PEEP_THOUGHT_TYPE_PHOTO2_MUCH = 136,
-    PEEP_THOUGHT_TYPE_PHOTO3_MUCH = 137,
-    PEEP_THOUGHT_TYPE_PHOTO4_MUCH = 138,
-    PEEP_THOUGHT_TYPE_PRETZEL_MUCH = 139,
-    PEEP_THOUGHT_TYPE_HOT_CHOCOLATE_MUCH = 140,
-    PEEP_THOUGHT_TYPE_ICED_TEA_MUCH = 141,
-    PEEP_THOUGHT_TYPE_FUNNEL_CAKE_MUCH = 142,
-    PEEP_THOUGHT_TYPE_SUNGLASSES_MUCH = 143,
-    PEEP_THOUGHT_TYPE_BEEF_NOODLES_MUCH = 144,
-    PEEP_THOUGHT_TYPE_FRIED_RICE_NOODLES_MUCH = 145,
-    PEEP_THOUGHT_TYPE_WONTON_SOUP_MUCH = 146,
-    PEEP_THOUGHT_TYPE_MEATBALL_SOUP_MUCH = 147,
-    PEEP_THOUGHT_TYPE_FRUIT_JUICE_MUCH = 148,
-    PEEP_THOUGHT_TYPE_SOYBEAN_MILK_MUCH = 149,
-    PEEP_THOUGHT_TYPE_SU_JONGKWA_MUCH = 150,
-    PEEP_THOUGHT_TYPE_SUB_SANDWICH_MUCH = 151,
-    PEEP_THOUGHT_TYPE_COOKIE_MUCH = 152,
+    Photo2Much = 136,
+    Photo3Much = 137,
+    Photo4Much = 138,
+    PretzelMuch = 139,
+    HotChocolateMuch = 140,
+    IcedTeaMuch = 141,
+    FunnelCakeMuch = 142,
+    SunglassesMuch = 143,
+    BeefNoodlesMuch = 144,
+    FriedRiceNoodlesMuch = 145,
+    WontonSoupMuch = 146,
+    MeatballSoupMuch = 147,
+    FruitJuiceMuch = 148,
+    SoybeanMilkMuch = 149,
+    SujongkwaMuch = 150,
+    SubSandwichMuch = 151,
+    CookieMuch = 152,
 
-    PEEP_THOUGHT_TYPE_ROAST_SAUSAGE_MUCH = 156,
+    RoastSausageMuch = 156,
 
-    PEEP_THOUGHT_TYPE_HELP = 168,                 // "Help! Put me down!"
-    PEEP_THOUGHT_TYPE_RUNNING_OUT = 169,          // "I'm running out of cash!"
-    PEEP_THOUGHT_TYPE_NEW_RIDE = 170,             // "Wow! A new ride being built!"
-    PEEP_THOUGHT_TYPE_NICE_RIDE_DEPRECATED = 171, // "Nice ride! But not as good as the Phoenix..."
-    PEEP_THOUGHT_TYPE_EXCITED_DEPRECATED = 172,   // "I'm so excited - It's an Intamin ride!"
-    PEEP_THOUGHT_TYPE_HERE_WE_ARE = 173,          // "...and here we are on X!"
+    Help = 168,               // "Help! Put me down!"
+    RunningOut = 169,         // "I'm running out of cash!"
+    NewRide = 170,            // "Wow! A new ride being built!"
+    NiceRideDeprecated = 171, // "Nice ride! But not as good as the Phoenix..."
+    ExcitedDeprecated = 172,  // "I'm so excited - It's an Intamin ride!"
+    HereWeAre = 173,          // "...and here we are on X!"
 
-    PEEP_THOUGHT_TYPE_NONE = 255
+    None = 255
 };
 
-enum PeepState : uint8_t
+enum class PeepState : uint8_t
 {
-    PEEP_STATE_FALLING = 0, // Drowning is part of falling
-    PEEP_STATE_1 = 1,
-    PEEP_STATE_QUEUING_FRONT = 2,
-    PEEP_STATE_ON_RIDE = 3,
-    PEEP_STATE_LEAVING_RIDE = 4,
-    PEEP_STATE_WALKING = 5,
-    PEEP_STATE_QUEUING = 6,
-    PEEP_STATE_ENTERING_RIDE = 7,
-    PEEP_STATE_SITTING = 8,
-    PEEP_STATE_PICKED = 9,
-    PEEP_STATE_PATROLLING = 10, // Not sure
-    PEEP_STATE_MOWING = 11,
-    PEEP_STATE_SWEEPING = 12,
-    PEEP_STATE_ENTERING_PARK = 13,
-    PEEP_STATE_LEAVING_PARK = 14,
-    PEEP_STATE_ANSWERING = 15,
-    PEEP_STATE_FIXING = 16,
-    PEEP_STATE_BUYING = 17,
-    PEEP_STATE_WATCHING = 18,
-    PEEP_STATE_EMPTYING_BIN = 19,
-    PEEP_STATE_USING_BIN = 20,
-    PEEP_STATE_WATERING = 21,
-    PEEP_STATE_HEADING_TO_INSPECTION = 22,
-    PEEP_STATE_INSPECTING = 23
+    Falling = 0, // Drowning is part of falling
+    One = 1,     // was PEEP_STATE_1
+    QueuingFront = 2,
+    OnRide = 3,
+    LeavingRide = 4,
+    Walking = 5,
+    Queuing = 6,
+    EnteringRide = 7,
+    Sitting = 8,
+    Picked = 9,
+    Patrolling = 10, // Not sure
+    Mowing = 11,
+    Sweeping = 12,
+    EnteringPark = 13,
+    LeavingPark = 14,
+    Answering = 15,
+    Fixing = 16,
+    Buying = 17,
+    Watching = 18,
+    EmptyingBin = 19,
+    UsingBin = 20,
+    Watering = 21,
+    HeadingToInspection = 22,
+    Inspecting = 23
 };
 
-enum PeepSittingSubState
+enum class PeepSittingSubState : uint8_t
 {
-    PEEP_SITTING_TRYING_TO_SIT = 0,
-    PEEP_SITTING_SAT_DOWN
+    TryingToSit, // was = 0
+    SatDown      // was unassigned
 };
 
-enum PeepRideSubState
+enum class PeepRideSubState : uint8_t
 {
-    PEEP_RIDE_AT_ENTRANCE = 0,
-    PEEP_RIDE_IN_ENTRANCE = 1,
-    PEEP_RIDE_FREE_VEHICLE_CHECK = 2, // Spend money on ride
-    PEEP_RIDE_LEAVE_ENTRANCE = 3,     // Calculate what direction and where to go after commiting to entering vehicle
-    PEEP_RIDE_APPROACH_VEHICLE = 4,
-    PEEP_RIDE_ENTER_VEHICLE = 5,
-    PEEP_RIDE_ON_RIDE = 6,
-    PEEP_RIDE_LEAVE_VEHICLE = 7,
-    PEEP_RIDE_APPROACH_EXIT = 8,
-    PEEP_RIDE_IN_EXIT = 9,
+    AtEntrance = 0,
+    InEntrance = 1,
+    FreeVehicleCheck = 2, // Spend money on ride
+    LeaveEntrance = 3,    // Calculate what direction and where to go after commiting to entering vehicle
+    ApproachVehicle = 4,
+    EnterVehicle = 5,
+    OnRide = 6,
+    LeaveVehicle = 7,
+    ApproachExit = 8,
+    InExit = 9,
     // 10, 11 not used
-    PEEP_RIDE_APPROACH_VEHICLE_WAYPOINTS = 12,
-    PEEP_RIDE_APPROACH_EXIT_WAYPOINTS = 13,
-    PEEP_RIDE_APPROACH_SPIRAL_SLIDE = 14,
-    PEEP_RIDE_ON_SPIRAL_SLIDE = 15,
-    PEEP_RIDE_LEAVE_SPIRAL_SLIDE = 16,
-    PEEP_RIDE_MAZE_PATHFINDING = 17,
-    PEEP_RIDE_LEAVE_EXIT = 18,
-    PEEP_SHOP_APPROACH = 19,
-    PEEP_SHOP_INTERACT = 20,
-    PEEP_SHOP_LEAVE = 21
+    ApproachVehicleWaypoints = 12,
+    ApproachExitWaypoints = 13,
+    ApproachSpiralSlide = 14,
+    OnSpiralSlide = 15,
+    LeaveSpiralSlide = 16,
+    MazePathfinding = 17,
+    LeaveExit = 18,
+    ApproachShop = 19,
+    InteractShop = 20,
+    LeaveShop = 21
 };
 
-enum PeepUsingBinSubState
+enum class PeepUsingBinSubState : uint8_t
 {
-    PEEP_USING_BIN_WALKING_TO_BIN = 0,
-    PEEP_USING_BIN_GOING_BACK,
+    WalkingToBin = 0,
+    GoingBack,
 };
 
-enum PeepActionType : uint8_t
+enum class PeepActionType : uint8_t
 {
-    PEEP_ACTION_CHECK_TIME = 0,
+    CheckTime = 0,
     // If no food then check watch
-    PEEP_ACTION_EAT_FOOD = 1,
-    PEEP_ACTION_SHAKE_HEAD = 2,
-    PEEP_ACTION_EMPTY_POCKETS = 3,
-    PEEP_ACTION_SITTING_EAT_FOOD = 4,
-    PEEP_ACTION_SITTING_CHECK_WATCH = 4,
-    PEEP_ACTION_SITTING_LOOK_AROUND_LEFT = 5,
-    PEEP_ACTION_SITTING_LOOK_AROUND_RIGHT = 6,
-    PEEP_ACTION_WOW = 7,
-    PEEP_ACTION_THROW_UP = 8,
-    PEEP_ACTION_JUMP = 9,
-    PEEP_ACTION_STAFF_SWEEP = 10,
-    PEEP_ACTION_DROWNING = 11,
-    PEEP_ACTION_STAFF_ANSWER_CALL = 12,
-    PEEP_ACTION_STAFF_ANSWER_CALL_2 = 13,
-    PEEP_ACTION_STAFF_CHECKBOARD = 14,
-    PEEP_ACTION_STAFF_FIX = 15,
-    PEEP_ACTION_STAFF_FIX_2 = 16,
-    PEEP_ACTION_STAFF_FIX_GROUND = 17,
-    PEEP_ACTION_STAFF_FIX_3 = 18,
-    PEEP_ACTION_STAFF_WATERING = 19,
-    PEEP_ACTION_JOY = 20,
-    PEEP_ACTION_READ_MAP = 21,
-    PEEP_ACTION_WAVE = 22,
-    PEEP_ACTION_STAFF_EMPTY_BIN = 23,
-    PEEP_ACTION_WAVE_2 = 24,
-    PEEP_ACTION_TAKE_PHOTO = 25,
-    PEEP_ACTION_CLAP = 26,
-    PEEP_ACTION_DISGUST = 27,
-    PEEP_ACTION_DRAW_PICTURE = 28,
-    PEEP_ACTION_BEING_WATCHED = 29,
-    PEEP_ACTION_WITHDRAW_MONEY = 30,
+    EatFood = 1,
+    ShakeHead = 2,
+    EmptyPockets = 3,
+    SittingEatFood = 4,
+    SittingCheckWatch = 4,
+    SittingLookAroundLeft = 5,
+    SittingLookAroundRight = 6,
+    Wow = 7,
+    ThrowUp = 8,
+    Jump = 9,
+    StaffSweep = 10,
+    Drowning = 11,
+    StaffAnswerCall = 12,
+    StaffAnswerCall2 = 13,
+    StaffCheckboard = 14,
+    StaffFix = 15,
+    StaffFix2 = 16,
+    StaffFixGround = 17,
+    StaffFix3 = 18,
+    StaffWatering = 19,
+    Joy = 20,
+    ReadMap = 21,
+    Wave = 22,
+    StaffEmptyBin = 23,
+    Wave2 = 24,
+    TakePhoto = 25,
+    Clap = 26,
+    Disgust = 27,
+    DrawPicture = 28,
+    BeingWatched = 29,
+    WithdrawMoney = 30,
 
-    PEEP_ACTION_NONE_1 = 254,
-    PEEP_ACTION_NONE_2 = 255,
+    None1 = 254,
+    None2 = 255,
 };
 
-enum PeepActionSpriteType : uint8_t
+enum class PeepActionSpriteType : uint8_t
 {
-    PEEP_ACTION_SPRITE_TYPE_NONE = 0,
-    PEEP_ACTION_SPRITE_TYPE_CHECK_TIME = 1,
-    PEEP_ACTION_SPRITE_TYPE_WATCH_RIDE = 2,
-    PEEP_ACTION_SPRITE_TYPE_EAT_FOOD = 3,
-    PEEP_ACTION_SPRITE_TYPE_SHAKE_HEAD = 4,
-    PEEP_ACTION_SPRITE_TYPE_EMPTY_POCKETS = 5,
-    PEEP_ACTION_SPRITE_TYPE_HOLD_MAT = 6,
-    PEEP_ACTION_SPRITE_TYPE_SITTING_IDLE = 7,
-    PEEP_ACTION_SPRITE_TYPE_SITTING_EAT_FOOD = 8,
-    PEEP_ACTION_SPRITE_TYPE_SITTING_LOOK_AROUND_LEFT = 9,
-    PEEP_ACTION_SPRITE_TYPE_SITTING_LOOK_AROUND_RIGHT = 10,
-    PEEP_ACTION_SPRITE_TYPE_UI = 11,
-    PEEP_ACTION_SPRITE_TYPE_STAFF_MOWER = 12,
-    PEEP_ACTION_SPRITE_TYPE_WOW = 13,
-    PEEP_ACTION_SPRITE_TYPE_THROW_UP = 14,
-    PEEP_ACTION_SPRITE_TYPE_JUMP = 15,
-    PEEP_ACTION_SPRITE_TYPE_STAFF_SWEEP = 16,
-    PEEP_ACTION_SPRITE_TYPE_DROWNING = 17,
-    PEEP_ACTION_SPRITE_TYPE_STAFF_ANSWER_CALL = 18,
-    PEEP_ACTION_SPRITE_TYPE_STAFF_ANSWER_CALL_2 = 19,
-    PEEP_ACTION_SPRITE_TYPE_STAFF_CHECKBOARD = 20,
-    PEEP_ACTION_SPRITE_TYPE_STAFF_FIX = 21,
-    PEEP_ACTION_SPRITE_TYPE_STAFF_FIX_2 = 22,
-    PEEP_ACTION_SPRITE_TYPE_STAFF_FIX_GROUND = 23,
-    PEEP_ACTION_SPRITE_TYPE_STAFF_FIX_3 = 24,
-    PEEP_ACTION_SPRITE_TYPE_STAFF_WATERING = 25,
-    PEEP_ACTION_SPRITE_TYPE_JOY = 26,
-    PEEP_ACTION_SPRITE_TYPE_READ_MAP = 27,
-    PEEP_ACTION_SPRITE_TYPE_WAVE = 28,
-    PEEP_ACTION_SPRITE_TYPE_STAFF_EMPTY_BIN = 29,
-    PEEP_ACTION_SPRITE_TYPE_WAVE_2 = 30,
-    PEEP_ACTION_SPRITE_TYPE_TAKE_PHOTO = 31,
-    PEEP_ACTION_SPRITE_TYPE_CLAP = 32,
-    PEEP_ACTION_SPRITE_TYPE_DISGUST = 33,
-    PEEP_ACTION_SPRITE_TYPE_DRAW_PICTURE = 34,
-    PEEP_ACTION_SPRITE_TYPE_BEING_WATCHED = 35,
-    PEEP_ACTION_SPRITE_TYPE_WITHDRAW_MONEY = 36,
+    None = 0,
+    CheckTime = 1,
+    WatchRide = 2,
+    EatFood = 3,
+    ShakeHead = 4,
+    EmptyPockets = 5,
+    HoldMat = 6,
+    SittingIdle = 7,
+    SittingEatFood = 8,
+    SittingLookAroundLeft = 9,
+    SittingLookAroundRight = 10,
+    Ui = 11,
+    StaffMower = 12,
+    Wow = 13,
+    ThrowUp = 14,
+    Jump = 15,
+    StaffSweep = 16,
+    Drowning = 17,
+    StaffAnswerCall = 18,
+    StaffAnswerCall2 = 19,
+    StaffCheckboard = 20,
+    StaffFix = 21,
+    StaffFix2 = 22,
+    StaffFixGround = 23,
+    StaffFix3 = 24,
+    StaffWatering = 25,
+    Joy = 26,
+    ReadMap = 27,
+    Wave = 28,
+    StaffEmptyBin = 29,
+    Wave2 = 30,
+    TakePhoto = 31,
+    Clap = 32,
+    Disgust = 33,
+    DrawPicture = 34,
+    BeingWatched = 35,
+    WithdrawMoney = 36,
 
-    PEEP_ACTION_SPRITE_TYPE_INVALID = 255
+    Invalid = 255
 };
 
 enum PeepFlags : uint32_t
@@ -406,124 +410,67 @@ enum PeepNextFlags
     PEEP_NEXT_FLAG_UNUSED = (1 << 4),
 };
 
-enum PeepNauseaTolerance
+enum class PeepNauseaTolerance : uint8_t
 {
-    PEEP_NAUSEA_TOLERANCE_NONE,
-    PEEP_NAUSEA_TOLERANCE_LOW,
-    PEEP_NAUSEA_TOLERANCE_AVERAGE,
-    PEEP_NAUSEA_TOLERANCE_HIGH,
+    None,
+    Low,
+    Average,
+    High
 };
 
-enum PeepItem
+enum class PeepSpriteType : uint8_t
 {
-    // ItemStandardFlags
-    PEEP_ITEM_BALLOON = (1 << 0),
-    PEEP_ITEM_TOY = (1 << 1),
-    PEEP_ITEM_MAP = (1 << 2),
-    PEEP_ITEM_PHOTO = (1 << 3),
-    PEEP_ITEM_UMBRELLA = (1 << 4),
-    PEEP_ITEM_DRINK = (1 << 5),
-    PEEP_ITEM_BURGER = (1 << 6),
-    PEEP_ITEM_CHIPS = (1 << 7),
-    PEEP_ITEM_ICE_CREAM = (1 << 8),
-    PEEP_ITEM_CANDYFLOSS = (1 << 9),
-    PEEP_ITEM_EMPTY_CAN = (1 << 10),
-    PEEP_ITEM_RUBBISH = (1 << 11),
-    PEEP_ITEM_EMPTY_BURGER_BOX = (1 << 12),
-    PEEP_ITEM_PIZZA = (1 << 13),
-    PEEP_ITEM_VOUCHER = (1 << 14),
-    PEEP_ITEM_POPCORN = (1 << 15),
-    PEEP_ITEM_HOT_DOG = (1 << 16),
-    PEEP_ITEM_TENTACLE = (1 << 17),
-    PEEP_ITEM_HAT = (1 << 18),
-    PEEP_ITEM_TOFFEE_APPLE = (1 << 19),
-    PEEP_ITEM_TSHIRT = (1 << 20),
-    PEEP_ITEM_DOUGHNUT = (1 << 21),
-    PEEP_ITEM_COFFEE = (1 << 22),
-    PEEP_ITEM_EMPTY_CUP = (1 << 23),
-    PEEP_ITEM_CHICKEN = (1 << 24),
-    PEEP_ITEM_LEMONADE = (1 << 25),
-    PEEP_ITEM_EMPTY_BOX = (1 << 26),
-    PEEP_ITEM_EMPTY_BOTTLE = (1 << 27),
+    Normal = 0,
+    Handyman = 1,
+    Mechanic = 2,
+    Security = 3,
+    EntertainerPanda = 4,
+    EntertainerTiger = 5,
+    EntertainerElephant = 6,
+    EntertainerRoman = 7,
+    EntertainerGorilla = 8,
+    EntertainerSnowman = 9,
+    EntertainerKnight = 10,
+    EntertainerAstronaut = 11,
+    EntertainerBandit = 12,
+    EntertainerSheriff = 13,
+    EntertainerPirate = 14,
+    IceCream = 15,
+    Chips = 16,
+    Burger = 17,
+    Drink = 18,
+    Balloon = 19,
+    Candyfloss = 20,
+    Umbrella = 21,
+    Pizza = 22,
+    SecurityAlt = 23,
+    Popcorn = 24,
+    ArmsCrossed = 25,
+    HeadDown = 26,
+    Nauseous = 27,
+    VeryNauseous = 28,
+    RequireToilet = 29,
+    Hat = 30,
+    HotDog = 31,
+    Tentacle = 32,
+    ToffeeApple = 33,
+    Doughnut = 34,
+    Coffee = 35,
+    Chicken = 36,
+    Lemonade = 37,
+    Watching = 38,
+    Pretzel = 39,
+    Sunglasses = 40,
+    SuJongkwa = 41,
+    Juice = 42,
+    FunnelCake = 43,
+    Noodles = 44,
+    Sausage = 45,
+    Soup = 46,
+    Sandwich = 47,
+    Count = 48,
 
-    // ItemExtraFlags
-    PEEP_ITEM_PHOTO2 = (1 << 0),
-    PEEP_ITEM_PHOTO3 = (1 << 1),
-    PEEP_ITEM_PHOTO4 = (1 << 2),
-    PEEP_ITEM_PRETZEL = (1 << 3),
-    PEEP_ITEM_CHOCOLATE = (1 << 4),
-    PEEP_ITEM_ICED_TEA = (1 << 5),
-    PEEP_ITEM_FUNNEL_CAKE = (1 << 6),
-    PEEP_ITEM_SUNGLASSES = (1 << 7),
-    PEEP_ITEM_BEEF_NOODLES = (1 << 8),
-    PEEP_ITEM_FRIED_RICE_NOODLES = (1 << 9),
-    PEEP_ITEM_WONTON_SOUP = (1 << 10),
-    PEEP_ITEM_MEATBALL_SOUP = (1 << 11),
-    PEEP_ITEM_FRUIT_JUICE = (1 << 12),
-    PEEP_ITEM_SOYBEAN_MILK = (1 << 13),
-    PEEP_ITEM_SU_JONGKWA = (1 << 14),
-    PEEP_ITEM_SUB_SANDWICH = (1 << 15),
-    PEEP_ITEM_COOKIE = (1 << 16),
-    PEEP_ITEM_EMPTY_BOWL_RED = (1 << 17),
-    PEEP_ITEM_EMPTY_DRINK_CARTON = (1 << 18),
-    PEEP_ITEM_EMPTY_JUICE_CUP = (1 << 19),
-    PEEP_ITEM_ROAST_SAUSAGE = (1 << 20),
-    PEEP_ITEM_EMPTY_BOWL_BLUE = (1 << 21),
-};
-
-enum PeepSpriteType : uint8_t
-{
-    PEEP_SPRITE_TYPE_NORMAL = 0,
-    PEEP_SPRITE_TYPE_HANDYMAN = 1,
-    PEEP_SPRITE_TYPE_MECHANIC = 2,
-    PEEP_SPRITE_TYPE_SECURITY = 3,
-    PEEP_SPRITE_TYPE_ENTERTAINER_PANDA = 4,
-    PEEP_SPRITE_TYPE_ENTERTAINER_TIGER = 5,
-    PEEP_SPRITE_TYPE_ENTERTAINER_ELEPHANT = 6,
-    PEEP_SPRITE_TYPE_ENTERTAINER_ROMAN = 7,
-    PEEP_SPRITE_TYPE_ENTERTAINER_GORILLA = 8,
-    PEEP_SPRITE_TYPE_ENTERTAINER_SNOWMAN = 9,
-    PEEP_SPRITE_TYPE_ENTERTAINER_KNIGHT = 10,
-    PEEP_SPRITE_TYPE_ENTERTAINER_ASTRONAUT = 11,
-    PEEP_SPRITE_TYPE_ENTERTAINER_BANDIT = 12,
-    PEEP_SPRITE_TYPE_ENTERTAINER_SHERIFF = 13,
-    PEEP_SPRITE_TYPE_ENTERTAINER_PIRATE = 14,
-    PEEP_SPRITE_TYPE_ICE_CREAM = 15,
-    PEEP_SPRITE_TYPE_CHIPS = 16,
-    PEEP_SPRITE_TYPE_BURGER = 17,
-    PEEP_SPRITE_TYPE_DRINK = 18,
-    PEEP_SPRITE_TYPE_BALLOON = 19,
-    PEEP_SPRITE_TYPE_CANDYFLOSS = 20,
-    PEEP_SPRITE_TYPE_UMBRELLA = 21,
-    PEEP_SPRITE_TYPE_PIZZA = 22,
-    PEEP_SPRITE_TYPE_SECURITY_ALT = 23,
-    PEEP_SPRITE_TYPE_POPCORN = 24,
-    PEEP_SPRITE_TYPE_ARMS_CROSSED = 25,
-    PEEP_SPRITE_TYPE_HEAD_DOWN = 26,
-    PEEP_SPRITE_TYPE_NAUSEOUS = 27,
-    PEEP_SPRITE_TYPE_VERY_NAUSEOUS = 28,
-    PEEP_SPRITE_TYPE_REQUIRE_TOILET = 29,
-    PEEP_SPRITE_TYPE_HAT = 30,
-    PEEP_SPRITE_TYPE_HOT_DOG = 31,
-    PEEP_SPRITE_TYPE_TENTACLE = 32,
-    PEEP_SPRITE_TYPE_TOFFEE_APPLE = 33,
-    PEEP_SPRITE_TYPE_DOUGHNUT = 34,
-    PEEP_SPRITE_TYPE_COFFEE = 35,
-    PEEP_SPRITE_TYPE_CHICKEN = 36,
-    PEEP_SPRITE_TYPE_LEMONADE = 37,
-    PEEP_SPRITE_TYPE_WATCHING = 38,
-    PEEP_SPRITE_TYPE_PRETZEL = 39,
-    PEEP_SPRITE_TYPE_SUNGLASSES = 40,
-    PEEP_SPRITE_TYPE_SU_JONGKWA = 41,
-    PEEP_SPRITE_TYPE_JUICE = 42,
-    PEEP_SPRITE_TYPE_FUNNEL_CAKE = 43,
-    PEEP_SPRITE_TYPE_NOODLES = 44,
-    PEEP_SPRITE_TYPE_SAUSAGE = 45,
-    PEEP_SPRITE_TYPE_SOUP = 46,
-    PEEP_SPRITE_TYPE_SANDWICH = 47,
-    PEEP_SPRITE_TYPE_COUNT,
-
-    PEEP_SPRITE_TYPE_INVALID = 255
+    Invalid = 255
 };
 
 // Flags used by peep->WindowInvalidateFlags
@@ -614,7 +561,13 @@ struct Peep : SpriteBase
     uint8_t NextFlags;
     bool OutsideOfPark;
     PeepState State;
-    uint8_t SubState;
+    union
+    {
+        uint8_t SubState;
+        PeepSittingSubState SittingSubState;
+        PeepRideSubState RideSubState;
+        PeepUsingBinSubState UsingBinSubState;
+    };
     PeepSpriteType SpriteType;
     PeepType AssignedPeepType;
     union
@@ -640,11 +593,10 @@ struct Peep : SpriteBase
     uint8_t Mass;
     uint8_t TimeToConsume;
     IntensityRange Intensity;
-    uint8_t NauseaTolerance;
+    PeepNauseaTolerance NauseaTolerance;
     uint8_t WindowInvalidateFlags;
     money16 PaidOnDrink;
     uint8_t RideTypesBeenOn[16];
-    uint32_t ItemExtraFlags;
     ride_id_t Photo2RideRef;
     ride_id_t Photo3RideRef;
     ride_id_t Photo4RideRef;
@@ -689,7 +641,7 @@ struct Peep : SpriteBase
         uint8_t MazeLastEdge;
         Direction PeepDirection; // Direction ?
     };
-    uint8_t InteractionRideIndex;
+    ride_id_t InteractionRideIndex;
     uint16_t TimeInQueue;
     uint8_t RidesBeenOn[32];
     // 255 bit bitmap of every ride the peep has been on see
@@ -697,9 +649,13 @@ struct Peep : SpriteBase
     uint32_t Id;
     money32 CashInPocket;
     money32 CashSpent;
-    int32_t TimeInPark;
+    union
+    {
+        int32_t ParkEntryTime;
+        int32_t HireDate;
+    };
     int8_t RejoinQueueTimeout; // whilst waiting for a free vehicle (or pair) in the entrance
-    uint8_t PreviousRide;
+    ride_id_t PreviousRide;
     uint16_t PreviousRideTimeOut;
     rct_peep_thought Thoughts[PEEP_MAX_THOUGHTS];
     uint8_t PathCheckOptimisation; // see peep.checkForPath
@@ -768,7 +724,7 @@ struct Peep : SpriteBase
     uint8_t HatColour;
     ride_id_t FavouriteRide;
     uint8_t FavouriteRideRating;
-    uint32_t ItemStandardFlags;
+    uint64_t ItemFlags;
 
 public: // Peep
     Guest* AsGuest();
@@ -790,7 +746,7 @@ public: // Peep
     void SetNextFlags(uint8_t next_direction, bool is_sloped, bool is_surface);
     void Pickup();
     void PickupAbort(int32_t old_x);
-    std::unique_ptr<GameActionResult> Place(const TileCoordsXYZ& location, bool apply);
+    std::unique_ptr<GameActions::Result> Place(const TileCoordsXYZ& location, bool apply);
     static Peep* Generate(const CoordsXYZ& coords);
     void RemoveFromQueue();
     void RemoveFromRide();
@@ -799,6 +755,16 @@ public: // Peep
     void FormatNameTo(Formatter&) const;
     std::string GetName() const;
     bool SetName(const std::string_view& value);
+
+    // Reset the peep's stored goal, which means they will forget any stored pathfinding history
+    // on the next peep_pathfind_choose_direction call.
+    void ResetPathfindGoal();
+    uint64_t GetItemFlags() const;
+    void SetItemFlags(uint64_t itemFlags);
+    void RemoveAllItems();
+    void RemoveItem(ShopItem item);
+    void GiveItem(ShopItem item);
+    bool HasItem(ShopItem peepItem) const;
 
     // TODO: Make these private again when done refactoring
 public: // Peep
@@ -820,9 +786,10 @@ struct Guest : Peep
 public:
     void UpdateGuest();
     void Tick128UpdateGuest(int32_t index);
-    bool HasItem(int32_t peepItem) const;
-    bool HasFood() const;
+    int64_t GetFoodOrDrinkFlags() const;
+    int64_t GetEmptyContainerFlags() const;
     bool HasDrink() const;
+    bool HasFoodOrDrink() const;
     bool HasEmptyContainer() const;
     void OnEnterRide(ride_id_t rideIndex);
     void OnExitRide(ride_id_t rideIndex);
@@ -844,16 +811,12 @@ public:
     bool HasRidden(const Ride* ride) const;
     void SetHasRiddenRideType(int32_t rideType);
     bool HasRiddenRideType(int32_t rideType) const;
-    int32_t HasFoodStandardFlag() const;
-    int32_t HasFoodExtraFlag() const;
-    bool HasDrinkStandardFlag() const;
-    bool HasDrinkExtraFlag() const;
-    int32_t HasEmptyContainerStandardFlag() const;
-    int32_t HasEmptyContainerExtraFlag() const;
+    void SetParkEntryTime(int32_t entryTime);
+    int32_t GetParkEntryTime() const;
     void CheckIfLost();
     void CheckCantFindRide();
     void CheckCantFindExit();
-    bool DecideAndBuyItem(Ride* ride, int32_t shopItem, money32 price);
+    bool DecideAndBuyItem(Ride* ride, ShopItem shopItem, money32 price);
     void SetSpriteType(PeepSpriteType new_sprite_type);
     void HandleEasterEggName();
     int32_t GetEasterEggNameId() const;
@@ -913,9 +876,16 @@ public:
     bool IsMechanic() const;
     bool IsPatrolAreaSet(const CoordsXY& coords) const;
     bool IsLocationInPatrol(const CoordsXY& loc) const;
+    bool IsLocationOnPatrolEdge(const CoordsXY& loc) const;
     bool DoPathFinding();
     uint8_t GetCostume() const;
     void SetCostume(uint8_t value);
+    void SetHireDate(int32_t hireDate);
+    int32_t GetHireDate() const;
+
+    bool CanIgnoreWideFlag(const CoordsXYZ& staffPos, TileElement* path) const;
+
+    static void ResetStats();
 
 private:
     void UpdatePatrolling();
@@ -925,18 +895,18 @@ private:
     void UpdateWatering();
     void UpdateAnswering();
     void UpdateFixing(int32_t steps);
-    bool UpdateFixingEnterStation(Ride* ride);
-    bool UpdateFixingMoveToBrokenDownVehicle(bool firstRun, Ride* ride);
-    bool UpdateFixingFixVehicle(bool firstRun, Ride* ride);
-    bool UpdateFixingFixVehicleMalfunction(bool firstRun, Ride* ride);
-    bool UpdateFixingMoveToStationEnd(bool firstRun, Ride* ride);
+    bool UpdateFixingEnterStation(Ride* ride) const;
+    bool UpdateFixingMoveToBrokenDownVehicle(bool firstRun, const Ride* ride);
+    bool UpdateFixingFixVehicle(bool firstRun, const Ride* ride);
+    bool UpdateFixingFixVehicleMalfunction(bool firstRun, const Ride* ride);
+    bool UpdateFixingMoveToStationEnd(bool firstRun, const Ride* ride);
     bool UpdateFixingFixStationEnd(bool firstRun);
-    bool UpdateFixingMoveToStationStart(bool firstRun, Ride* ride);
-    bool UpdateFixingFixStationStart(bool firstRun, Ride* ride);
+    bool UpdateFixingMoveToStationStart(bool firstRun, const Ride* ride);
+    bool UpdateFixingFixStationStart(bool firstRun, const Ride* ride);
     bool UpdateFixingFixStationBrakes(bool firstRun, Ride* ride);
-    bool UpdateFixingMoveToStationExit(bool firstRun, Ride* ride);
+    bool UpdateFixingMoveToStationExit(bool firstRun, const Ride* ride);
     bool UpdateFixingFinishFixOrInspect(bool firstRun, int32_t steps, Ride* ride);
-    bool UpdateFixingLeaveByEntranceExit(bool firstRun, Ride* ride);
+    bool UpdateFixingLeaveByEntranceExit(bool firstRun, const Ride* ride);
     void UpdateRideInspected(ride_id_t rideIndex);
     void UpdateHeadingToInspect();
 
@@ -945,7 +915,22 @@ private:
     bool DoEntertainerPathFinding();
     bool DoMiscPathFinding();
 
-    int32_t HandymanDirectionRandSurface(uint8_t validDirections);
+    Direction HandymanDirectionRandSurface(uint8_t validDirections) const;
+
+    void EntertainerUpdateNearbyPeeps() const;
+
+    uint8_t GetValidPatrolDirections(const CoordsXY& loc) const;
+    Direction HandymanDirectionToNearestLitter() const;
+    uint8_t HandymanDirectionToUncutGrass(uint8_t valid_directions) const;
+    Direction DirectionSurface(Direction initialDirection) const;
+    Direction DirectionPath(uint8_t validDirections, PathElement* pathElement) const;
+    Direction MechanicDirectionSurface() const;
+    Direction MechanicDirectionPathRand(uint8_t pathDirections) const;
+    Direction MechanicDirectionPath(uint8_t validDirections, PathElement* pathElement);
+    bool UpdatePatrollingFindWatering();
+    bool UpdatePatrollingFindBin();
+    bool UpdatePatrollingFindSweeping();
+    bool UpdatePatrollingFindGrass();
 };
 
 static_assert(sizeof(Peep) <= 512);
@@ -1007,7 +992,7 @@ enum
 };
 
 // rct2: 0x00982708
-extern rct_peep_animation_entry g_peep_animation_entries[PEEP_SPRITE_TYPE_COUNT];
+extern const rct_peep_animation_entry g_peep_animation_entries[EnumValue(PeepSpriteType::Count)];
 extern const bool gSpriteTypeToSlowWalkMap[48];
 
 extern uint8_t gGuestChangeModifier;
@@ -1024,10 +1009,6 @@ extern uint32_t gNextGuestNumber;
 
 extern uint8_t gPeepWarningThrottle[16];
 
-extern TileCoordsXYZ gPeepPathFindGoalPosition;
-extern bool gPeepPathFindIgnoreForeignQueues;
-extern ride_id_t gPeepPathFindQueueRideIndex;
-
 Peep* try_get_guest(uint16_t spriteIndex);
 int32_t peep_get_staff_count();
 bool peep_can_be_picked_up(Peep* peep);
@@ -1037,11 +1018,9 @@ void peep_stop_crowd_noise();
 void peep_update_crowd_noise();
 void peep_update_days_in_queue();
 void peep_applause();
-void peep_thought_set_format_args(const rct_peep_thought* thought);
+void peep_thought_set_format_args(const rct_peep_thought* thought, Formatter& ft);
 int32_t get_peep_face_sprite_small(Peep* peep);
 int32_t get_peep_face_sprite_large(Peep* peep);
-void game_command_pickup_guest(
-    int32_t* eax, int32_t* ebx, int32_t* ecx, int32_t* edx, int32_t* esi, int32_t* edi, int32_t* ebp);
 void peep_sprite_remove(Peep* peep);
 
 void peep_window_state_update(Peep* peep);
@@ -1050,30 +1029,9 @@ void peep_decrement_num_riders(Peep* peep);
 void peep_set_map_tooltip(Peep* peep);
 int32_t peep_compare(const uint16_t sprite_index_a, const uint16_t sprite_index_b);
 
-void SwitchToSpecialSprite(Peep* peep, uint8_t special_sprite_id);
 void peep_update_names(bool realNames);
 
 void guest_set_name(uint16_t spriteIndex, const char* name);
-
-Direction peep_pathfind_choose_direction(const TileCoordsXYZ& loc, Peep* peep);
-void peep_reset_pathfind_goal(Peep* peep);
-
-bool is_valid_path_z_and_direction(TileElement* tileElement, int32_t currentZ, int32_t currentDirection);
-int32_t guest_path_finding(Guest* peep);
-
-#if defined(DEBUG_LEVEL_1) && DEBUG_LEVEL_1
-#    define PATHFIND_DEBUG                                                                                                     \
-        0 // Set to 0 to disable pathfinding debugging;
-          // Set to 1 to enable pathfinding debugging.
-// Some variables used for the path finding debugging.
-extern bool gPathFindDebug;              // Use to guard calls to log messages
-extern utf8 gPathFindDebugPeepName[256]; // Use to put the peep name in the log message
-
-// The following calls set the above two variables for a peep.
-// ... when PATHFIND_DEBUG is 1 (nonzero)
-void pathfind_logging_enable(Peep* peep);
-void pathfind_logging_disable();
-#endif // defined(DEBUG_LEVEL_1) && DEBUG_LEVEL_1
 
 void increment_guests_in_park();
 void increment_guests_heading_for_park();
@@ -1081,5 +1039,17 @@ void decrement_guests_in_park();
 void decrement_guests_heading_for_park();
 
 rct_string_id get_real_name_string_id_from_id(uint32_t id);
+
+inline const rct_peep_animation& GetPeepAnimation(
+    PeepSpriteType spriteType, PeepActionSpriteType actionSpriteType = PeepActionSpriteType::None)
+{
+    return g_peep_animation_entries[EnumValue(spriteType)].sprite_animation[EnumValue(actionSpriteType)];
+};
+
+inline const rct_sprite_bounds& GetSpriteBounds(
+    PeepSpriteType spriteType, PeepActionSpriteType actionSpriteType = PeepActionSpriteType::None)
+{
+    return g_peep_animation_entries[EnumValue(spriteType)].sprite_bounds[EnumValue(actionSpriteType)];
+};
 
 #endif

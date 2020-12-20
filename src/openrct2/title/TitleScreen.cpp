@@ -125,13 +125,13 @@ void TitleScreen::Load()
     gCurrentLoadedPath = "";
 
     network_close();
-    audio_stop_all_music_and_sounds();
+    OpenRCT2::Audio::StopAll();
     GetContext()->GetGameState()->InitAll(150);
     viewport_init_all();
     context_open_window(WC_MAIN_WINDOW);
     CreateWindows();
     TitleInitialise();
-    audio_start_title_music();
+    OpenRCT2::Audio::PlayTitleMusic();
 
     if (gOpenRCT2ShowChangelog)
     {
@@ -174,7 +174,7 @@ void TitleScreen::Update()
             _gameState.UpdateLogic();
         }
         update_palette_effects();
-        // update_rain_animation();
+        // update_weather_animation();
     }
 
     input_set_flag(INPUT_FLAG_VIEWPORT_SCROLLING, false);
@@ -256,9 +256,9 @@ void TitleScreen::TitleInitialise()
 
         int32_t random = 0;
         bool safeSequence = false;
-        std::string RCT1String = format_string(STR_TITLE_SEQUENCE_RCT1, gCommonFormatArgs);
-        std::string RCT1AAString = format_string(STR_TITLE_SEQUENCE_RCT1_AA, gCommonFormatArgs);
-        std::string RCT1LLString = format_string(STR_TITLE_SEQUENCE_RCT1_AA_LL, gCommonFormatArgs);
+        std::string RCT1String = format_string(STR_TITLE_SEQUENCE_RCT1, nullptr);
+        std::string RCT1AAString = format_string(STR_TITLE_SEQUENCE_RCT1_AA, nullptr);
+        std::string RCT1LLString = format_string(STR_TITLE_SEQUENCE_RCT1_AA_LL, nullptr);
 
         // Ensure the random sequence chosen isn't from RCT1 or expansion if the player doesn't have it installed
         while (!safeSequence)
@@ -429,17 +429,13 @@ bool title_is_previewing_sequence()
 
 void DrawOpenRCT2(rct_drawpixelinfo* dpi, const ScreenCoordsXY& screenCoords)
 {
-    utf8 buffer[256];
-
-    // Write format codes
-    utf8* ch = buffer;
-    ch = utf8_write_codepoint(ch, FORMAT_MEDIUMFONT);
-    ch = utf8_write_codepoint(ch, FORMAT_OUTLINE);
-    ch = utf8_write_codepoint(ch, FORMAT_WHITE);
+    thread_local std::string buffer;
+    buffer.clear();
+    buffer.assign("{MEDIUMFONT}{OUTLINE}{WHITE}");
 
     // Write name and version information
-    openrct2_write_full_version_info(ch, sizeof(buffer) - (ch - buffer));
-    gfx_draw_string(dpi, buffer, COLOUR_BLACK, screenCoords + ScreenCoordsXY(5, 5 - 13));
+    buffer += gVersionInfoFull;
+    gfx_draw_string(dpi, buffer.c_str(), COLOUR_BLACK, screenCoords + ScreenCoordsXY(5, 5 - 13));
 
     // Invalidate screen area
     int16_t width = static_cast<int16_t>(gfx_get_string_width(buffer));
@@ -447,6 +443,10 @@ void DrawOpenRCT2(rct_drawpixelinfo* dpi, const ScreenCoordsXY& screenCoords)
         { screenCoords, screenCoords + ScreenCoordsXY{ width, 30 } }); // 30 is an arbitrary height to catch both strings
 
     // Write platform information
-    snprintf(ch, 256 - (ch - buffer), "%s (%s)", OPENRCT2_PLATFORM, OPENRCT2_ARCHITECTURE);
-    gfx_draw_string(dpi, buffer, COLOUR_BLACK, screenCoords + ScreenCoordsXY(5, 5));
+    buffer.assign("{MEDIUMFONT}{OUTLINE}{WHITE}");
+    buffer.append(OPENRCT2_PLATFORM);
+    buffer.append(" (");
+    buffer.append(OPENRCT2_ARCHITECTURE);
+    buffer.append(")");
+    gfx_draw_string(dpi, buffer.c_str(), COLOUR_BLACK, screenCoords + ScreenCoordsXY(5, 5));
 }

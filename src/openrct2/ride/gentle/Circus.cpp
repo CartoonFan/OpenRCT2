@@ -44,7 +44,7 @@ static void paint_circus_tent(
         imageColourFlags = SPRITE_ID_PALETTE_COLOUR_2(ride->vehicle_colours[0].Body, ride->vehicle_colours[0].Trim);
     }
 
-    sub_98197C(session, imageId | imageColourFlags, al, cl, 24, 24, 47, height + 3, al + 16, cl + 16, height + 3);
+    PaintAddImageAsParent(session, imageId | imageColourFlags, al, cl, 24, 24, 47, height + 3, al + 16, cl + 16, height + 3);
 
     session->CurrentlyDrawnItem = savedTileElement;
     session->InteractionType = VIEWPORT_INTERACTION_ITEM_RIDE;
@@ -123,7 +123,7 @@ static void paint_circus(
 /**
  * rct2: 0x0076F8D4
  */
-TRACK_PAINT_FUNCTION get_track_paint_function_circus(int32_t trackType, int32_t direction)
+TRACK_PAINT_FUNCTION get_track_paint_function_circus(int32_t trackType)
 {
     if (trackType != FLAT_TRACK_ELEM_3_X_3)
     {

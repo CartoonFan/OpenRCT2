@@ -23,43 +23,18 @@ enum {
 };
 
 static rct_widget window_error_widgets[] = {
-    MakeWidget({0, 0}, {200, 42}, WWT_IMGBTN, WindowColour::Primary),
+    MakeWidget({0, 0}, {200, 42}, WindowWidgetType::ImgBtn, WindowColour::Primary),
     { WIDGETS_END }
 };
 
 static void window_error_unknown5(rct_window *w);
 static void window_error_paint(rct_window *w, rct_drawpixelinfo *dpi);
 
-static rct_window_event_list window_error_events = {
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    window_error_unknown5,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    window_error_paint,
-    nullptr
-};
+static rct_window_event_list window_error_events([](auto& events)
+{
+    events.unknown_05 = &window_error_unknown5;
+    events.paint = &window_error_paint;
+});
 // clang-format on
 
 static std::string _window_error_text;
@@ -72,10 +47,10 @@ static uint16_t _window_error_num_lines;
  * bx: title
  * dx: message
  */
-rct_window* window_error_open(rct_string_id title, rct_string_id message)
+rct_window* window_error_open(rct_string_id title, rct_string_id message, const Formatter& args)
 {
-    auto titlez = format_string(title, gCommonFormatArgs);
-    auto messagez = format_string(message, gCommonFormatArgs);
+    auto titlez = format_string(title, args.Data());
+    auto messagez = format_string(message, args.Data());
     return window_error_open(titlez, messagez);
 }
 
@@ -86,22 +61,13 @@ rct_window* window_error_open(const std::string_view& title, const std::string_v
 
     window_close_by_class(WC_ERROR);
     auto& buffer = _window_error_text;
-    buffer.clear();
-
-    // Format the title
-    {
-        char temp[8]{};
-        utf8_write_codepoint(temp, FORMAT_BLACK);
-        buffer.append(temp);
-    }
+    buffer.assign("{BLACK}");
     buffer.append(title);
 
     // Format the message
     if (!message.empty())
     {
-        char temp[8]{};
-        utf8_write_codepoint(temp, FORMAT_NEWLINE);
-        buffer.append(temp);
+        buffer.push_back('\n');
         buffer.append(message);
     }
 
@@ -143,13 +109,13 @@ rct_window* window_error_open(const std::string_view& title, const std::string_v
         windowPosition.y = std::min(windowPosition.y - height - 40, maxY);
     }
 
-    w = window_create(
+    w = WindowCreate(
         windowPosition, width, height, &window_error_events, WC_ERROR, WF_STICK_TO_FRONT | WF_TRANSPARENT | WF_RESIZABLE);
     w->widgets = window_error_widgets;
     w->error.var_480 = 0;
     if (!gDisableErrorWindowSound)
     {
-        audio_play_sound(SoundId::Error, 0, w->windowPos.x + (w->width / 2));
+        OpenRCT2::Audio::Play(OpenRCT2::Audio::SoundId::Error, 0, w->windowPos.x + (w->width / 2));
     }
 
     return w;
@@ -179,18 +145,18 @@ static void window_error_paint(rct_window* w, rct_drawpixelinfo* dpi)
     r = w->windowPos.x + w->width - 1;
     b = w->windowPos.y + w->height - 1;
 
-    gfx_filter_rect(dpi, l + 1, t + 1, r - 1, b - 1, PALETTE_45);
-    gfx_filter_rect(dpi, l, t, r, b, PALETTE_GLASS_SATURATED_RED);
+    gfx_filter_rect(dpi, l + 1, t + 1, r - 1, b - 1, FilterPaletteID::Palette45);
+    gfx_filter_rect(dpi, l, t, r, b, FilterPaletteID::PaletteGlassSaturatedRed);
 
-    gfx_filter_rect(dpi, l, t + 2, l, b - 2, PALETTE_DARKEN_3);
-    gfx_filter_rect(dpi, r, t + 2, r, b - 2, PALETTE_DARKEN_3);
-    gfx_filter_rect(dpi, l + 2, b, r - 2, b, PALETTE_DARKEN_3);
-    gfx_filter_rect(dpi, l + 2, t, r - 2, t, PALETTE_DARKEN_3);
+    gfx_filter_rect(dpi, l, t + 2, l, b - 2, FilterPaletteID::PaletteDarken3);
+    gfx_filter_rect(dpi, r, t + 2, r, b - 2, FilterPaletteID::PaletteDarken3);
+    gfx_filter_rect(dpi, l + 2, b, r - 2, b, FilterPaletteID::PaletteDarken3);
+    gfx_filter_rect(dpi, l + 2, t, r - 2, t, FilterPaletteID::PaletteDarken3);
 
-    gfx_filter_rect(dpi, r + 1, t + 1, r + 1, t + 1, PALETTE_DARKEN_3);
-    gfx_filter_rect(dpi, r - 1, t + 1, r - 1, t + 1, PALETTE_DARKEN_3);
-    gfx_filter_rect(dpi, l + 1, b - 1, l + 1, b - 1, PALETTE_DARKEN_3);
-    gfx_filter_rect(dpi, r - 1, b - 1, r - 1, b - 1, PALETTE_DARKEN_3);
+    gfx_filter_rect(dpi, r + 1, t + 1, r + 1, t + 1, FilterPaletteID::PaletteDarken3);
+    gfx_filter_rect(dpi, r - 1, t + 1, r - 1, t + 1, FilterPaletteID::PaletteDarken3);
+    gfx_filter_rect(dpi, l + 1, b - 1, l + 1, b - 1, FilterPaletteID::PaletteDarken3);
+    gfx_filter_rect(dpi, r - 1, b - 1, r - 1, b - 1, FilterPaletteID::PaletteDarken3);
 
     l = w->windowPos.x + (w->width + 1) / 2 - 1;
     t = w->windowPos.y + 1;

@@ -110,11 +110,11 @@ namespace OpenRCT2::Ui
         {
             return nullptr;
         }
-        CURSOR_ID GetCursor() override
+        CursorID GetCursor() override
         {
-            return CURSOR_ARROW;
+            return CursorID::Arrow;
         }
-        void SetCursor(CURSOR_ID /*cursor*/) override
+        void SetCursor(CursorID /*cursor*/) override
         {
         }
         void SetCursorScale(uint8_t /*scale*/) override
@@ -148,7 +148,7 @@ namespace OpenRCT2::Ui
         class X8DrawingEngineFactory final : public IDrawingEngineFactory
         {
             std::unique_ptr<IDrawingEngine> Create(
-                [[maybe_unused]] DRAWING_ENGINE_TYPE type, const std::shared_ptr<IUiContext>& uiContext) override
+                [[maybe_unused]] DrawingEngine type, const std::shared_ptr<IUiContext>& uiContext) override
             {
                 return std::make_unique<X8DrawingEngine>(uiContext);
             }
@@ -159,7 +159,7 @@ namespace OpenRCT2::Ui
         {
             return std::make_shared<X8DrawingEngineFactory>();
         }
-        void DrawRainAnimation(IRainDrawer* rainDrawer, rct_drawpixelinfo* dpi, DrawRainFunc drawFunc) override
+        void DrawWeatherAnimation(IWeatherDrawer* weatherDrawer, rct_drawpixelinfo* dpi, DrawWeatherFunc drawFunc) override
         {
         }
 
@@ -197,6 +197,11 @@ namespace OpenRCT2::Ui
         ~DummyUiContext()
         {
             delete _windowManager;
+        }
+
+        bool HasFilePicker() const override
+        {
+            return false;
         }
     };
 

@@ -16,7 +16,7 @@
 
 template<> bool SpriteBase::Is<Balloon>() const
 {
-    return sprite_identifier == SPRITE_IDENTIFIER_MISC && type == SPRITE_MISC_BALLOON;
+    return sprite_identifier == SpriteIdentifier::Misc && type == SPRITE_MISC_BALLOON;
 }
 
 void Balloon::Update()
@@ -76,15 +76,15 @@ void Balloon::Pop()
 {
     popped = 1;
     frame = 0;
-    audio_play_sound_at_location(SoundId::BalloonPop, { x, y, z });
+    OpenRCT2::Audio::Play3D(OpenRCT2::Audio::SoundId::BalloonPop, { x, y, z });
 }
 
 void create_balloon(const CoordsXYZ& balloonPos, int32_t colour, bool isPopped)
 {
-    rct_sprite* sprite = create_sprite(SPRITE_IDENTIFIER_MISC);
+    rct_sprite* sprite = create_sprite(SpriteIdentifier::Misc);
     if (sprite == nullptr)
         return;
-    sprite->generic.sprite_identifier = SPRITE_IDENTIFIER_MISC;
+    sprite->generic.sprite_identifier = SpriteIdentifier::Misc;
     sprite->generic.type = SPRITE_MISC_BALLOON;
     auto balloon = sprite->generic.As<Balloon>();
     if (balloon == nullptr)

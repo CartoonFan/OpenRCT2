@@ -58,14 +58,14 @@ enum {
 };
 
 static rct_widget window_server_list_widgets[] = {
-    MakeWidget({  0,  0}, {341, 91}, WWT_FRAME,    WindowColour::Primary                                           ), // panel / background
-    MakeWidget({  1,  1}, {338, 14}, WWT_CAPTION,  WindowColour::Primary  , STR_SERVER_LIST,   STR_WINDOW_TITLE_TIP), // title bar
-    MakeWidget({327,  2}, { 11, 12}, WWT_CLOSEBOX, WindowColour::Primary  , STR_CLOSE_X,       STR_CLOSE_WINDOW_TIP), // close x button
-    MakeWidget({100, 20}, {245, 12}, WWT_TEXT_BOX, WindowColour::Secondary                                         ), // player name text box
-    MakeWidget({  6, 37}, {332, 14}, WWT_SCROLL,   WindowColour::Secondary                                         ), // server list
-    MakeWidget({  6, 53}, {101, 14}, WWT_BUTTON,   WindowColour::Secondary, STR_FETCH_SERVERS                      ), // fetch servers button
-    MakeWidget({112, 53}, {101, 14}, WWT_BUTTON,   WindowColour::Secondary, STR_ADD_SERVER                         ), // add server button
-    MakeWidget({218, 53}, {101, 14}, WWT_BUTTON,   WindowColour::Secondary, STR_START_SERVER                       ), // start server button
+    MakeWidget({  0,  0}, {341, 91}, WindowWidgetType::Frame,    WindowColour::Primary                                           ), // panel / background
+    MakeWidget({  1,  1}, {338, 14}, WindowWidgetType::Caption,  WindowColour::Primary  , STR_SERVER_LIST,   STR_WINDOW_TITLE_TIP), // title bar
+    MakeWidget({327,  2}, { 11, 12}, WindowWidgetType::CloseBox, WindowColour::Primary  , STR_CLOSE_X,       STR_CLOSE_WINDOW_TIP), // close x button
+    MakeWidget({100, 20}, {245, 12}, WindowWidgetType::TextBox, WindowColour::Secondary                                         ), // player name text box
+    MakeWidget({  6, 37}, {332, 14}, WindowWidgetType::Scroll,   WindowColour::Secondary                                         ), // server list
+    MakeWidget({  6, 53}, {101, 14}, WindowWidgetType::Button,   WindowColour::Secondary, STR_FETCH_SERVERS                      ), // fetch servers button
+    MakeWidget({112, 53}, {101, 14}, WindowWidgetType::Button,   WindowColour::Secondary, STR_ADD_SERVER                         ), // add server button
+    MakeWidget({218, 53}, {101, 14}, WindowWidgetType::Button,   WindowColour::Secondary, STR_START_SERVER                       ), // start server button
     { WIDGETS_END },
 };
 
@@ -78,40 +78,27 @@ static void window_server_list_scroll_getsize(rct_window *w, int32_t scrollIndex
 static void window_server_list_scroll_mousedown(rct_window *w, int32_t scrollIndex, const ScreenCoordsXY& screenCoords);
 static void window_server_list_scroll_mouseover(rct_window *w, int32_t scrollIndex, const ScreenCoordsXY& screenCoords);
 static void window_server_list_textinput(rct_window *w, rct_widgetindex widgetIndex, char *text);
+static OpenRCT2String window_server_list_tooltip(rct_window* const w, const rct_widgetindex widgetIndex, rct_string_id fallback);
 static void window_server_list_invalidate(rct_window *w);
 static void window_server_list_paint(rct_window *w, rct_drawpixelinfo *dpi);
 static void window_server_list_scrollpaint(rct_window *w, rct_drawpixelinfo *dpi, int32_t scrollIndex);
 
-static rct_window_event_list window_server_list_events = {
-    window_server_list_close,
-    window_server_list_mouseup,
-    window_server_list_resize,
-    nullptr,
-    window_server_list_dropdown,
-    nullptr,
-    window_server_list_update,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    window_server_list_scroll_getsize,
-    window_server_list_scroll_mousedown,
-    nullptr,
-    window_server_list_scroll_mouseover,
-    window_server_list_textinput,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    window_server_list_invalidate,
-    window_server_list_paint,
-    window_server_list_scrollpaint
-};
+static rct_window_event_list window_server_list_events([](auto& events)
+{
+    events.close = &window_server_list_close;
+    events.mouse_up = &window_server_list_mouseup;
+    events.resize = &window_server_list_resize;
+    events.dropdown = &window_server_list_dropdown;
+    events.update = &window_server_list_update;
+    events.get_scroll_size = &window_server_list_scroll_getsize;
+    events.scroll_mousedown = &window_server_list_scroll_mousedown;
+    events.scroll_mouseover = &window_server_list_scroll_mouseover;
+    events.text_input = &window_server_list_textinput;
+    events.tooltip = &window_server_list_tooltip;
+    events.invalidate = &window_server_list_invalidate;
+    events.paint = &window_server_list_paint;
+    events.scroll_paint = &window_server_list_scrollpaint;
+});
 // clang-format on
 
 enum
@@ -137,14 +124,14 @@ rct_window* window_server_list_open()
     if (window != nullptr)
         return window;
 
-    window = window_create_centred(WWIDTH_MIN, WHEIGHT_MIN, &window_server_list_events, WC_SERVER_LIST, WF_10 | WF_RESIZABLE);
+    window = WindowCreateCentred(WWIDTH_MIN, WHEIGHT_MIN, &window_server_list_events, WC_SERVER_LIST, WF_10 | WF_RESIZABLE);
 
     window_server_list_widgets[WIDX_PLAYER_NAME_INPUT].string = _playerName;
     window->widgets = window_server_list_widgets;
     window->enabled_widgets
         = ((1 << WIDX_CLOSE) | (1 << WIDX_PLAYER_NAME_INPUT) | (1 << WIDX_FETCH_SERVERS) | (1 << WIDX_ADD_SERVER)
            | (1 << WIDX_START_SERVER));
-    window_init_scroll_widgets(window);
+    WindowInitScrollWidgets(window);
     window->no_list_items = 0;
     window->selected_list_item = -1;
     window->frame_no = 0;
@@ -196,9 +183,9 @@ static void window_server_list_mouseup(rct_window* w, rct_widgetindex widgetInde
                 }
                 else
                 {
-                    auto ft = Formatter::Common();
+                    Formatter ft;
                     ft.Add<const char*>(server.Version.c_str());
-                    context_show_error(STR_UNABLE_TO_CONNECT_TO_SERVER, STR_MULTIPLAYER_INCORRECT_SOFTWARE_VERSION);
+                    context_show_error(STR_UNABLE_TO_CONNECT_TO_SERVER, STR_MULTIPLAYER_INCORRECT_SOFTWARE_VERSION, ft);
                 }
             }
             break;
@@ -235,9 +222,9 @@ static void window_server_list_dropdown(rct_window* w, rct_widgetindex widgetInd
                 }
                 else
                 {
-                    auto ft = Formatter::Common();
+                    Formatter ft;
                     ft.Add<const char*>(server.Version.c_str());
-                    context_show_error(STR_UNABLE_TO_CONNECT_TO_SERVER, STR_MULTIPLAYER_INCORRECT_SOFTWARE_VERSION);
+                    context_show_error(STR_UNABLE_TO_CONNECT_TO_SERVER, STR_MULTIPLAYER_INCORRECT_SOFTWARE_VERSION, ft);
                 }
                 break;
             case DDIDX_FAVOURITE:
@@ -286,7 +273,7 @@ static void window_server_list_scroll_mousedown(rct_window* w, int32_t scrollInd
         }
         auto dropdownPos = ScreenCoordsXY{ w->windowPos.x + listWidget->left + screenCoords.x + 2 - w->scrolls[0].h_left,
                                            w->windowPos.y + listWidget->top + screenCoords.y + 2 - w->scrolls[0].v_top };
-        window_dropdown_show_text(dropdownPos, 0, COLOUR_GREY, 0, 2);
+        WindowDropdownShowText(dropdownPos, 0, COLOUR_GREY, 0, 2);
     }
 }
 
@@ -374,10 +361,15 @@ static void window_server_list_textinput(rct_window* w, rct_widgetindex widgetIn
     }
 }
 
+static OpenRCT2String window_server_list_tooltip(rct_window* const w, const rct_widgetindex widgetIndex, rct_string_id fallback)
+{
+    auto ft = Formatter();
+    ft.Add<char*>(_version.c_str());
+    return { fallback, ft };
+}
+
 static void window_server_list_invalidate(rct_window* w)
 {
-    auto ft = Formatter::Common();
-    ft.Add<char*>(_version.c_str());
     window_server_list_widgets[WIDX_BACKGROUND].right = w->width - 1;
     window_server_list_widgets[WIDX_BACKGROUND].bottom = w->height - 1;
     window_server_list_widgets[WIDX_TITLE].right = w->width - 2;
@@ -406,7 +398,7 @@ static void window_server_list_invalidate(rct_window* w)
 
 static void window_server_list_paint(rct_window* w, rct_drawpixelinfo* dpi)
 {
-    window_draw_widgets(w, dpi);
+    WindowDrawWidgets(w, dpi);
 
     gfx_draw_string_left(
         dpi, STR_PLAYER_NAME, nullptr, COLOUR_WHITE,
@@ -445,7 +437,7 @@ static void window_server_list_scrollpaint(rct_window* w, rct_drawpixelinfo* dpi
         // Draw hover highlight
         if (highlighted)
         {
-            gfx_filter_rect(dpi, 0, screenCoords.y, width, screenCoords.y + ITEM_HEIGHT, PALETTE_DARKEN_1);
+            gfx_filter_rect(dpi, 0, screenCoords.y, width, screenCoords.y + ITEM_HEIGHT, FilterPaletteID::PaletteDarken1);
             _version = serverDetails.Version;
             w->widgets[WIDX_LIST].tooltip = STR_NETWORK_VERSION_TIP;
         }
@@ -481,8 +473,9 @@ static void window_server_list_scrollpaint(rct_window* w, rct_drawpixelinfo* dpi
         }
 
         // Finally, draw the server information.
-        gfx_draw_string_left_clipped(
-            dpi, STR_STRING, &serverInfoToShow, colour, screenCoords + ScreenCoordsXY{ 0, 3 }, spaceAvailableForInfo);
+        auto ft = Formatter();
+        ft.Add<const char*>(serverInfoToShow);
+        DrawTextEllipsised(dpi, screenCoords + ScreenCoordsXY{ 0, 3 }, spaceAvailableForInfo, STR_STRING, ft, colour);
 
         int32_t right = width - 7 - SCROLLBAR_WIDTH;
 
@@ -552,7 +545,7 @@ static void join_server(std::string address)
 
     if (!network_begin_client(address.c_str(), port))
     {
-        context_show_error(STR_UNABLE_TO_CONNECT_TO_SERVER, STR_NONE);
+        context_show_error(STR_UNABLE_TO_CONNECT_TO_SERVER, STR_NONE, {});
     }
 }
 

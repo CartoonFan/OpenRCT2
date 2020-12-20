@@ -43,9 +43,9 @@ constexpr int32_t MIN_WH = 250;
 
 static rct_widget window_changelog_widgets[] = {
     WINDOW_SHIM(WINDOW_TITLE, WW, WH),
-    MakeWidget({0,  14}, {500, 382}, WWT_RESIZE,      WindowColour::Secondary                               ), // content panel
-    MakeWidget({3,  16}, {495, 366}, WWT_SCROLL,      WindowColour::Secondary, SCROLL_BOTH                  ), // scroll area
-    MakeWidget({3, 473}, {300,  14}, WWT_PLACEHOLDER, WindowColour::Secondary, STR_NEW_RELEASE_DOWNLOAD_PAGE), // changelog button
+    MakeWidget({0,  14}, {500, 382}, WindowWidgetType::Resize,      WindowColour::Secondary                               ), // content panel
+    MakeWidget({3,  16}, {495, 366}, WindowWidgetType::Scroll,      WindowColour::Secondary, SCROLL_BOTH                  ), // scroll area
+    MakeWidget({3, 473}, {300,  14}, WindowWidgetType::Placeholder, WindowColour::Secondary, STR_NEW_RELEASE_DOWNLOAD_PAGE), // changelog button
     { WIDGETS_END },
 };
 
@@ -57,36 +57,16 @@ static void window_changelog_invalidate(rct_window *w);
 static void window_changelog_paint(rct_window *w, rct_drawpixelinfo *dpi);
 static void window_changelog_scrollpaint(rct_window *w, rct_drawpixelinfo *dpi, int32_t scrollIndex);
 
-static rct_window_event_list window_changelog_events = {
-    window_changelog_close,
-    window_changelog_mouseup,
-    window_changelog_resize,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    window_changelog_scrollgetsize,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    window_changelog_invalidate,
-    window_changelog_paint,
-    window_changelog_scrollpaint
-};
+static rct_window_event_list window_changelog_events([](auto& events)
+{
+    events.close = &window_changelog_close;
+    events.mouse_up = &window_changelog_mouseup;
+    events.resize = &window_changelog_resize;
+    events.get_scroll_size = &window_changelog_scrollgetsize;
+    events.invalidate = &window_changelog_invalidate;
+    events.paint = &window_changelog_paint;
+    events.scroll_paint = &window_changelog_scrollpaint;
+});
 // clang-format on
 
 static void window_new_version_process_info();
@@ -110,7 +90,7 @@ rct_window* window_changelog_open(int personality)
 
     uint64_t enabled_widgets{};
 
-    window_changelog_widgets[WIDX_OPEN_URL].type = WWT_PLACEHOLDER;
+    window_changelog_widgets[WIDX_OPEN_URL].type = WindowWidgetType::Placeholder;
     switch (personality)
     {
         case WV_NEW_VERSION_INFO:
@@ -122,7 +102,7 @@ rct_window* window_changelog_open(int personality)
             _persnality = WV_NEW_VERSION_INFO;
             window_new_version_process_info();
             enabled_widgets = (1 << WIDX_CLOSE) | (1 << WIDX_OPEN_URL);
-            window_changelog_widgets[WIDX_OPEN_URL].type = WWT_BUTTON;
+            window_changelog_widgets[WIDX_OPEN_URL].type = WindowWidgetType::Button;
             break;
 
         case WV_CHANGELOG:
@@ -143,12 +123,12 @@ rct_window* window_changelog_open(int personality)
     int32_t screenWidth = context_get_width();
     int32_t screenHeight = context_get_height();
 
-    window = window_create_centred(
+    window = WindowCreateCentred(
         screenWidth * 4 / 5, screenHeight * 4 / 5, &window_changelog_events, WC_CHANGELOG, WF_RESIZABLE);
     window->widgets = window_changelog_widgets;
     window->enabled_widgets = enabled_widgets;
 
-    window_init_scroll_widgets(window);
+    WindowInitScrollWidgets(window);
     window->min_width = MIN_WW;
     window->min_height = MIN_WH;
     window->max_width = MIN_WW;
@@ -228,7 +208,7 @@ static void window_changelog_invalidate(rct_window* w)
 
 static void window_changelog_paint(rct_window* w, rct_drawpixelinfo* dpi)
 {
-    window_draw_widgets(w, dpi);
+    WindowDrawWidgets(w, dpi);
 }
 
 static void window_changelog_scrollpaint(rct_window* w, rct_drawpixelinfo* dpi, [[maybe_unused]] int32_t scrollIndex)
@@ -256,13 +236,6 @@ static void window_changelog_process_changelog_text(const std::string& text)
     while ((pos = text.find("\n", prev)) != std::string::npos)
     {
         std::string line = text.substr(prev, pos - prev);
-        for (char* ch = line.data(); *ch != '\0'; ch++)
-        {
-            if (utf8_is_format_code(*ch))
-            {
-                *ch = FORMAT_OUTLINE_OFF;
-            }
-        }
         _changelogLines.push_back(line);
         prev = pos + 1;
     }

@@ -27,9 +27,9 @@ namespace OpenRCT2
     namespace Drawing
     {
         struct IDrawingEngineFactory;
-        struct IRainDrawer;
-        using DrawRainFunc = void (*)(
-            OpenRCT2::Drawing::IRainDrawer* rainDrawer, int32_t left, int32_t top, int32_t width, int32_t height);
+        struct IWeatherDrawer;
+        using DrawWeatherFunc = void (*)(
+            OpenRCT2::Drawing::IWeatherDrawer* weatherDrawer, int32_t left, int32_t top, int32_t width, int32_t height);
     } // namespace Drawing
 
     namespace Ui
@@ -117,11 +117,12 @@ namespace OpenRCT2
             virtual void OpenURL(const std::string& url) abstract;
             virtual std::string ShowFileDialog(const FileDialogDesc& desc) abstract;
             virtual std::string ShowDirectoryDialog(const std::string& title) abstract;
+            virtual bool HasFilePicker() const abstract;
 
             // Input
             virtual const CursorState* GetCursorState() abstract;
-            virtual CURSOR_ID GetCursor() abstract;
-            virtual void SetCursor(CURSOR_ID cursor) abstract;
+            virtual CursorID GetCursor() abstract;
+            virtual void SetCursor(CursorID cursor) abstract;
             virtual void SetCursorScale(uint8_t scale) abstract;
             virtual void SetCursorVisible(bool value) abstract;
             virtual ScreenCoordsXY GetCursorPosition() abstract;
@@ -133,9 +134,9 @@ namespace OpenRCT2
 
             // Drawing
             virtual std::shared_ptr<Drawing::IDrawingEngineFactory> GetDrawingEngineFactory() abstract;
-            virtual void DrawRainAnimation(
-                OpenRCT2::Drawing::IRainDrawer* rainDrawer, rct_drawpixelinfo* dpi,
-                OpenRCT2::Drawing::DrawRainFunc drawFunc) abstract;
+            virtual void DrawWeatherAnimation(
+                OpenRCT2::Drawing::IWeatherDrawer* weatherDrawer, rct_drawpixelinfo* dpi,
+                OpenRCT2::Drawing::DrawWeatherFunc drawFunc) abstract;
 
             // Text input
             virtual bool IsTextInputActive() abstract;

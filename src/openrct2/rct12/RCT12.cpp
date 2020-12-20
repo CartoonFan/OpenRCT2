@@ -9,6 +9,7 @@
 
 #include "RCT12.h"
 
+#include "../core/String.hpp"
 #include "../localisation/Localisation.h"
 #include "../ride/Track.h"
 #include "../world/Banner.h"
@@ -221,7 +222,7 @@ uint8_t RCT12TrackElement::GetColourScheme() const
 
 uint8_t RCT12TrackElement::GetStationIndex() const
 {
-    if (track_type_is_station(trackType) || trackType == TRACK_ELEM_TOWER_BASE)
+    if (track_type_is_station(trackType) || trackType == TrackElemType::TowerBase)
     {
         return (sequence & RCT12_TRACK_ELEMENT_SEQUENCE_STATION_INDEX_MASK) >> 4;
     }
@@ -273,7 +274,7 @@ uint16_t RCT12TrackElement::GetMazeEntry() const
 
 uint8_t RCT12TrackElement::GetPhotoTimeout() const
 {
-    if (GetTrackType() == TRACK_ELEM_ON_RIDE_PHOTO)
+    if (GetTrackType() == TrackElemType::OnRidePhoto)
     {
         return sequence >> 4;
     }
@@ -473,7 +474,7 @@ uint8_t RCT12BannerElement::GetPosition() const
 
 uint8_t RCT12BannerElement::GetAllowedEdges() const
 {
-    return flags & 0b00001111;
+    return AllowedEdges & 0b00001111;
 }
 
 bool is_user_string_id(rct_string_id stringId)
@@ -752,7 +753,7 @@ void RCT12TrackElement::SetSequenceIndex(uint8_t newSequenceIndex)
 
 void RCT12TrackElement::SetStationIndex(uint8_t newStationIndex)
 {
-    if (track_type_is_station(trackType) || trackType == TRACK_ELEM_TOWER_BASE)
+    if (track_type_is_station(trackType) || trackType == TrackElemType::TowerBase)
     {
         sequence &= ~RCT12_TRACK_ELEMENT_SEQUENCE_STATION_INDEX_MASK;
         sequence |= (newStationIndex << 4);
@@ -852,7 +853,7 @@ void RCT12TrackElement::SetMazeEntry(uint16_t newMazeEntry)
 
 void RCT12TrackElement::SetPhotoTimeout(uint8_t value)
 {
-    if (GetTrackType() == TRACK_ELEM_ON_RIDE_PHOTO)
+    if (GetTrackType() == TrackElemType::OnRidePhoto)
     {
         sequence &= RCT12_TRACK_ELEMENT_SEQUENCE_SEQUENCE_MASK;
         sequence |= (value << 4);
@@ -990,8 +991,8 @@ void RCT12BannerElement::SetPosition(uint8_t newPosition)
 
 void RCT12BannerElement::SetAllowedEdges(uint8_t newEdges)
 {
-    flags &= ~0b00001111;
-    flags |= (newEdges & 0b00001111);
+    AllowedEdges &= ~0b00001111;
+    AllowedEdges |= (newEdges & 0b00001111);
 }
 
 bool RCT12ResearchItem::IsInventedEndMarker() const
@@ -1023,4 +1024,71 @@ RCT12ObjectEntryIndex OpenRCT2EntryIndexToRCTEntryIndex(const ObjectEntryIndex i
         return RCT12_OBJECT_ENTRY_INDEX_NULL;
 
     return index;
+}
+
+ride_id_t RCT12RideIdToOpenRCT2RideId(const RCT12RideId rideId)
+{
+    if (rideId == RCT12_RIDE_ID_NULL)
+        return RIDE_ID_NULL;
+
+    return rideId;
+}
+
+RCT12RideId OpenRCT2RideIdToRCT12RideId(const ride_id_t rideId)
+{
+    if (rideId == RIDE_ID_NULL)
+        return RCT12_RIDE_ID_NULL;
+
+    return rideId;
+}
+
+static bool RCT12IsFormatChar(codepoint_t c)
+{
+    if (c >= RCT2_STRING_FORMAT_ARG_START && c <= RCT2_STRING_FORMAT_ARG_END)
+    {
+        return true;
+    }
+    if (c >= RCT2_STRING_FORMAT_COLOUR_START && c <= RCT2_STRING_FORMAT_COLOUR_END)
+    {
+        return true;
+    }
+    return false;
+}
+
+static bool RCT12IsFormatChar(char c)
+{
+    return RCT12IsFormatChar(static_cast<codepoint_t>(c));
+}
+
+bool IsLikelyUTF8(std::string_view s)
+{
+    // RCT2 uses CP-1252 so some characters may be >= 128. However we don't expect any
+    // characters that are reserved for formatting strings, so if those are found, assume
+    // that the string is UTF-8.
+    for (auto c : s)
+    {
+        if (RCT12IsFormatChar(c))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+std::string RCT12RemoveFormattingUTF8(std::string_view s)
+{
+    std::string result;
+    result.reserve(s.size() * 2);
+
+    CodepointView codepoints(s);
+    for (auto codepoint : codepoints)
+    {
+        if (!RCT12IsFormatChar(codepoint))
+        {
+            String::AppendCodepoint(result, codepoint);
+        }
+    }
+
+    result.shrink_to_fit();
+    return result;
 }

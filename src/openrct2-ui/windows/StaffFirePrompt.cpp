@@ -10,7 +10,7 @@
 #include <openrct2-ui/interface/Widget.h>
 #include <openrct2-ui/windows/Window.h>
 #include <openrct2/Game.h>
-#include <openrct2/actions/StaffFireAction.hpp>
+#include <openrct2/actions/StaffFireAction.h>
 #include <openrct2/drawing/Drawing.h>
 #include <openrct2/interface/Colour.h>
 #include <openrct2/localisation/Localisation.h>
@@ -32,8 +32,8 @@ enum WINDOW_STAFF_FIRE_WIDGET_IDX {
 // 0x9AFB4C
 static rct_widget window_staff_fire_widgets[] = {
     WINDOW_SHIM_WHITE(WINDOW_TITLE, WW, WH),
-    MakeWidget({     10, WH - 20}, {85, 14}, WWT_BUTTON, WindowColour::Primary, STR_YES               ),
-    MakeWidget({WW - 95, WH - 20}, {85, 14}, WWT_BUTTON, WindowColour::Primary, STR_SAVE_PROMPT_CANCEL),
+    MakeWidget({     10, WH - 20}, {85, 14}, WindowWidgetType::Button, WindowColour::Primary, STR_YES               ),
+    MakeWidget({WW - 95, WH - 20}, {85, 14}, WindowWidgetType::Button, WindowColour::Primary, STR_SAVE_PROMPT_CANCEL),
     { WIDGETS_END }
 };
 
@@ -41,36 +41,11 @@ static void window_staff_fire_mouseup(rct_window *w, rct_widgetindex widgetIndex
 static void window_staff_fire_paint(rct_window *w, rct_drawpixelinfo *dpi);
 
 //0x9A3F7C
-static rct_window_event_list window_staff_fire_events = {
-    nullptr,
-    window_staff_fire_mouseup,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    window_staff_fire_paint,
-    nullptr
-};
+static rct_window_event_list window_staff_fire_events([](auto& events)
+{
+    events.mouse_up = &window_staff_fire_mouseup;
+    events.paint = &window_staff_fire_paint;
+});
 // clang-format on
 
 /** Based off of rct2: 0x6C0A77 */
@@ -85,11 +60,11 @@ rct_window* window_staff_fire_prompt_open(Peep* peep)
         return w;
     }
 
-    w = window_create_centred(WW, WH, &window_staff_fire_events, WC_FIRE_PROMPT, WF_TRANSPARENT);
+    w = WindowCreateCentred(WW, WH, &window_staff_fire_events, WC_FIRE_PROMPT, WF_TRANSPARENT);
     w->widgets = window_staff_fire_widgets;
     w->enabled_widgets |= (1 << WIDX_CLOSE) | (1 << WIDX_YES) | (1 << WIDX_CANCEL);
 
-    window_init_scroll_widgets(w);
+    WindowInitScrollWidgets(w);
 
     w->number = peep->sprite_index;
 
@@ -122,12 +97,12 @@ static void window_staff_fire_mouseup(rct_window* w, rct_widgetindex widgetIndex
  */
 static void window_staff_fire_paint(rct_window* w, rct_drawpixelinfo* dpi)
 {
-    window_draw_widgets(w, dpi);
+    WindowDrawWidgets(w, dpi);
 
     Peep* peep = GetEntity<Peep>(w->number);
-    auto ft = Formatter::Common();
+    auto ft = Formatter();
     peep->FormatNameTo(ft);
 
     ScreenCoordsXY stringCoords(w->windowPos.x + WW / 2, w->windowPos.y + (WH / 2) - 3);
-    gfx_draw_string_centred_wrapped(dpi, gCommonFormatArgs, stringCoords, WW - 4, STR_FIRE_STAFF_ID, COLOUR_BLACK);
+    gfx_draw_string_centred_wrapped(dpi, ft.Data(), stringCoords, WW - 4, STR_FIRE_STAFF_ID, COLOUR_BLACK);
 }

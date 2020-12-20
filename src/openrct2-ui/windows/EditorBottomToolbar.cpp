@@ -36,10 +36,10 @@ enum {
 };
 
 static rct_widget window_editor_bottom_toolbar_widgets[] = {
-    MakeWidget({  0, 0}, {200, 34}, WWT_IMGBTN,  WindowColour::Primary),
-    MakeWidget({  2, 2}, {196, 30}, WWT_FLATBTN, WindowColour::Primary),
-    MakeWidget({440, 0}, {200, 34}, WWT_IMGBTN,  WindowColour::Primary),
-    MakeWidget({442, 2}, {196, 30}, WWT_FLATBTN, WindowColour::Primary),
+    MakeWidget({  0, 0}, {200, 34}, WindowWidgetType::ImgBtn,  WindowColour::Primary),
+    MakeWidget({  2, 2}, {196, 30}, WindowWidgetType::FlatBtn, WindowColour::Primary),
+    MakeWidget({440, 0}, {200, 34}, WindowWidgetType::ImgBtn,  WindowColour::Primary),
+    MakeWidget({442, 2}, {196, 30}, WindowWidgetType::FlatBtn, WindowColour::Primary),
     { WIDGETS_END },
 };
 
@@ -58,36 +58,12 @@ static void window_editor_bottom_toolbar_jump_forward_to_options_selection();
 static void window_editor_bottom_toolbar_jump_forward_to_objective_selection();
 static void window_editor_bottom_toolbar_jump_forward_to_save_scenario();
 
-static rct_window_event_list window_editor_bottom_toolbar_events = {
-    nullptr,
-    window_editor_bottom_toolbar_mouseup, // 0x0066f5ae,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    window_editor_bottom_toolbar_invalidate, // 0x0066f1c9,
-    window_editor_bottom_toolbar_paint, // 0x0066f25c,
-    nullptr
-};
+static rct_window_event_list window_editor_bottom_toolbar_events([](auto& events)
+{
+    events.mouse_up = &window_editor_bottom_toolbar_mouseup;
+    events.invalidate = &window_editor_bottom_toolbar_invalidate;
+    events.paint = &window_editor_bottom_toolbar_paint;
+});
 
 static EMPTY_ARGS_VOID_POINTER *previous_button_mouseup_events[] = {
     nullptr,
@@ -129,7 +105,7 @@ static constexpr const rct_string_id EditorStepNames[] = {
  */
 rct_window* window_editor_bottom_toolbar_open()
 {
-    rct_window* window = window_create(
+    rct_window* window = WindowCreate(
         ScreenCoordsXY(0, context_get_height() - 32), context_get_width(), 32, &window_editor_bottom_toolbar_events,
         WC_BOTTOM_TOOLBAR, WF_STICK_TO_FRONT | WF_TRANSPARENT | WF_NO_BACKGROUND);
     window->widgets = window_editor_bottom_toolbar_widgets;
@@ -137,7 +113,7 @@ rct_window* window_editor_bottom_toolbar_open()
     window->enabled_widgets |= (1 << WIDX_PREVIOUS_STEP_BUTTON) | (1 << WIDX_NEXT_STEP_BUTTON) | (1 << WIDX_PREVIOUS_IMAGE)
         | (1 << WIDX_NEXT_IMAGE);
 
-    window_init_scroll_widgets(window);
+    WindowInitScrollWidgets(window);
     set_all_scenery_items_invented();
 
     return window;
@@ -200,19 +176,19 @@ static bool window_editor_bottom_toolbar_check_object_selection()
 {
     rct_window* w;
 
-    int32_t missingObjectType = Editor::CheckObjectSelection();
-    if (missingObjectType < 0)
+    ObjectType missingObjectType = Editor::CheckObjectSelection();
+    if (missingObjectType == ObjectType::None)
     {
         window_close_by_class(WC_EDITOR_OBJECT_SELECTION);
         return true;
     }
 
-    context_show_error(STR_INVALID_SELECTION_OF_OBJECTS, gGameCommandErrorText);
+    context_show_error(STR_INVALID_SELECTION_OF_OBJECTS, gGameCommandErrorText, {});
     w = window_find_by_class(WC_EDITOR_OBJECT_SELECTION);
     if (w != nullptr)
     {
         // Click tab with missing object
-        window_event_mouse_up_call(w, WC_EDITOR_OBJECT_SELECTION__WIDX_TAB_1 + missingObjectType);
+        window_event_mouse_up_call(w, WC_EDITOR_OBJECT_SELECTION__WIDX_TAB_1 + EnumValue(missingObjectType));
     }
     return false;
 }
@@ -251,7 +227,7 @@ void window_editor_bottom_toolbar_jump_forward_to_invention_list_set_up()
     }
     else
     {
-        context_show_error(STR_CANT_ADVANCE_TO_NEXT_EDITOR_STAGE, gGameCommandErrorText);
+        context_show_error(STR_CANT_ADVANCE_TO_NEXT_EDITOR_STAGE, gGameCommandErrorText, {});
     }
 
     gfx_invalidate_screen();
@@ -276,7 +252,7 @@ void window_editor_bottom_toolbar_jump_forward_to_options_selection()
 void window_editor_bottom_toolbar_jump_forward_to_objective_selection()
 {
     window_close_all();
-    context_open_window(WC_EDTIOR_OBJECTIVE_OPTIONS);
+    context_open_window(WC_EDITOR_OBJECTIVE_OPTIONS);
     gS6Info.editor_step = EDITOR_STEP_OBJECTIVE_SELECTION;
     gfx_invalidate_screen();
 }
@@ -289,7 +265,7 @@ void window_editor_bottom_toolbar_jump_forward_to_save_scenario()
 {
     if (!scenario_prepare_for_save())
     {
-        context_show_error(STR_UNABLE_TO_SAVE_SCENARIO_FILE, gGameCommandErrorText);
+        context_show_error(STR_UNABLE_TO_SAVE_SCENARIO_FILE, gGameCommandErrorText, {});
         gfx_invalidate_screen();
         return;
     }
@@ -323,14 +299,14 @@ static void window_editor_bottom_toolbar_mouseup([[maybe_unused]] rct_window* w,
 
 static void hide_previous_step_button()
 {
-    window_editor_bottom_toolbar_widgets[WIDX_PREVIOUS_STEP_BUTTON].type = WWT_EMPTY;
-    window_editor_bottom_toolbar_widgets[WIDX_PREVIOUS_IMAGE].type = WWT_EMPTY;
+    window_editor_bottom_toolbar_widgets[WIDX_PREVIOUS_STEP_BUTTON].type = WindowWidgetType::Empty;
+    window_editor_bottom_toolbar_widgets[WIDX_PREVIOUS_IMAGE].type = WindowWidgetType::Empty;
 }
 
 static void hide_next_step_button()
 {
-    window_editor_bottom_toolbar_widgets[WIDX_NEXT_STEP_BUTTON].type = WWT_EMPTY;
-    window_editor_bottom_toolbar_widgets[WIDX_NEXT_IMAGE].type = WWT_EMPTY;
+    window_editor_bottom_toolbar_widgets[WIDX_NEXT_STEP_BUTTON].type = WindowWidgetType::Empty;
+    window_editor_bottom_toolbar_widgets[WIDX_NEXT_IMAGE].type = WindowWidgetType::Empty;
 }
 
 /**
@@ -339,7 +315,7 @@ static void hide_next_step_button()
  */
 void window_editor_bottom_toolbar_invalidate(rct_window* w)
 {
-    colour_scheme_update_by_class(
+    ColourSchemeUpdateByClass(
         w, (gScreenFlags & SCREEN_FLAGS_SCENARIO_EDITOR) ? WC_EDITOR_SCENARIO_BOTTOM_TOOLBAR : WC_EDITOR_TRACK_BOTTOM_TOOLBAR);
 
     uint16_t screenWidth = context_get_width();
@@ -348,10 +324,10 @@ void window_editor_bottom_toolbar_invalidate(rct_window* w)
     window_editor_bottom_toolbar_widgets[WIDX_NEXT_STEP_BUTTON].left = screenWidth - 198;
     window_editor_bottom_toolbar_widgets[WIDX_NEXT_STEP_BUTTON].right = screenWidth - 3;
 
-    window_editor_bottom_toolbar_widgets[WIDX_PREVIOUS_STEP_BUTTON].type = WWT_FLATBTN;
-    window_editor_bottom_toolbar_widgets[WIDX_NEXT_STEP_BUTTON].type = WWT_FLATBTN;
-    window_editor_bottom_toolbar_widgets[WIDX_PREVIOUS_IMAGE].type = WWT_IMGBTN;
-    window_editor_bottom_toolbar_widgets[WIDX_NEXT_IMAGE].type = WWT_IMGBTN;
+    window_editor_bottom_toolbar_widgets[WIDX_PREVIOUS_STEP_BUTTON].type = WindowWidgetType::FlatBtn;
+    window_editor_bottom_toolbar_widgets[WIDX_NEXT_STEP_BUTTON].type = WindowWidgetType::FlatBtn;
+    window_editor_bottom_toolbar_widgets[WIDX_PREVIOUS_IMAGE].type = WindowWidgetType::ImgBtn;
+    window_editor_bottom_toolbar_widgets[WIDX_NEXT_IMAGE].type = WindowWidgetType::ImgBtn;
 
     if (gScreenFlags & SCREEN_FLAGS_TRACK_MANAGER)
     {
@@ -416,7 +392,7 @@ void window_editor_bottom_toolbar_paint(rct_window* w, rct_drawpixelinfo* dpi)
                 dpi, window_editor_bottom_toolbar_widgets[WIDX_PREVIOUS_IMAGE].left + w->windowPos.x,
                 window_editor_bottom_toolbar_widgets[WIDX_PREVIOUS_IMAGE].top + w->windowPos.y,
                 window_editor_bottom_toolbar_widgets[WIDX_PREVIOUS_IMAGE].right + w->windowPos.x,
-                window_editor_bottom_toolbar_widgets[WIDX_PREVIOUS_IMAGE].bottom + w->windowPos.y, PALETTE_51);
+                window_editor_bottom_toolbar_widgets[WIDX_PREVIOUS_IMAGE].bottom + w->windowPos.y, FilterPaletteID::Palette51);
         }
 
         if ((drawPreviousButton || drawNextButton) && gS6Info.editor_step != EDITOR_STEP_ROLLERCOASTER_DESIGNER)
@@ -425,11 +401,11 @@ void window_editor_bottom_toolbar_paint(rct_window* w, rct_drawpixelinfo* dpi)
                 dpi, window_editor_bottom_toolbar_widgets[WIDX_NEXT_IMAGE].left + w->windowPos.x,
                 window_editor_bottom_toolbar_widgets[WIDX_NEXT_IMAGE].top + w->windowPos.y,
                 window_editor_bottom_toolbar_widgets[WIDX_NEXT_IMAGE].right + w->windowPos.x,
-                window_editor_bottom_toolbar_widgets[WIDX_NEXT_IMAGE].bottom + w->windowPos.y, PALETTE_51);
+                window_editor_bottom_toolbar_widgets[WIDX_NEXT_IMAGE].bottom + w->windowPos.y, FilterPaletteID::Palette51);
         }
     }
 
-    window_draw_widgets(w, dpi);
+    WindowDrawWidgets(w, dpi);
 
     if (!(gScreenFlags & SCREEN_FLAGS_TRACK_MANAGER))
     {

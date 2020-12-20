@@ -62,7 +62,7 @@ namespace Platform
         std::wstring result;
         auto wname = String::ToWideChar(name);
         wchar_t wvalue[256];
-        auto valueSize = GetEnvironmentVariableW(wname.c_str(), wvalue, (DWORD)std::size(wvalue));
+        auto valueSize = GetEnvironmentVariableW(wname.c_str(), wvalue, static_cast<DWORD>(std::size(wvalue)));
         if (valueSize < std::size(wvalue))
         {
             result = wvalue;
@@ -181,7 +181,7 @@ namespace Platform
         LONGLONG ll = Int32x32To64(timestamp, 10000000) + 116444736000000000;
 
         FILETIME ft;
-        ft.dwLowDateTime = (DWORD)ll;
+        ft.dwLowDateTime = static_cast<DWORD>(ll);
         ft.dwHighDateTime = ll >> 32;
 
         SYSTEMTIME st;
@@ -234,7 +234,7 @@ namespace Platform
 #        pragma GCC diagnostic push
 #        pragma GCC diagnostic ignored "-Wcast-function-type"
 #    endif
-            auto fn = (RtlGetVersionPtr)GetProcAddress(hModule, "RtlGetVersion");
+            auto fn = reinterpret_cast<RtlGetVersionPtr>(GetProcAddress(hModule, "RtlGetVersion"));
 #    if defined(__GNUC__) && __GNUC__ >= 8
 #        pragma GCC diagnostic pop
 #    endif
@@ -363,6 +363,7 @@ namespace Platform
         SetUpFileAssociation(".sv4", "RCT1 Saved Game (.sc4)", "Play", "\"%1\"", 0);
         SetUpFileAssociation(".sv6", "RCT2 Saved Game (.sv6)", "Play", "\"%1\"", 0);
         SetUpFileAssociation(".sv7", "RCT Modified Saved Game (.sv7)", "Play", "\"%1\"", 0);
+        SetUpFileAssociation(".sea", "RCTC Saved Game (.sea)", "Play", "\"%1\"", 0);
         SetUpFileAssociation(".td4", "RCT1 Track Design (.td4)", "Install", "\"%1\"", 0);
         SetUpFileAssociation(".td6", "RCT2 Track Design (.td6)", "Install", "\"%1\"", 0);
 
@@ -507,6 +508,7 @@ namespace Platform
         RemoveFileAssociation(".sv4");
         RemoveFileAssociation(".sv6");
         RemoveFileAssociation(".sv7");
+        RemoveFileAssociation(".sea");
         RemoveFileAssociation(".td4");
         RemoveFileAssociation(".td6");
 

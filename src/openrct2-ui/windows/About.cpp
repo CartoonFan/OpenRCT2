@@ -50,21 +50,21 @@ enum WINDOW_ABOUT_WIDGET_IDX {
 
 #define WIDGETS_MAIN \
     WINDOW_SHIM(WINDOW_TITLE, WW, WH), \
-    MakeWidget     ({ 0, TABHEIGHT}, {WW, WH - TABHEIGHT}, WWT_IMGBTN, WindowColour::Secondary               ), /* page background */       \
-    MakeRemapWidget({ 3,        17}, {91, TABHEIGHT - 16}, WWT_TAB,    WindowColour::Secondary, SPR_TAB_LARGE), /* about OpenRCT2 button */ \
-    MakeRemapWidget({94,        17}, {91, TABHEIGHT - 16}, WWT_TAB,    WindowColour::Secondary, SPR_TAB_LARGE)  /* about RCT2 button */
+    MakeWidget     ({ 0, TABHEIGHT}, {WW, WH - TABHEIGHT}, WindowWidgetType::ImgBtn, WindowColour::Secondary               ), /* page background */       \
+    MakeRemapWidget({ 3,        17}, {91, TABHEIGHT - 16}, WindowWidgetType::Tab,    WindowColour::Secondary, SPR_TAB_LARGE), /* about OpenRCT2 button */ \
+    MakeRemapWidget({94,        17}, {91, TABHEIGHT - 16}, WindowWidgetType::Tab,    WindowColour::Secondary, SPR_TAB_LARGE)  /* about RCT2 button */
 
 static rct_widget window_about_openrct2_widgets[] = {
     WIDGETS_MAIN,
-    MakeWidget({100, WH - TABHEIGHT - (14 + 3) * 2}, {200, 14}, WWT_BUTTON,      WindowColour::Secondary, STR_CHANGELOG_ELLIPSIS), // changelog button
-    MakeWidget({100, WH - TABHEIGHT - (14 + 3) * 1}, {200, 14}, WWT_BUTTON,      WindowColour::Secondary, STR_JOIN_DISCORD      ), // "join discord" button
-    MakeWidget({100, WH - TABHEIGHT - (14 + 3) * 0}, {200, 14}, WWT_PLACEHOLDER, WindowColour::Secondary, STR_UPDATE_AVAILABLE  ), // "new version" button
+    MakeWidget({100, WH - TABHEIGHT - (14 + 3) * 2}, {200, 14}, WindowWidgetType::Button,      WindowColour::Secondary, STR_CHANGELOG_ELLIPSIS), // changelog button
+    MakeWidget({100, WH - TABHEIGHT - (14 + 3) * 1}, {200, 14}, WindowWidgetType::Button,      WindowColour::Secondary, STR_JOIN_DISCORD      ), // "join discord" button
+    MakeWidget({100, WH - TABHEIGHT - (14 + 3) * 0}, {200, 14}, WindowWidgetType::Placeholder, WindowColour::Secondary, STR_UPDATE_AVAILABLE  ), // "new version" button
     { WIDGETS_END }
 };
 
 static rct_widget window_about_rct2_widgets[] = {
     WIDGETS_MAIN,
-    MakeWidget({100, WH - TABHEIGHT}, {200, 14}, WWT_BUTTON, WindowColour::Secondary, STR_MUSIC_ACKNOWLEDGEMENTS_ELLIPSIS), // music credits button
+    MakeWidget({100, WH - TABHEIGHT}, {200, 14}, WindowWidgetType::Button, WindowColour::Secondary, STR_MUSIC_ACKNOWLEDGEMENTS_ELLIPSIS), // music credits button
     { WIDGETS_END },
 };
 
@@ -89,67 +89,18 @@ static void window_about_rct2_mouseup(rct_window *w, rct_widgetindex widgetIndex
 static void window_about_rct2_paint(rct_window *w, rct_drawpixelinfo *dpi);
 static void window_about_openrct2_common_paint(rct_window *w, rct_drawpixelinfo *dpi);
 
-static rct_window_event_list window_about_openrct2_events = {
-    nullptr,
-    window_about_openrct2_mouseup,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    window_about_openrct2_invalidate,
-    window_about_openrct2_paint,
-    nullptr
-};
+static rct_window_event_list window_about_openrct2_events([](auto& events)
+{
+    events.mouse_up = &window_about_openrct2_mouseup;
+    events.invalidate = &window_about_openrct2_invalidate;
+    events.paint = &window_about_openrct2_paint;
+});
 
-static rct_window_event_list window_about_rct2_events = {
-    nullptr,
-    window_about_rct2_mouseup,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    window_about_rct2_paint,
-    nullptr
-};
+static rct_window_event_list window_about_rct2_events([](auto& events)
+{
+    events.mouse_up = &window_about_rct2_mouseup;
+    events.paint = &window_about_rct2_paint;
+});
 
 static rct_window_event_list *window_about_page_events[] = {
     &window_about_openrct2_events,
@@ -172,11 +123,11 @@ rct_window* window_about_open()
     if (window != nullptr)
         return window;
 
-    window = window_create_centred(WW, WH, window_about_page_events[WINDOW_ABOUT_PAGE_OPENRCT2], WC_ABOUT, 0);
+    window = WindowCreateCentred(WW, WH, window_about_page_events[WINDOW_ABOUT_PAGE_OPENRCT2], WC_ABOUT, 0);
 
     window_about_set_page(window, WINDOW_ABOUT_PAGE_OPENRCT2);
 
-    window_init_scroll_widgets(window);
+    WindowInitScrollWidgets(window);
     window->colours[0] = COLOUR_GREY;
     window->colours[1] = COLOUR_LIGHT_BLUE;
     window->colours[2] = COLOUR_LIGHT_BLUE;
@@ -211,7 +162,7 @@ static void window_about_openrct2_mouseup(rct_window* w, rct_widgetindex widgetI
 
 static void window_about_openrct2_common_paint(rct_window* w, rct_drawpixelinfo* dpi)
 {
-    window_draw_widgets(w, dpi);
+    WindowDrawWidgets(w, dpi);
 
     const auto& aboutOpenRCT2 = w->widgets[WIDX_TAB_ABOUT_OPENRCT2];
     const auto& aboutRCT2 = w->widgets[WIDX_TAB_ABOUT_RCT2];
@@ -220,15 +171,17 @@ static void window_about_openrct2_common_paint(rct_window* w, rct_drawpixelinfo*
     ScreenCoordsXY aboutOpenRCT2Coords(w->windowPos.x + aboutOpenRCT2.left + 45, y);
     ScreenCoordsXY aboutRCT2Coords(w->windowPos.x + aboutRCT2.left + 45, y);
 
-    auto ft = Formatter::Common();
-    ft.Add<rct_string_id>(STR_TITLE_SEQUENCE_OPENRCT2);
-    gfx_draw_string_centred_wrapped(
-        dpi, gCommonFormatArgs, aboutOpenRCT2Coords, 87, STR_WINDOW_COLOUR_2_STRINGID, COLOUR_AQUAMARINE);
-
-    ft = Formatter::Common();
-    ft.Add<rct_string_id>(STR_TITLE_SEQUENCE_RCT2);
-    gfx_draw_string_centred_wrapped(
-        dpi, gCommonFormatArgs, aboutRCT2Coords, 87, STR_WINDOW_COLOUR_2_STRINGID, COLOUR_AQUAMARINE);
+    {
+        auto ft = Formatter();
+        ft.Add<rct_string_id>(STR_TITLE_SEQUENCE_OPENRCT2);
+        gfx_draw_string_centred_wrapped(
+            dpi, ft.Data(), aboutOpenRCT2Coords, 87, STR_WINDOW_COLOUR_2_STRINGID, COLOUR_AQUAMARINE);
+    }
+    {
+        auto ft = Formatter();
+        ft.Add<rct_string_id>(STR_TITLE_SEQUENCE_RCT2);
+        gfx_draw_string_centred_wrapped(dpi, ft.Data(), aboutRCT2Coords, 87, STR_WINDOW_COLOUR_2_STRINGID, COLOUR_AQUAMARINE);
+    }
 }
 
 static void window_about_openrct2_paint(rct_window* w, rct_drawpixelinfo* dpi)
@@ -278,8 +231,8 @@ static void window_about_openrct2_invalidate(rct_window* w)
     if (w->page == WINDOW_ABOUT_PAGE_OPENRCT2 && OpenRCT2::GetContext()->HasNewVersionInfo())
     {
         w->enabled_widgets |= (1ULL << WIDX_NEW_VERSION);
-        w->widgets[WIDX_NEW_VERSION].type = WWT_BUTTON;
-        window_about_openrct2_widgets[WIDX_NEW_VERSION].type = WWT_BUTTON;
+        w->widgets[WIDX_NEW_VERSION].type = WindowWidgetType::Button;
+        window_about_openrct2_widgets[WIDX_NEW_VERSION].type = WindowWidgetType::Button;
     }
 }
 
@@ -362,6 +315,6 @@ static void window_about_set_page(rct_window* w, int32_t page)
 
     w->pressed_widgets |= (page == WINDOW_ABOUT_PAGE_RCT2) ? (1ULL << WIDX_TAB_ABOUT_RCT2) : (1ULL << WIDX_TAB_ABOUT_OPENRCT2);
 
-    window_init_scroll_widgets(w);
+    WindowInitScrollWidgets(w);
     w->Invalidate();
 }

@@ -16,19 +16,17 @@
 #include "../core/Console.hpp"
 #include "../core/File.h"
 #include "../core/FileIndex.hpp"
-#include "../core/FileStream.hpp"
+#include "../core/FileStream.h"
 #include "../core/Path.hpp"
 #include "../core/String.hpp"
 #include "../localisation/LocalisationService.h"
 #include "../object/ObjectRepository.h"
-#include "../object/RideObject.h"
 #include "../ride/RideData.h"
 #include "../util/Util.h"
 #include "TrackDesign.h"
 
 #include <algorithm>
 #include <memory>
-#include <mutex>
 #include <vector>
 
 using namespace OpenRCT2;
@@ -55,13 +53,11 @@ std::string GetNameFromTrackPath(const std::string& path)
     return name;
 }
 
-static std::mutex _objectLookupMutex;
-
 class TrackDesignFileIndex final : public FileIndex<TrackRepositoryItem>
 {
 private:
     static constexpr uint32_t MAGIC_NUMBER = 0x58444954; // TIDX
-    static constexpr uint16_t VERSION = 3;
+    static constexpr uint16_t VERSION = 4;
     static constexpr auto PATTERN = "*.td4;*.td6";
 
 public:
@@ -82,27 +78,10 @@ public:
         auto td6 = track_design_open(path.c_str());
         if (td6 != nullptr)
         {
-            ObjectEntryIndex rideType = td6->type;
-            if (RCT2RideTypeNeedsConversion(td6->type))
-            {
-                std::scoped_lock<std::mutex> lock(_objectLookupMutex);
-                auto* rawObject = object_repository_load_object(&td6->vehicle_object);
-                if (rawObject != nullptr)
-                {
-                    const auto* rideEntry = static_cast<const rct_ride_entry*>(
-                        static_cast<RideObject*>(rawObject)->GetLegacyData());
-                    if (rideEntry != nullptr)
-                    {
-                        rideType = RCT2RideTypeToOpenRCT2RideType(td6->type, rideEntry);
-                    }
-                    object_delete(rawObject);
-                }
-            }
-
             TrackRepositoryItem item;
             item.Name = GetNameFromTrackPath(path);
             item.Path = path;
-            item.RideType = rideType;
+            item.RideType = td6->type;
             item.ObjectEntry = std::string(td6->vehicle_object.name, 8);
             item.Flags = 0;
             if (IsTrackReadOnly(path))
@@ -118,24 +97,13 @@ public:
     }
 
 protected:
-    void Serialise(IStream* stream, const TrackRepositoryItem& item) const override
+    void Serialise(DataSerialiser& ds, TrackRepositoryItem& item) const override
     {
-        stream->WriteString(item.Name);
-        stream->WriteString(item.Path);
-        stream->WriteValue(item.RideType);
-        stream->WriteString(item.ObjectEntry);
-        stream->WriteValue(item.Flags);
-    }
-
-    TrackRepositoryItem Deserialise(IStream* stream) const override
-    {
-        TrackRepositoryItem item;
-        item.Name = stream->ReadStdString();
-        item.Path = stream->ReadStdString();
-        item.RideType = stream->ReadValue<uint8_t>();
-        item.ObjectEntry = stream->ReadStdString();
-        item.Flags = stream->ReadValue<uint32_t>();
-        return item;
+        ds << item.Name;
+        ds << item.Path;
+        ds << item.RideType;
+        ds << item.ObjectEntry;
+        ds << item.Flags;
     }
 
 private:
@@ -185,7 +153,7 @@ public:
             bool entryIsNotSeparate = false;
             if (entry.empty())
             {
-                const ObjectRepositoryItem* ori = repo.FindObject(item.ObjectEntry.c_str());
+                const ObjectRepositoryItem* ori = repo.FindObjectLegacy(item.ObjectEntry.c_str());
 
                 if (ori == nullptr || !RideTypeDescriptors[rideType].HasFlag(RIDE_TYPE_FLAG_LIST_VEHICLES_SEPARATELY))
                     entryIsNotSeparate = true;
@@ -219,7 +187,7 @@ public:
             bool entryIsNotSeparate = false;
             if (entry.empty())
             {
-                const ObjectRepositoryItem* ori = repo.FindObject(item.ObjectEntry.c_str());
+                const ObjectRepositoryItem* ori = repo.FindObjectLegacy(item.ObjectEntry.c_str());
 
                 if (ori == nullptr || !RideTypeDescriptors[rideType].HasFlag(RIDE_TYPE_FLAG_LIST_VEHICLES_SEPARATELY))
                     entryIsNotSeparate = true;
@@ -291,17 +259,16 @@ public:
         return result;
     }
 
-    std::string Install(const std::string& path) override
+    std::string Install(const std::string& path, const std::string& name) override
     {
         std::string result;
-        std::string fileName = Path::GetFileName(path);
         std::string installDir = _env->GetDirectoryPath(DIRBASE::USER, DIRID::TRACK);
 
-        std::string newPath = Path::Combine(installDir, fileName);
+        std::string newPath = Path::Combine(installDir, name + Path::GetExtension(path));
         if (File::Copy(path, newPath, false))
         {
             auto language = LocalisationService_GetCurrentLanguage();
-            auto td = _fileIndex.Create(language, path);
+            auto td = _fileIndex.Create(language, newPath);
             if (std::get<0>(td))
             {
                 _items.push_back(std::get<1>(td));
@@ -372,9 +339,9 @@ bool track_repository_rename(const utf8* path, const utf8* newName)
     return !newPath.empty();
 }
 
-bool track_repository_install(const utf8* srcPath)
+bool track_repository_install(const utf8* srcPath, const utf8* name)
 {
     ITrackDesignRepository* repo = GetContext()->GetTrackDesignRepository();
-    std::string newPath = repo->Install(srcPath);
+    std::string newPath = repo->Install(srcPath, name);
     return !newPath.empty();
 }

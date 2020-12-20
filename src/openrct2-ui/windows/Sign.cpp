@@ -12,10 +12,10 @@
 #include <openrct2-ui/interface/Widget.h>
 #include <openrct2-ui/windows/Window.h>
 #include <openrct2/Game.h>
-#include <openrct2/actions/LargeSceneryRemoveAction.hpp>
-#include <openrct2/actions/SignSetNameAction.hpp>
-#include <openrct2/actions/SignSetStyleAction.hpp>
-#include <openrct2/actions/WallRemoveAction.hpp>
+#include <openrct2/actions/LargeSceneryRemoveAction.h>
+#include <openrct2/actions/SignSetNameAction.h>
+#include <openrct2/actions/SignSetStyleAction.h>
+#include <openrct2/actions/WallRemoveAction.h>
 #include <openrct2/config/Config.h>
 #include <openrct2/localisation/Localisation.h>
 #include <openrct2/localisation/StringIds.h>
@@ -44,11 +44,11 @@ enum WINDOW_SIGN_WIDGET_IDX {
 // 0x9AEE00
 static rct_widget window_sign_widgets[] = {
     WINDOW_SHIM(WINDOW_TITLE, WW, WH),
-    MakeWidget({      3,      17}, {85, 60}, WWT_VIEWPORT,  WindowColour::Secondary, STR_VIEWPORT                                 ), // Viewport
-    MakeWidget({WW - 25,      19}, {24, 24}, WWT_FLATBTN,   WindowColour::Secondary, SPR_RENAME,   STR_CHANGE_SIGN_TEXT_TIP       ), // change sign button
-    MakeWidget({WW - 25,      67}, {24, 24}, WWT_FLATBTN,   WindowColour::Secondary, SPR_DEMOLISH, STR_DEMOLISH_SIGN_TIP          ), // demolish button
-    MakeWidget({      5, WH - 16}, {12, 12}, WWT_COLOURBTN, WindowColour::Secondary, 0xFFFFFFFF,   STR_SELECT_MAIN_SIGN_COLOUR_TIP), // Main colour
-    MakeWidget({     17, WH - 16}, {12, 12}, WWT_COLOURBTN, WindowColour::Secondary, 0xFFFFFFFF,   STR_SELECT_TEXT_COLOUR_TIP     ), // Text colour
+    MakeWidget({      3,      17}, {85, 60}, WindowWidgetType::Viewport,  WindowColour::Secondary, STR_VIEWPORT                                 ), // Viewport
+    MakeWidget({WW - 25,      19}, {24, 24}, WindowWidgetType::FlatBtn,   WindowColour::Secondary, SPR_RENAME,   STR_CHANGE_SIGN_TEXT_TIP       ), // change sign button
+    MakeWidget({WW - 25,      67}, {24, 24}, WindowWidgetType::FlatBtn,   WindowColour::Secondary, SPR_DEMOLISH, STR_DEMOLISH_SIGN_TIP          ), // demolish button
+    MakeWidget({      5, WH - 16}, {12, 12}, WindowWidgetType::ColourBtn, WindowColour::Secondary, 0xFFFFFFFF,   STR_SELECT_MAIN_SIGN_COLOUR_TIP), // Main colour
+    MakeWidget({     17, WH - 16}, {12, 12}, WindowWidgetType::ColourBtn, WindowColour::Secondary, 0xFFFFFFFF,   STR_SELECT_TEXT_COLOUR_TIP     ), // Text colour
     { WIDGETS_END },
 };
 
@@ -62,72 +62,32 @@ static void window_sign_paint(rct_window *w, rct_drawpixelinfo *dpi);
 
 
 // 0x98E44C
-static rct_window_event_list window_sign_events = {
-    nullptr,
-    window_sign_mouseup,
-    nullptr,
-    window_sign_mousedown,
-    window_sign_dropdown,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    window_sign_textinput,
-    window_sign_viewport_rotate,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    window_sign_invalidate,
-    window_sign_paint,
-    nullptr
-};
+static rct_window_event_list window_sign_events([](auto& events)
+{
+    events.mouse_up = &window_sign_mouseup;
+    events.mouse_down = &window_sign_mousedown;
+    events.dropdown = &window_sign_dropdown;
+    events.text_input = &window_sign_textinput;
+    events.viewport_rotate = &window_sign_viewport_rotate;
+    events.invalidate = &window_sign_invalidate;
+    events.paint = &window_sign_paint;
+});
 
 static void window_sign_small_mouseup(rct_window *w, rct_widgetindex widgetIndex);
 static void window_sign_small_dropdown(rct_window *w, rct_widgetindex widgetIndex, int32_t dropdownIndex);
 static void window_sign_small_invalidate(rct_window *w);
 
 // 0x9A410C
-static rct_window_event_list window_sign_small_events = {
-    nullptr,
-    window_sign_small_mouseup,
-    nullptr,
-    window_sign_mousedown,
-    window_sign_small_dropdown,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    window_sign_textinput,
-    window_sign_viewport_rotate,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    window_sign_small_invalidate,
-    window_sign_paint,
-    nullptr
-};
+static rct_window_event_list window_sign_small_events([](auto& events)
+{
+    events.mouse_up = &window_sign_small_mouseup;
+    events.mouse_down = &window_sign_mousedown;
+    events.dropdown = &window_sign_small_dropdown;
+    events.text_input = &window_sign_textinput;
+    events.viewport_rotate = &window_sign_viewport_rotate;
+    events.invalidate = &window_sign_small_invalidate;
+    events.paint = &window_sign_paint;
+});
 // clang-format on
 
 static void window_sign_show_text_input(rct_window* w);
@@ -146,13 +106,13 @@ rct_window* window_sign_open(rct_windownumber number)
     if (w != nullptr)
         return w;
 
-    w = window_create_auto_pos(WW, WH, &window_sign_events, WC_BANNER, WF_NO_SCROLLING);
+    w = WindowCreateAutoPos(WW, WH, &window_sign_events, WC_BANNER, WF_NO_SCROLLING);
     w->widgets = window_sign_widgets;
     w->enabled_widgets = (1 << WIDX_CLOSE) | (1 << WIDX_SIGN_TEXT) | (1 << WIDX_SIGN_DEMOLISH) | (1 << WIDX_MAIN_COLOUR)
         | (1 << WIDX_TEXT_COLOUR);
 
     w->number = number;
-    window_init_scroll_widgets(w);
+    WindowInitScrollWidgets(w);
 
     auto banner = GetBanner(w->number);
     if (banner == nullptr)
@@ -260,10 +220,10 @@ static void window_sign_mousedown(rct_window* w, rct_widgetindex widgetIndex, rc
     switch (widgetIndex)
     {
         case WIDX_MAIN_COLOUR:
-            window_dropdown_show_colour(w, widget, TRANSLUCENT(w->colours[1]), static_cast<uint8_t>(w->list_information_type));
+            WindowDropdownShowColour(w, widget, TRANSLUCENT(w->colours[1]), static_cast<uint8_t>(w->list_information_type));
             break;
         case WIDX_TEXT_COLOUR:
-            window_dropdown_show_colour(w, widget, TRANSLUCENT(w->colours[1]), static_cast<uint8_t>(w->var_492));
+            WindowDropdownShowColour(w, widget, TRANSLUCENT(w->colours[1]), static_cast<uint8_t>(w->var_492));
             break;
     }
 }
@@ -325,16 +285,16 @@ static void window_sign_invalidate(rct_window* w)
 
     rct_scenery_entry* scenery_entry = get_large_scenery_entry(w->SceneryEntry);
 
-    main_colour_btn->type = WWT_EMPTY;
-    text_colour_btn->type = WWT_EMPTY;
+    main_colour_btn->type = WindowWidgetType::Empty;
+    text_colour_btn->type = WindowWidgetType::Empty;
 
     if (scenery_entry->large_scenery.flags & LARGE_SCENERY_FLAG_HAS_PRIMARY_COLOUR)
     {
-        main_colour_btn->type = WWT_COLOURBTN;
+        main_colour_btn->type = WindowWidgetType::ColourBtn;
     }
     if (scenery_entry->large_scenery.flags & LARGE_SCENERY_FLAG_HAS_SECONDARY_COLOUR)
     {
-        text_colour_btn->type = WWT_COLOURBTN;
+        text_colour_btn->type = WindowWidgetType::ColourBtn;
     }
 
     main_colour_btn->image = SPRITE_ID_PALETTE_COLOUR_1(w->list_information_type) | IMAGE_TYPE_TRANSPARENT | SPR_PALETTE_BTN;
@@ -347,7 +307,7 @@ static void window_sign_invalidate(rct_window* w)
  */
 static void window_sign_paint(rct_window* w, rct_drawpixelinfo* dpi)
 {
-    window_draw_widgets(w, dpi);
+    WindowDrawWidgets(w, dpi);
 
     // Draw viewport
     if (w->viewport != nullptr)
@@ -362,10 +322,7 @@ static void window_sign_paint(rct_window* w, rct_drawpixelinfo* dpi)
  */
 static void window_sign_viewport_rotate(rct_window* w)
 {
-    rct_viewport* view = w->viewport;
-    w->viewport = nullptr;
-
-    view->width = 0;
+    w->RemoveViewport();
 
     auto banner = GetBanner(w->number);
 
@@ -395,13 +352,13 @@ rct_window* window_sign_small_open(rct_windownumber number)
     if (w != nullptr)
         return w;
 
-    w = window_create_auto_pos(WW, WH, &window_sign_small_events, WC_BANNER, 0);
+    w = WindowCreateAutoPos(WW, WH, &window_sign_small_events, WC_BANNER, 0);
     w->widgets = window_sign_widgets;
     w->enabled_widgets = (1 << WIDX_CLOSE) | (1 << WIDX_SIGN_TEXT) | (1 << WIDX_SIGN_DEMOLISH) | (1 << WIDX_MAIN_COLOUR)
         | (1 << WIDX_TEXT_COLOUR);
 
     w->number = number;
-    window_init_scroll_widgets(w);
+    WindowInitScrollWidgets(w);
     w->colours[0] = COLOUR_DARK_BROWN;
     w->colours[1] = COLOUR_DARK_BROWN;
     w->colours[2] = COLOUR_DARK_BROWN;
@@ -533,16 +490,16 @@ static void window_sign_small_invalidate(rct_window* w)
 
     rct_scenery_entry* scenery_entry = get_wall_entry(w->SceneryEntry);
 
-    main_colour_btn->type = WWT_EMPTY;
-    text_colour_btn->type = WWT_EMPTY;
+    main_colour_btn->type = WindowWidgetType::Empty;
+    text_colour_btn->type = WindowWidgetType::Empty;
 
     if (scenery_entry->wall.flags & WALL_SCENERY_HAS_PRIMARY_COLOUR)
     {
-        main_colour_btn->type = WWT_COLOURBTN;
+        main_colour_btn->type = WindowWidgetType::ColourBtn;
     }
     if (scenery_entry->wall.flags & WALL_SCENERY_HAS_SECONDARY_COLOUR)
     {
-        text_colour_btn->type = WWT_COLOURBTN;
+        text_colour_btn->type = WindowWidgetType::ColourBtn;
     }
 
     main_colour_btn->image = SPRITE_ID_PALETTE_COLOUR_1(w->list_information_type) | IMAGE_TYPE_TRANSPARENT | SPR_PALETTE_BTN;

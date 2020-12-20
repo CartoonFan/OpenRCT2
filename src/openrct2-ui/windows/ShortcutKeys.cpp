@@ -36,8 +36,8 @@ enum WINDOW_SHORTCUT_WIDGET_IDX {
 // 0x9DE48C
 static rct_widget window_shortcut_widgets[] = {
     WINDOW_SHIM(WINDOW_TITLE, WW, WH),
-    MakeWidget({4,    18}, {412, 245}, WWT_SCROLL, WindowColour::Primary, SCROLL_VERTICAL,           STR_SHORTCUT_LIST_TIP        ),
-    MakeWidget({4, WH-15}, {150,  12}, WWT_BUTTON, WindowColour::Primary, STR_SHORTCUT_ACTION_RESET, STR_SHORTCUT_ACTION_RESET_TIP),
+    MakeWidget({4,    18}, {412, 245}, WindowWidgetType::Scroll, WindowColour::Primary, SCROLL_VERTICAL,           STR_SHORTCUT_LIST_TIP        ),
+    MakeWidget({4, WH-15}, {150,  12}, WindowWidgetType::Button, WindowColour::Primary, STR_SHORTCUT_ACTION_RESET, STR_SHORTCUT_ACTION_RESET_TIP),
     { WIDGETS_END }
 };
 
@@ -50,36 +50,17 @@ static void window_shortcut_scrollmousedown(rct_window *w, int32_t scrollIndex, 
 static void window_shortcut_scrollmouseover(rct_window *w, int32_t scrollIndex, const ScreenCoordsXY& screenCoords);
 static void window_shortcut_scrollpaint(rct_window *w, rct_drawpixelinfo *dpi, int32_t scrollIndex);
 
-static rct_window_event_list window_shortcut_events = {
-    nullptr,
-    window_shortcut_mouseup,
-    window_shortcut_resize,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    window_shortcut_scrollgetsize,
-    window_shortcut_scrollmousedown,
-    nullptr,
-    window_shortcut_scrollmouseover,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    window_shortcut_invalidate,
-    window_shortcut_paint,
-    window_shortcut_scrollpaint
-};
+static rct_window_event_list window_shortcut_events([](auto& events)
+{
+    events.mouse_up = &window_shortcut_mouseup;
+    events.resize = &window_shortcut_resize;
+    events.get_scroll_size = &window_shortcut_scrollgetsize;
+    events.scroll_mousedown = &window_shortcut_scrollmousedown;
+    events.scroll_mouseover = &window_shortcut_scrollmouseover;
+    events.invalidate = &window_shortcut_invalidate;
+    events.paint = &window_shortcut_paint;
+    events.scroll_paint = &window_shortcut_scrollpaint;
+});
 
 struct ShortcutStringPair
 {
@@ -222,11 +203,11 @@ rct_window* window_shortcut_keys_open()
     rct_window* w = window_bring_to_front_by_class(WC_KEYBOARD_SHORTCUT_LIST);
     if (w == nullptr)
     {
-        w = window_create_auto_pos(WW, WH, &window_shortcut_events, WC_KEYBOARD_SHORTCUT_LIST, WF_RESIZABLE);
+        w = WindowCreateAutoPos(WW, WH, &window_shortcut_events, WC_KEYBOARD_SHORTCUT_LIST, WF_RESIZABLE);
 
         w->widgets = window_shortcut_widgets;
         w->enabled_widgets = (1 << WIDX_CLOSE) | (1 << WIDX_RESET);
-        window_init_scroll_widgets(w);
+        WindowInitScrollWidgets(w);
 
         w->no_list_items = static_cast<uint16_t>(std::size(ShortcutList));
         w->selected_list_item = -1;
@@ -250,8 +231,8 @@ static void window_shortcut_mouseup(rct_window* w, rct_widgetindex widgetIndex)
             window_close(w);
             break;
         case WIDX_RESET:
-            keyboard_shortcuts_reset();
-            keyboard_shortcuts_save();
+            KeyboardShortcutsReset();
+            KeyboardShortcutsSave();
             w->Invalidate();
             break;
     }
@@ -281,7 +262,7 @@ static void window_shortcut_invalidate(rct_window* w)
  */
 static void window_shortcut_paint(rct_window* w, rct_drawpixelinfo* dpi)
 {
-    window_draw_widgets(w, dpi);
+    WindowDrawWidgets(w, dpi);
 }
 
 /**
@@ -366,25 +347,25 @@ static void window_shortcut_scrollpaint(rct_window* w, rct_drawpixelinfo* dpi, i
         if (i == w->selected_list_item)
         {
             format = STR_WINDOW_COLOUR_2_STRINGID;
-            gfx_filter_rect(dpi, 0, y - 1, scrollWidth, y + (SCROLLABLE_ROW_HEIGHT - 2), PALETTE_DARKEN_1);
+            gfx_filter_rect(dpi, 0, y - 1, scrollWidth, y + (SCROLLABLE_ROW_HEIGHT - 2), FilterPaletteID::PaletteDarken1);
         }
 
         const int32_t bindingOffset = scrollWidth - 150;
-        auto ft = Formatter::Common();
+        auto ft = Formatter();
         ft.Add<rct_string_id>(STR_SHORTCUT_ENTRY_FORMAT);
         ft.Add<rct_string_id>(ShortcutList[i].StringId);
-        gfx_draw_string_left_clipped(dpi, format, gCommonFormatArgs, COLOUR_BLACK, { 0, y - 1 }, bindingOffset);
+        DrawTextEllipsised(dpi, { 0, y - 1 }, bindingOffset, format, ft, COLOUR_BLACK);
 
         char keybinding[128];
-        keyboard_shortcuts_format_string(keybinding, 128, static_cast<int32_t>(ShortcutList[i].ShortcutId));
+        KeyboardShortcutsFormatString(keybinding, 128, static_cast<int32_t>(ShortcutList[i].ShortcutId));
 
         if (strlen(keybinding) > 0)
         {
             const int32_t maxWidth = 150;
-            ft = Formatter::Common();
+            ft = Formatter();
             ft.Add<rct_string_id>(STR_STRING);
             ft.Add<char*>(keybinding);
-            gfx_draw_string_left_clipped(dpi, format, gCommonFormatArgs, COLOUR_BLACK, { bindingOffset, y - 1 }, maxWidth);
+            DrawTextEllipsised(dpi, { bindingOffset, y - 1 }, maxWidth, format, ft, COLOUR_BLACK);
         }
     }
 }

@@ -24,8 +24,8 @@ Vehicle* cable_lift_segment_create(
     Ride& ride, int32_t x, int32_t y, int32_t z, int32_t direction, uint16_t var_44, int32_t remaining_distance, bool head)
 {
     Vehicle* current = &(
-        create_sprite(SPRITE_IDENTIFIER_VEHICLE, head ? EntityListId::TrainHead : EntityListId::Vehicle)->vehicle);
-    current->sprite_identifier = SPRITE_IDENTIFIER_VEHICLE;
+        create_sprite(SpriteIdentifier::Vehicle, head ? EntityListId::TrainHead : EntityListId::Vehicle)->vehicle);
+    current->sprite_identifier = SpriteIdentifier::Vehicle;
     current->ride = ride.id;
     current->ride_subtype = RIDE_ENTRY_INDEX_NULL;
     if (head)
@@ -51,13 +51,13 @@ Vehicle* cable_lift_segment_create(
     current->spin_sprite = 0;
     current->spin_speed = 0;
     current->sound2_flags = 0;
-    current->sound1_id = SoundId::Null;
-    current->sound2_id = SoundId::Null;
+    current->sound1_id = OpenRCT2::Audio::SoundId::Null;
+    current->sound2_id = OpenRCT2::Audio::SoundId::Null;
     current->var_C4 = 0;
     current->animation_frame = 0;
     current->var_C8 = 0;
     current->var_CA = 0;
-    current->scream_sound_id = SoundId::Null;
+    current->scream_sound_id = OpenRCT2::Audio::SoundId::Null;
     current->vehicle_sprite_type = 0;
     current->bank_rotation = 0;
     for (auto& peep : current->peep)
@@ -72,9 +72,9 @@ Vehicle* cable_lift_segment_create(
     z += RideTypeDescriptors[ride.type].Heights.VehicleZOffset;
 
     current->MoveTo({ 16, 16, z });
-    current->track_type = (TRACK_ELEM_CABLE_LIFT_HILL << 2) | (current->sprite_direction >> 3);
+    current->track_type = (TrackElemType::CableLiftHill << 2) | (current->sprite_direction >> 3);
     current->track_progress = 164;
-    current->update_flags = VEHICLE_UPDATE_FLAG_1;
+    current->update_flags = VEHICLE_UPDATE_FLAG_COLLISION_DISABLED;
     current->SetState(Vehicle::Status::MovingToEndOfStation, 0);
     current->num_peeps = 0;
     current->next_free_seat = 0;
@@ -234,7 +234,7 @@ bool Vehicle::CableLiftUpdateTrackMotionForwards()
     for (; remaining_distance >= 13962; _vehicleUnkF64E10++)
     {
         uint8_t trackType = GetTrackType();
-        if (trackType == TRACK_ELEM_CABLE_LIFT_HILL && track_progress == 160)
+        if (trackType == TrackElemType::CableLiftHill && track_progress == 160)
         {
             _vehicleMotionTrackFlags |= VEHICLE_UPDATE_MOTION_TRACK_FLAG_1;
         }
@@ -322,7 +322,7 @@ bool Vehicle::CableLiftUpdateTrackMotionBackwards()
             track_direction = output.begin_direction;
             track_type |= output.begin_element->AsTrack()->GetTrackType() << 2;
 
-            if (output.begin_element->AsTrack()->GetTrackType() == TRACK_ELEM_END_STATION)
+            if (output.begin_element->AsTrack()->GetTrackType() == TrackElemType::EndStation)
             {
                 _vehicleMotionTrackFlags = VEHICLE_UPDATE_MOTION_TRACK_FLAG_VEHICLE_AT_STATION;
             }

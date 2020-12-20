@@ -17,13 +17,15 @@
 #include "../core/Console.hpp"
 #include "../core/File.h"
 #include "../core/FileIndex.hpp"
-#include "../core/FileStream.hpp"
+#include "../core/FileStream.h"
+#include "../core/MemoryStream.h"
 #include "../core/Path.hpp"
 #include "../core/String.hpp"
 #include "../localisation/Language.h"
 #include "../localisation/Localisation.h"
 #include "../localisation/LocalisationService.h"
 #include "../platform/Platform2.h"
+#include "../rct12/RCT12.h"
 #include "../rct12/SawyerChunkReader.h"
 #include "Scenario.h"
 #include "ScenarioSources.h"
@@ -127,8 +129,8 @@ class ScenarioFileIndex final : public FileIndex<scenario_index_entry>
 {
 private:
     static constexpr uint32_t MAGIC_NUMBER = 0x58444953; // SIDX
-    static constexpr uint16_t VERSION = 3;
-    static constexpr auto PATTERN = "*.sc4;*.sc6";
+    static constexpr uint16_t VERSION = 5;
+    static constexpr auto PATTERN = "*.sc4;*.sc6;*.sea";
 
 public:
     explicit ScenarioFileIndex(const IPlatformEnvironment& env)
@@ -157,52 +159,41 @@ protected:
         }
     }
 
-    void Serialise(IStream* stream, const scenario_index_entry& item) const override
+    void Serialise(DataSerialiser& ds, scenario_index_entry& item) const override
     {
-        stream->Write(item.path, sizeof(item.path));
-        stream->WriteValue(item.timestamp);
+        ds << item.path;
+        ds << item.timestamp;
+        ds << item.category;
+        ds << item.source_game;
+        ds << item.source_index;
+        ds << item.sc_id;
+        ds << item.objective_type;
+        ds << item.objective_arg_1;
+        ds << item.objective_arg_2;
+        ds << item.objective_arg_3;
 
-        stream->WriteValue(item.category);
-        stream->WriteValue(item.source_game);
-        stream->WriteValue(item.source_index);
-        stream->WriteValue(item.sc_id);
-
-        stream->WriteValue(item.objective_type);
-        stream->WriteValue(item.objective_arg_1);
-        stream->WriteValue(item.objective_arg_2);
-        stream->WriteValue(item.objective_arg_3);
-
-        stream->Write(item.internal_name, sizeof(item.internal_name));
-        stream->Write(item.name, sizeof(item.name));
-        stream->Write(item.details, sizeof(item.details));
-    }
-
-    scenario_index_entry Deserialise(IStream* stream) const override
-    {
-        scenario_index_entry item;
-
-        stream->Read(item.path, sizeof(item.path));
-        item.timestamp = stream->ReadValue<uint64_t>();
-
-        item.category = stream->ReadValue<uint8_t>();
-        item.source_game = ScenarioSource{ stream->ReadValue<uint8_t>() };
-        item.source_index = stream->ReadValue<int16_t>();
-        item.sc_id = stream->ReadValue<uint16_t>();
-
-        item.objective_type = stream->ReadValue<uint8_t>();
-        item.objective_arg_1 = stream->ReadValue<uint8_t>();
-        item.objective_arg_2 = stream->ReadValue<int32_t>();
-        item.objective_arg_3 = stream->ReadValue<int16_t>();
-        item.highscore = nullptr;
-
-        stream->Read(item.internal_name, sizeof(item.internal_name));
-        stream->Read(item.name, sizeof(item.name));
-        stream->Read(item.details, sizeof(item.details));
-
-        return item;
+        ds << item.internal_name;
+        ds << item.name;
+        ds << item.details;
     }
 
 private:
+    static std::unique_ptr<IStream> GetStreamFromRCT2Scenario(const std::string& path)
+    {
+        if (String::Equals(Path::GetExtension(path), ".sea", true))
+        {
+            auto data = DecryptSea(fs::u8path(path));
+            auto ms = std::make_unique<MemoryStream>();
+            // Need to copy the data into MemoryStream as the overload will borrow instead of copy.
+            ms->Write(data.data(), data.size());
+            ms->SetPosition(0);
+            return ms;
+        }
+
+        auto fs = std::make_unique<FileStream>(path, FILE_MODE_OPEN);
+        return fs;
+    }
+
     /**
      * Reads basic information from a scenario file.
      */
@@ -234,9 +225,9 @@ private:
             }
             else
             {
-                // RCT2 scenario
-                auto fs = FileStream(path, FILE_MODE_OPEN);
-                auto chunkReader = SawyerChunkReader(&fs);
+                // RCT2 or RCTC scenario
+                auto stream = GetStreamFromRCT2Scenario(path);
+                auto chunkReader = SawyerChunkReader(stream.get());
 
                 rct_s6_header header = chunkReader.ReadChunkAs<rct_s6_header>();
                 if (header.type == S6_TYPE_SCENARIO)
@@ -244,7 +235,7 @@ private:
                     rct_s6_info info = chunkReader.ReadChunkAs<rct_s6_info>();
                     // If the name or the details contain a colour code, they might be in UTF-8 already.
                     // This is caused by a bug that was in OpenRCT2 for 3 years.
-                    if (!String::ContainsColourCode(info.name) && !String::ContainsColourCode(info.details))
+                    if (!IsLikelyUTF8(info.name) && !IsLikelyUTF8(info.details))
                     {
                         rct2_to_utf8_self(info.name, sizeof(info.name));
                         rct2_to_utf8_self(info.details, sizeof(info.details));

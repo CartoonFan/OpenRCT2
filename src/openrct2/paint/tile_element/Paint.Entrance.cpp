@@ -81,7 +81,7 @@ static void ride_entrance_exit_paint(paint_session* session, uint8_t direction, 
     uint32_t transparant_image_id = 0, image_id = 0;
     if (stationObj->Flags & STATION_OBJECT_FLAGS::IS_TRANSPARENT)
     {
-        colour_1 = GlassPaletteIds[ride->track_colour[0].main];
+        colour_1 = EnumValue(GlassPaletteIds[ride->track_colour[0].main]);
         transparant_image_id = (colour_1 << 19) | IMAGE_TYPE_TRANSPARENT;
     }
 
@@ -120,7 +120,7 @@ static void ride_entrance_exit_paint(paint_session* session, uint8_t direction, 
     int16_t lengthY = (direction & 1) ? 28 : 2;
     int16_t lengthX = (direction & 1) ? 2 : 28;
 
-    sub_98197C(session, image_id, 0, 0, lengthX, lengthY, ah, height, 2, 2, height);
+    PaintAddImageAsParent(session, image_id, 0, 0, lengthX, lengthY, ah, height, 2, 2, height);
 
     if (transparant_image_id)
     {
@@ -133,18 +133,18 @@ static void ride_entrance_exit_paint(paint_session* session, uint8_t direction, 
             transparant_image_id |= stationObj->BaseImageId + direction + 16;
         }
 
-        sub_98199C(session, transparant_image_id, 0, 0, lengthX, lengthY, ah, height, 2, 2, height);
+        PaintAddImageAsChild(session, transparant_image_id, 0, 0, lengthX, lengthY, ah, height, 2, 2, height);
     }
 
     image_id += 4;
 
-    sub_98197C(
+    PaintAddImageAsParent(
         session, image_id, 0, 0, lengthX, lengthY, ah, height, (direction & 1) ? 28 : 2, (direction & 1) ? 2 : 28, height);
 
     if (transparant_image_id)
     {
         transparant_image_id += 4;
-        sub_98199C(
+        PaintAddImageAsChild(
             session, transparant_image_id, 0, 0, lengthX, lengthY, ah, height, (direction & 1) ? 28 : 2,
             (direction & 1) ? 2 : 28, height);
     }
@@ -161,10 +161,7 @@ static void ride_entrance_exit_paint(paint_session* session, uint8_t direction, 
     if (!is_exit && !(tile_element->IsGhost()) && tile_element->AsEntrance()->GetRideIndex() != RIDE_ID_NULL
         && stationObj->ScrollingMode != SCROLLING_MODE_NONE)
     {
-        // clear next 8 bytes
-        Formatter::Common().Add<uint32_t>(0).Add<uint32_t>(0);
-
-        auto ft = Formatter::Common();
+        auto ft = Formatter();
         ft.Add<rct_string_id>(STR_RIDE_ENTRANCE_NAME);
 
         if (ride->status == RIDE_STATUS_OPEN && !(ride->lifecycle_flags & RIDE_LIFECYCLE_BROKEN_DOWN))
@@ -179,11 +176,11 @@ static void ride_entrance_exit_paint(paint_session* session, uint8_t direction, 
         utf8 entrance_string[256];
         if (gConfigGeneral.upper_case_banners)
         {
-            format_string_to_upper(entrance_string, sizeof(entrance_string), STR_BANNER_TEXT_FORMAT, gCommonFormatArgs);
+            format_string_to_upper(entrance_string, sizeof(entrance_string), STR_BANNER_TEXT_FORMAT, ft.Data());
         }
         else
         {
-            format_string(entrance_string, sizeof(entrance_string), STR_BANNER_TEXT_FORMAT, gCommonFormatArgs);
+            format_string(entrance_string, sizeof(entrance_string), STR_BANNER_TEXT_FORMAT, ft.Data());
         }
 
         gCurrentFontSpriteBase = FONT_SPRITE_BASE_TINY;
@@ -191,7 +188,7 @@ static void ride_entrance_exit_paint(paint_session* session, uint8_t direction, 
         uint16_t stringWidth = gfx_get_string_width(entrance_string);
         uint16_t scroll = stringWidth > 0 ? (gCurrentTicks / 2) % stringWidth : 0;
 
-        sub_98199C(
+        PaintAddImageAsChild(
             session, scrolling_text_setup(session, STR_BANNER_TEXT_FORMAT, ft, scroll, stationObj->ScrollingMode, COLOUR_BLACK),
             0, 0, 0x1C, 0x1C, 0x33, height + stationObj->Height, 2, 2, height + stationObj->Height);
     }
@@ -252,16 +249,16 @@ static void park_entrance_paint(paint_session* session, uint8_t direction, int32
             if (path_entry != nullptr)
             {
                 image_id = (path_entry->image + 5 * (1 + (direction & 1))) | ghost_id;
-                sub_98197C(session, image_id, 0, 0, 32, 0x1C, 0, height, 0, 2, height);
+                PaintAddImageAsParent(session, image_id, 0, 0, 32, 0x1C, 0, height, 0, 2, height);
             }
 
-            entrance = static_cast<rct_entrance_type*>(object_entry_get_chunk(OBJECT_TYPE_PARK_ENTRANCE, 0));
+            entrance = static_cast<rct_entrance_type*>(object_entry_get_chunk(ObjectType::ParkEntrance, 0));
             if (entrance == nullptr)
             {
                 return;
             }
             image_id = (entrance->image_id + direction * 3) | ghost_id;
-            sub_98197C(session, image_id, 0, 0, 0x1C, 0x1C, 0x2F, height, 2, 2, height + 32);
+            PaintAddImageAsParent(session, image_id, 0, 0, 0x1C, 0x1C, 0x2F, height, 2, 2, height + 32);
 
             if ((direction + 1) & (1 << 1))
                 break;
@@ -269,8 +266,7 @@ static void park_entrance_paint(paint_session* session, uint8_t direction, int32
                 break;
 
             {
-                Formatter::Common().Add<uint32_t>(0).Add<uint32_t>(0);
-                auto ft = Formatter::Common();
+                auto ft = Formatter();
 
                 if (gParkFlags & PARK_FLAGS_PARK_OPEN)
                 {
@@ -288,11 +284,11 @@ static void park_entrance_paint(paint_session* session, uint8_t direction, int32
                 utf8 park_name[256];
                 if (gConfigGeneral.upper_case_banners)
                 {
-                    format_string_to_upper(park_name, sizeof(park_name), STR_BANNER_TEXT_FORMAT, gCommonFormatArgs);
+                    format_string_to_upper(park_name, sizeof(park_name), STR_BANNER_TEXT_FORMAT, ft.Data());
                 }
                 else
                 {
-                    format_string(park_name, sizeof(park_name), STR_BANNER_TEXT_FORMAT, gCommonFormatArgs);
+                    format_string(park_name, sizeof(park_name), STR_BANNER_TEXT_FORMAT, ft.Data());
                 }
 
                 gCurrentFontSpriteBase = FONT_SPRITE_BASE_TINY;
@@ -306,18 +302,18 @@ static void park_entrance_paint(paint_session* session, uint8_t direction, int32
                 int32_t stsetup = scrolling_text_setup(
                     session, STR_BANNER_TEXT_FORMAT, ft, scroll, entrance->scrolling_mode + direction / 2, COLOUR_BLACK);
                 int32_t text_height = height + entrance->text_height;
-                sub_98199C(session, stsetup, 0, 0, 0x1C, 0x1C, 0x2F, text_height, 2, 2, text_height);
+                PaintAddImageAsChild(session, stsetup, 0, 0, 0x1C, 0x1C, 0x2F, text_height, 2, 2, text_height);
             }
             break;
         case 1:
         case 2:
-            entrance = static_cast<rct_entrance_type*>(object_entry_get_chunk(OBJECT_TYPE_PARK_ENTRANCE, 0));
+            entrance = static_cast<rct_entrance_type*>(object_entry_get_chunk(ObjectType::ParkEntrance, 0));
             if (entrance == nullptr)
             {
                 return;
             }
             image_id = (entrance->image_id + part_index + direction * 3) | ghost_id;
-            sub_98197C(session, image_id, 0, 0, 0x1A, di, 0x4F, height, 3, 3, height);
+            PaintAddImageAsParent(session, image_id, 0, 0, 0x1A, di, 0x4F, height, 3, 3, height);
             break;
     }
 
@@ -348,7 +344,7 @@ void entrance_paint(paint_session* session, uint8_t direction, int32_t height, c
             uint32_t image_id = 0x20101689 + get_height_marker_offset() + (z / 16);
             image_id -= gMapBaseZ;
 
-            sub_98197C(session, image_id, 16, 16, 1, 1, 0, height, 31, 31, z + 64);
+            PaintAddImageAsParent(session, image_id, 16, 16, 1, 1, 0, height, 31, 31, z + 64);
         }
     }
 

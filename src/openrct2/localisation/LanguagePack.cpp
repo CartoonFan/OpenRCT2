@@ -10,25 +10,18 @@
 #include "LanguagePack.h"
 
 #include "../common.h"
-#include "../core/FileStream.hpp"
+#include "../core/FileStream.h"
 #include "../core/Memory.hpp"
+#include "../core/RTL.h"
 #include "../core/String.hpp"
-#include "../core/StringBuilder.hpp"
-#include "../core/StringReader.hpp"
+#include "../core/StringBuilder.h"
+#include "../core/StringReader.h"
 #include "Language.h"
 #include "Localisation.h"
 
 #include <algorithm>
 #include <string>
 #include <vector>
-#ifndef _WIN32
-#    include <unicode/ubidi.h>
-#    include <unicode/unistr.h>
-#    include <unicode/ushape.h>
-#    include <unicode/ustring.h>
-#    include <unicode/utf.h>
-#    include <unicode/utypes.h>
-#endif
 
 // Don't try to load more than language files that exceed 64 MiB
 constexpr uint64_t MAX_LANGUAGE_SIZE = 64 * 1024 * 1024;
@@ -546,32 +539,8 @@ private:
         sb.Clear();
         while (reader->TryPeek(&codepoint) && !IsNewLine(codepoint))
         {
-            if (codepoint == '{')
-            {
-                uint32_t token;
-                bool isByte;
-                if (ParseToken(reader, &token, &isByte))
-                {
-                    if (isByte)
-                    {
-                        sb.Append(reinterpret_cast<const utf8*>(&token), 1);
-                    }
-                    else
-                    {
-                        sb.Append(static_cast<int32_t>(token));
-                    }
-                }
-                else
-                {
-                    // Syntax error or unknown token, ignore line entirely
-                    return;
-                }
-            }
-            else
-            {
-                reader->Skip();
-                sb.Append(codepoint);
-            }
+            reader->Skip();
+            sb.Append(codepoint);
         }
 
         std::string s;
@@ -605,78 +574,6 @@ private:
                 _currentScenarioOverride->strings[stringId] = s;
             }
         }
-    }
-
-    bool ParseToken(IStringReader* reader, uint32_t* token, bool* isByte)
-    {
-        auto sb = StringBuilder();
-        codepoint_t codepoint;
-
-        // Skip open brace
-        reader->Skip();
-
-        while (reader->TryPeek(&codepoint))
-        {
-            if (IsNewLine(codepoint))
-                return false;
-            if (IsWhitespace(codepoint))
-                return false;
-
-            reader->Skip();
-
-            if (codepoint == '}')
-                break;
-
-            sb.Append(codepoint);
-        }
-
-        const utf8* tokenName = sb.GetBuffer();
-        *token = format_get_code(tokenName);
-        *isByte = false;
-
-        // Handle explicit byte values
-        if (*token == 0)
-        {
-            int32_t number;
-            if (sscanf(tokenName, "%d", &number) == 1)
-            {
-                *token = std::clamp(number, 0, 255);
-                *isByte = true;
-            }
-        }
-
-        return true;
-    }
-
-    std::string FixRTL(std::string& input)
-    {
-#ifdef _WIN32
-        return input;
-#else
-        UErrorCode err = static_cast<UErrorCode>(0);
-        // Force a hard left-to-right at the beginning (will mess up mixed strings' word order otherwise)
-        std::string text2 = std::string(u8"\xE2\x80\xAA") + input;
-
-        icu::UnicodeString ustr = icu::UnicodeString::fromUTF8(icu::StringPiece(text2));
-
-        int32_t length = ustr.length();
-        icu::UnicodeString reordered;
-        icu::UnicodeString shaped;
-        UBiDi* bidi = ubidi_openSized(length, 0, &err);
-        // UBIDI_DEFAULT_LTR preserves formatting codes.
-        ubidi_setPara(bidi, ustr.getBuffer(), length, UBIDI_DEFAULT_LTR, nullptr, &err);
-        ubidi_writeReordered(bidi, reordered.getBuffer(length), length, UBIDI_DO_MIRRORING | UBIDI_REMOVE_BIDI_CONTROLS, &err);
-        ubidi_close(bidi);
-        reordered.releaseBuffer(length);
-        u_shapeArabic(
-            reordered.getBuffer(), length, shaped.getBuffer(length), length,
-            U_SHAPE_LETTERS_SHAPE | U_SHAPE_LENGTH_FIXED_SPACES_NEAR | U_SHAPE_TEXT_DIRECTION_VISUAL_LTR, &err);
-        shaped.releaseBuffer(length);
-
-        std::string cppstring;
-        shaped.toUTF8String(cppstring);
-        return cppstring;
-#endif
     }
 };
 

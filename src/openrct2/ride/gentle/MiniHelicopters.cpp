@@ -26,10 +26,10 @@ static void paint_mini_helicopters_track_station(
     if (direction == 0 || direction == 2)
     {
         imageId = SPR_STATION_BASE_B_SW_NE | session->TrackColours[SCHEME_MISC];
-        sub_98197C(session, imageId, 0, 0, 32, 28, 1, height - 2, 0, 2, height);
+        PaintAddImageAsParent(session, imageId, 0, 0, 32, 28, 1, height - 2, 0, 2, height);
 
         imageId = SPR_TRACK_SUBMARINE_RIDE_MINI_HELICOPTERS_FLAT_NE_SW | session->TrackColours[SCHEME_TRACK];
-        sub_98199C(session, imageId, 0, 0, 32, 20, 1, height, 0, 0, height);
+        PaintAddImageAsChild(session, imageId, 0, 0, 32, 20, 1, height, 0, 0, height);
 
         metal_a_supports_paint_setup(session, METAL_SUPPORTS_BOXED, 5, 0, height, session->TrackColours[SCHEME_SUPPORTS]);
         metal_a_supports_paint_setup(session, METAL_SUPPORTS_BOXED, 8, 0, height, session->TrackColours[SCHEME_SUPPORTS]);
@@ -38,10 +38,10 @@ static void paint_mini_helicopters_track_station(
     else if (direction == 1 || direction == 3)
     {
         imageId = SPR_STATION_BASE_B_NW_SE | session->TrackColours[SCHEME_MISC];
-        sub_98197C(session, imageId, 0, 0, 28, 32, 1, height - 2, 2, 0, height);
+        PaintAddImageAsParent(session, imageId, 0, 0, 28, 32, 1, height - 2, 2, 0, height);
 
         imageId = SPR_TRACK_SUBMARINE_RIDE_MINI_HELICOPTERS_FLAT_SE_NW | session->TrackColours[SCHEME_TRACK];
-        sub_98199C(session, imageId, 0, 0, 20, 32, 1, height, 0, 0, height);
+        PaintAddImageAsChild(session, imageId, 0, 0, 20, 32, 1, height, 0, 0, height);
 
         metal_a_supports_paint_setup(session, METAL_SUPPORTS_BOXED, 6, 0, height, session->TrackColours[SCHEME_SUPPORTS]);
         metal_a_supports_paint_setup(session, METAL_SUPPORTS_BOXED, 7, 0, height, session->TrackColours[SCHEME_SUPPORTS]);
@@ -64,13 +64,13 @@ static void paint_mini_helicopters_track_flat(
     if (direction & 1)
     {
         imageId = SPR_TRACK_SUBMARINE_RIDE_MINI_HELICOPTERS_FLAT_SE_NW | session->TrackColours[SCHEME_TRACK];
-        sub_98197C(session, imageId, 0, 0, 20, 32, 3, height, 6, 0, height);
+        PaintAddImageAsParent(session, imageId, 0, 0, 20, 32, 3, height, 6, 0, height);
         paint_util_push_tunnel_right(session, height, TUNNEL_0);
     }
     else
     {
         imageId = SPR_TRACK_SUBMARINE_RIDE_MINI_HELICOPTERS_FLAT_NE_SW | session->TrackColours[SCHEME_TRACK];
-        sub_98197C(session, imageId, 0, 0, 32, 20, 3, height, 0, 6, height);
+        PaintAddImageAsParent(session, imageId, 0, 0, 32, 20, 3, height, 0, 6, height);
         paint_util_push_tunnel_left(session, height, TUNNEL_0);
     }
 
@@ -97,22 +97,22 @@ static void paint_mini_helicopters_track_flat_to_25_deg_up(
     {
         case 0:
             imageId = SPR_TRACK_SUBMARINE_RIDE_MINI_HELICOPTERS_FLAT_TO_25_DEG_UP_SW_NE | session->TrackColours[SCHEME_TRACK];
-            sub_98197C(session, imageId, 0, 0, 32, 20, 3, height, 0, 6, height);
+            PaintAddImageAsParent(session, imageId, 0, 0, 32, 20, 3, height, 0, 6, height);
             paint_util_push_tunnel_left(session, height, TUNNEL_0);
             break;
         case 1:
             imageId = SPR_TRACK_SUBMARINE_RIDE_MINI_HELICOPTERS_FLAT_TO_25_DEG_UP_NW_SE | session->TrackColours[SCHEME_TRACK];
-            sub_98197C(session, imageId, 0, 0, 20, 32, 3, height, 6, 0, height);
+            PaintAddImageAsParent(session, imageId, 0, 0, 20, 32, 3, height, 6, 0, height);
             paint_util_push_tunnel_right(session, height, TUNNEL_2);
             break;
         case 2:
             imageId = SPR_TRACK_SUBMARINE_RIDE_MINI_HELICOPTERS_FLAT_TO_25_DEG_UP_NE_SW | session->TrackColours[SCHEME_TRACK];
-            sub_98197C(session, imageId, 0, 0, 32, 20, 3, height, 0, 6, height);
+            PaintAddImageAsParent(session, imageId, 0, 0, 32, 20, 3, height, 0, 6, height);
             paint_util_push_tunnel_left(session, height, TUNNEL_2);
             break;
         case 3:
             imageId = SPR_TRACK_SUBMARINE_RIDE_MINI_HELICOPTERS_FLAT_TO_25_DEG_UP_SE_NW | session->TrackColours[SCHEME_TRACK];
-            sub_98197C(session, imageId, 0, 0, 20, 32, 3, height, 6, 0, height);
+            PaintAddImageAsParent(session, imageId, 0, 0, 20, 32, 3, height, 6, 0, height);
             paint_util_push_tunnel_right(session, height, TUNNEL_0);
             break;
     }
@@ -138,22 +138,22 @@ static void paint_mini_helicopters_track_25_deg_up(
     {
         case 0:
             imageId = SPR_TRACK_SUBMARINE_RIDE_MINI_HELICOPTERS_25_DEG_UP_SW_NE | session->TrackColours[SCHEME_TRACK];
-            sub_98197C(session, imageId, 0, 0, 32, 20, 3, height, 0, 6, height);
+            PaintAddImageAsParent(session, imageId, 0, 0, 32, 20, 3, height, 0, 6, height);
             paint_util_push_tunnel_left(session, height - 8, TUNNEL_1);
             break;
         case 1:
             imageId = SPR_TRACK_SUBMARINE_RIDE_MINI_HELICOPTERS_25_DEG_UP_NW_SE | session->TrackColours[SCHEME_TRACK];
-            sub_98197C(session, imageId, 0, 0, 20, 32, 3, height, 6, 0, height);
+            PaintAddImageAsParent(session, imageId, 0, 0, 20, 32, 3, height, 6, 0, height);
             paint_util_push_tunnel_right(session, height + 8, TUNNEL_2);
             break;
         case 2:
             imageId = SPR_TRACK_SUBMARINE_RIDE_MINI_HELICOPTERS_25_DEG_UP_NE_SW | session->TrackColours[SCHEME_TRACK];
-            sub_98197C(session, imageId, 0, 0, 32, 20, 3, height, 0, 6, height);
+            PaintAddImageAsParent(session, imageId, 0, 0, 32, 20, 3, height, 0, 6, height);
             paint_util_push_tunnel_left(session, height + 8, TUNNEL_2);
             break;
         case 3:
             imageId = SPR_TRACK_SUBMARINE_RIDE_MINI_HELICOPTERS_25_DEG_UP_SE_NW | session->TrackColours[SCHEME_TRACK];
-            sub_98197C(session, imageId, 0, 0, 20, 32, 3, height, 6, 0, height);
+            PaintAddImageAsParent(session, imageId, 0, 0, 20, 32, 3, height, 6, 0, height);
             paint_util_push_tunnel_right(session, height - 8, TUNNEL_1);
             break;
     }
@@ -179,22 +179,22 @@ static void paint_mini_helicopters_track_25_deg_up_to_flat(
     {
         case 0:
             imageId = SPR_TRACK_SUBMARINE_RIDE_MINI_HELICOPTERS_25_DEG_UP_TO_FLAT_SW_NE | session->TrackColours[SCHEME_TRACK];
-            sub_98197C(session, imageId, 0, 0, 32, 20, 3, height, 0, 6, height);
+            PaintAddImageAsParent(session, imageId, 0, 0, 32, 20, 3, height, 0, 6, height);
             paint_util_push_tunnel_left(session, height - 8, TUNNEL_0);
             break;
         case 1:
             imageId = SPR_TRACK_SUBMARINE_RIDE_MINI_HELICOPTERS_25_DEG_UP_TO_FLAT_NW_SE | session->TrackColours[SCHEME_TRACK];
-            sub_98197C(session, imageId, 0, 0, 20, 32, 3, height, 6, 0, height);
+            PaintAddImageAsParent(session, imageId, 0, 0, 20, 32, 3, height, 6, 0, height);
             paint_util_push_tunnel_right(session, height + 8, TUNNEL_12);
             break;
         case 2:
             imageId = SPR_TRACK_SUBMARINE_RIDE_MINI_HELICOPTERS_25_DEG_UP_TO_FLAT_NE_SW | session->TrackColours[SCHEME_TRACK];
-            sub_98197C(session, imageId, 0, 0, 32, 20, 3, height, 0, 6, height);
+            PaintAddImageAsParent(session, imageId, 0, 0, 32, 20, 3, height, 0, 6, height);
             paint_util_push_tunnel_left(session, height + 8, TUNNEL_12);
             break;
         case 3:
             imageId = SPR_TRACK_SUBMARINE_RIDE_MINI_HELICOPTERS_25_DEG_UP_TO_FLAT_SE_NW | session->TrackColours[SCHEME_TRACK];
-            sub_98197C(session, imageId, 0, 0, 20, 32, 3, height, 6, 0, height);
+            PaintAddImageAsParent(session, imageId, 0, 0, 20, 32, 3, height, 6, 0, height);
             paint_util_push_tunnel_right(session, height - 8, TUNNEL_0);
             break;
     }
@@ -303,40 +303,40 @@ static void paint_mini_helicopters_track_right_quarter_turn_1_tile(
 /**
  * rct2: 0x0081F268
  */
-TRACK_PAINT_FUNCTION get_track_paint_function_mini_helicopters(int32_t trackType, int32_t direction)
+TRACK_PAINT_FUNCTION get_track_paint_function_mini_helicopters(int32_t trackType)
 {
     switch (trackType)
     {
-        case TRACK_ELEM_FLAT:
+        case TrackElemType::Flat:
             return paint_mini_helicopters_track_flat;
 
-        case TRACK_ELEM_END_STATION:
-        case TRACK_ELEM_BEGIN_STATION:
-        case TRACK_ELEM_MIDDLE_STATION:
+        case TrackElemType::EndStation:
+        case TrackElemType::BeginStation:
+        case TrackElemType::MiddleStation:
             return paint_mini_helicopters_track_station;
 
-        case TRACK_ELEM_25_DEG_UP:
+        case TrackElemType::Up25:
             return paint_mini_helicopters_track_25_deg_up;
-        case TRACK_ELEM_FLAT_TO_25_DEG_UP:
+        case TrackElemType::FlatToUp25:
             return paint_mini_helicopters_track_flat_to_25_deg_up;
-        case TRACK_ELEM_25_DEG_UP_TO_FLAT:
+        case TrackElemType::Up25ToFlat:
             return paint_mini_helicopters_track_25_deg_up_to_flat;
 
-        case TRACK_ELEM_25_DEG_DOWN:
+        case TrackElemType::Down25:
             return paint_mini_helicopters_track_25_deg_down;
-        case TRACK_ELEM_FLAT_TO_25_DEG_DOWN:
+        case TrackElemType::FlatToDown25:
             return paint_mini_helicopters_track_flat_to_25_deg_down;
-        case TRACK_ELEM_25_DEG_DOWN_TO_FLAT:
+        case TrackElemType::Down25ToFlat:
             return paint_mini_helicopters_track_25_deg_down_to_flat;
 
-        case TRACK_ELEM_LEFT_QUARTER_TURN_3_TILES:
+        case TrackElemType::LeftQuarterTurn3Tiles:
             return paint_mini_helicopters_track_left_quarter_turn_3_tiles;
-        case TRACK_ELEM_RIGHT_QUARTER_TURN_3_TILES:
+        case TrackElemType::RightQuarterTurn3Tiles:
             return paint_mini_helicopters_track_right_quarter_turn_3_tiles;
 
-        case TRACK_ELEM_LEFT_QUARTER_TURN_1_TILE:
+        case TrackElemType::LeftQuarterTurn1Tile:
             return paint_mini_helicopters_track_left_quarter_turn_1_tile;
-        case TRACK_ELEM_RIGHT_QUARTER_TURN_1_TILE:
+        case TrackElemType::RightQuarterTurn1Tile:
             return paint_mini_helicopters_track_right_quarter_turn_1_tile;
     }
 

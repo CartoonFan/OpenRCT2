@@ -32,9 +32,11 @@
 #    include <openrct2/drawing/IDrawingContext.h>
 #    include <openrct2/drawing/IDrawingEngine.h>
 #    include <openrct2/drawing/LightFX.h>
-#    include <openrct2/drawing/Rain.h>
+#    include <openrct2/drawing/Weather.h>
 #    include <openrct2/interface/Screenshot.h>
 #    include <openrct2/ui/UiContext.h>
+#    include <openrct2/util/Util.h>
+#    include <openrct2/world/Climate.h>
 #    include <unordered_map>
 
 using namespace OpenRCT2;
@@ -101,7 +103,7 @@ public:
 
     void Clear(uint8_t paletteIndex) override;
     void FillRect(uint32_t colour, int32_t x, int32_t y, int32_t w, int32_t h) override;
-    void FilterRect(FILTER_PALETTE_ID palette, int32_t left, int32_t top, int32_t right, int32_t bottom) override;
+    void FilterRect(FilterPaletteID palette, int32_t left, int32_t top, int32_t right, int32_t bottom) override;
     void DrawLine(uint32_t colour, int32_t x1, int32_t y1, int32_t x2, int32_t y2) override;
     void DrawSprite(uint32_t image, int32_t x, int32_t y, uint32_t tertiaryColour) override;
     void DrawSpriteRawMasked(int32_t x, int32_t y, uint32_t maskImage, uint32_t colourImage) override;
@@ -121,22 +123,23 @@ public:
     }
 };
 
-class OpenGLRainDrawer final : public IRainDrawer
+class OpenGLWeatherDrawer final : public IWeatherDrawer
 {
     OpenGLDrawingContext* _drawingContext;
 
 public:
-    explicit OpenGLRainDrawer(OpenGLDrawingContext* drawingContext)
+    explicit OpenGLWeatherDrawer(OpenGLDrawingContext* drawingContext)
         : _drawingContext(drawingContext)
     {
     }
 
-    virtual void Draw(int32_t x, int32_t y, int32_t width, int32_t height, int32_t xStart, int32_t yStart) override
+    virtual void Draw(
+        int32_t x, int32_t y, int32_t width, int32_t height, int32_t xStart, int32_t yStart,
+        const uint8_t* weatherpattern) override
     {
-        const uint8_t* pattern = RainPattern;
-
-        uint8_t patternXSpace = *pattern++;
-        uint8_t patternYSpace = *pattern++;
+        const uint8_t* pattern = weatherpattern;
+        auto patternXSpace = *pattern++;
+        auto patternYSpace = *pattern++;
 
         uint8_t patternStartXOffset = xStart % patternXSpace;
         uint8_t patternStartYOffset = yStart % patternYSpace;
@@ -148,7 +151,7 @@ public:
 
         for (; height != 0; height--)
         {
-            uint8_t patternX = pattern[patternYPos * 2];
+            auto patternX = pattern[patternYPos * 2];
             if (patternX != 0xFF)
             {
                 uint32_t finalPixelOffset = width + pixelOffset;
@@ -156,7 +159,7 @@ public:
                 uint32_t xPixelOffset = pixelOffset;
                 xPixelOffset += (static_cast<uint8_t>(patternX - patternStartXOffset)) % patternXSpace;
 
-                uint8_t patternPixel = pattern[patternYPos * 2 + 1];
+                auto patternPixel = pattern[patternYPos * 2 + 1];
                 for (; xPixelOffset < finalPixelOffset; xPixelOffset += patternXSpace)
                 {
                     int32_t pixelX = xPixelOffset % dpi->width;
@@ -194,7 +197,7 @@ private:
     OpenGLFramebuffer* _screenFramebuffer = nullptr;
     OpenGLFramebuffer* _scaleFramebuffer = nullptr;
     OpenGLFramebuffer* _smoothScaleFramebuffer = nullptr;
-    OpenGLRainDrawer _rainDrawer;
+    OpenGLWeatherDrawer _weatherDrawer;
 
 public:
     SDL_Color Palette[256];
@@ -203,7 +206,7 @@ public:
     explicit OpenGLDrawingEngine(const std::shared_ptr<IUiContext>& uiContext)
         : _uiContext(uiContext)
         , _drawingContext(new OpenGLDrawingContext(this))
-        , _rainDrawer(_drawingContext)
+        , _weatherDrawer(_drawingContext)
     {
         _window = static_cast<SDL_Window*>(_uiContext->GetWindow());
         _bitsDPI.DrawingEngine = this;
@@ -340,10 +343,10 @@ public:
         window_update_all();
     }
 
-    void PaintRain() override
+    void PaintWeather() override
     {
         _drawingContext->SetDPI(&_bitsDPI);
-        DrawRain(&_bitsDPI, &_rainDrawer);
+        DrawWeather(&_bitsDPI, &_weatherDrawer);
     }
 
     std::string Screenshot() override
@@ -579,7 +582,7 @@ void OpenGLDrawingContext::FillRect(uint32_t colour, int32_t left, int32_t top, 
     }
 }
 
-void OpenGLDrawingContext::FilterRect(FILTER_PALETTE_ID palette, int32_t left, int32_t top, int32_t right, int32_t bottom)
+void OpenGLDrawingContext::FilterRect(FilterPaletteID palette, int32_t left, int32_t top, int32_t right, int32_t bottom)
 {
     left += _offsetX;
     top += _offsetY;
@@ -706,8 +709,8 @@ void OpenGLDrawingContext::DrawSprite(uint32_t image, int32_t x, int32_t y, uint
     bool special = false;
     if (image & IMAGE_TYPE_REMAP_2_PLUS)
     {
-        palettes.x = TextureCache::PaletteToY((image >> 19) & 0x1F);
-        palettes.y = TextureCache::PaletteToY((image >> 24) & 0x1F);
+        palettes.x = TextureCache::PaletteToY(static_cast<FilterPaletteID>((image >> 19) & 0x1F));
+        palettes.y = TextureCache::PaletteToY(static_cast<FilterPaletteID>((image >> 24) & 0x1F));
         if (image & IMAGE_TYPE_REMAP)
         {
             paletteCount = 2;
@@ -715,15 +718,15 @@ void OpenGLDrawingContext::DrawSprite(uint32_t image, int32_t x, int32_t y, uint
         else
         {
             paletteCount = 3;
-            palettes.z = TextureCache::PaletteToY(tertiaryColour & 0xFF);
+            palettes.z = TextureCache::PaletteToY(static_cast<FilterPaletteID>(tertiaryColour & 0xFF));
         }
     }
     else if ((image & IMAGE_TYPE_REMAP) || (image & IMAGE_TYPE_TRANSPARENT))
     {
         paletteCount = 1;
-        uint32_t palette = (image >> 19) & 0xFF;
+        FilterPaletteID palette = static_cast<FilterPaletteID>((image >> 19) & 0xFF);
         palettes.x = TextureCache::PaletteToY(palette);
-        if (palette == PALETTE_WATER)
+        if (palette == FilterPaletteID::PaletteWater)
         {
             special = true;
         }
@@ -961,7 +964,7 @@ void OpenGLDrawingContext::FlushRectangles()
         return;
 
     OpenGLAPI::SetTexture(0, GL_TEXTURE_2D_ARRAY, _textureCache->GetAtlasesTexture());
-    OpenGLAPI::SetTexture(1, GL_TEXTURE_RECTANGLE, _textureCache->GetPaletteTexture());
+    OpenGLAPI::SetTexture(1, GL_TEXTURE_2D, _textureCache->GetPaletteTexture());
 
     _drawRectShader->Use();
     _drawRectShader->SetInstances(_commandBuffers.rects);
@@ -995,7 +998,7 @@ void OpenGLDrawingContext::HandleTransparency()
         }
 
         OpenGLAPI::SetTexture(0, GL_TEXTURE_2D_ARRAY, _textureCache->GetAtlasesTexture());
-        OpenGLAPI::SetTexture(1, GL_TEXTURE_RECTANGLE, _textureCache->GetPaletteTexture());
+        OpenGLAPI::SetTexture(1, GL_TEXTURE_2D, _textureCache->GetPaletteTexture());
 
         _drawRectShader->Use();
         _drawRectShader->DrawInstances();

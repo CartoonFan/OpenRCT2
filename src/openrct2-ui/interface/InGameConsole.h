@@ -10,6 +10,7 @@
 #pragma once
 
 #include <openrct2/interface/InteractiveConsole.h>
+#include <openrct2/localisation/FormatCodes.h>
 #include <openrct2/world/Location.hpp>
 
 namespace OpenRCT2::Ui
@@ -35,6 +36,8 @@ namespace OpenRCT2::Ui
         utf8 _consoleHistory[CONSOLE_HISTORY_SIZE][CONSOLE_INPUT_SIZE];
         int32_t _consoleHistoryIndex = 0;
         int32_t _consoleHistoryCount = 0;
+        size_t _selectionStart = 0;
+        int32_t _caretScreenPosX = 0;
 
     public:
         InGameConsole();
@@ -50,10 +53,10 @@ namespace OpenRCT2::Ui
         void Close() override;
         void Hide() override;
         void Toggle();
-        void WriteLine(const std::string& s, uint32_t colourFormat) override;
+        void WriteLine(const std::string& s, FormatToken colourFormat) override;
 
-        void Input(CONSOLE_INPUT input);
-        void RefreshCaret();
+        void Input(ConsoleInput input);
+        void RefreshCaret(size_t position = 0);
         void Scroll(int32_t linesToScroll);
 
         void Update();

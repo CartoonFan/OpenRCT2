@@ -23,7 +23,7 @@ enum
 };
 
 static rct_widget window_title_logo_widgets[] = {
-    MakeWidget({ 0, 0 }, { WW + 1, WH + 1 }, WWT_IMGBTN, WindowColour::Primary),
+    MakeWidget({ 0, 0 }, { WW + 1, WH + 1 }, WindowWidgetType::ImgBtn, WindowColour::Primary),
     { WIDGETS_END },
 };
 
@@ -31,36 +31,11 @@ static void window_title_menu_mouseup(rct_window* w, rct_widgetindex widgetIndex
 static void window_title_logo_paint(rct_window* w, rct_drawpixelinfo* dpi);
 
 // clang-format off
-static rct_window_event_list window_title_logo_events = {
-    nullptr,
-    window_title_menu_mouseup,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    window_title_logo_paint,
-    nullptr
-};
+static rct_window_event_list window_title_logo_events([](auto& events)
+{
+    events.mouse_up = &window_title_menu_mouseup;
+    events.paint = &window_title_logo_paint;
+});
 // clang-format on
 
 /**
@@ -69,10 +44,10 @@ static rct_window_event_list window_title_logo_events = {
  */
 rct_window* window_title_logo_open()
 {
-    rct_window* window = window_create(
+    rct_window* window = WindowCreate(
         ScreenCoordsXY(0, 0), WW, WH, &window_title_logo_events, WC_TITLE_LOGO, WF_STICK_TO_BACK | WF_TRANSPARENT);
     window->widgets = window_title_logo_widgets;
-    window_init_scroll_widgets(window);
+    WindowInitScrollWidgets(window);
     window->colours[0] = TRANSLUCENT(COLOUR_GREY);
     window->colours[1] = TRANSLUCENT(COLOUR_GREY);
     window->colours[2] = TRANSLUCENT(COLOUR_GREY);

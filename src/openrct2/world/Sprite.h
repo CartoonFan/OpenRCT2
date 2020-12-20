@@ -19,13 +19,13 @@
 #define SPRITE_INDEX_NULL 0xFFFF
 #define MAX_SPRITES 10000
 
-enum SPRITE_IDENTIFIER
+enum class SpriteIdentifier : uint8_t
 {
-    SPRITE_IDENTIFIER_VEHICLE = 0,
-    SPRITE_IDENTIFIER_PEEP = 1,
-    SPRITE_IDENTIFIER_MISC = 2,
-    SPRITE_IDENTIFIER_LITTER = 3,
-    SPRITE_IDENTIFIER_NULL = 255
+    Vehicle = 0,
+    Peep = 1,
+    Misc = 2,
+    Litter = 3,
+    Null = 255
 };
 
 enum class EntityListId : uint8_t
@@ -57,9 +57,17 @@ struct Balloon : SpriteGeneric
 
 struct Duck : SpriteGeneric
 {
+    enum class DuckState : uint8_t
+    {
+        FlyToWater,
+        Swim,
+        Drink,
+        DoubleDrink,
+        FlyAway,
+    };
     int16_t target_x;
     int16_t target_y;
-    uint8_t state;
+    DuckState state;
 
     void Update();
     uint32_t GetFrameImage(int32_t direction) const;
@@ -225,8 +233,8 @@ extern uint16_t gSpriteSpatialIndex[SPATIAL_INDEX_SIZE];
 
 extern const rct_string_id litterNames[12];
 
-rct_sprite* create_sprite(SPRITE_IDENTIFIER spriteIdentifier);
-rct_sprite* create_sprite(SPRITE_IDENTIFIER spriteIdentifier, EntityListId linkedListIndex);
+rct_sprite* create_sprite(SpriteIdentifier spriteIdentifier);
+rct_sprite* create_sprite(SpriteIdentifier spriteIdentifier, EntityListId linkedListIndex);
 void reset_sprite_list();
 void reset_sprite_spatial_index();
 void sprite_clear_all_unused();
@@ -255,7 +263,6 @@ void balloon_update(Balloon* balloon);
 // Duck
 ///////////////////////////////////////////////////////////////
 void create_duck(const CoordsXY& pos);
-void duck_update(Duck* duck);
 void duck_press(Duck* duck);
 void duck_remove_all();
 
@@ -263,9 +270,7 @@ void duck_remove_all();
 // Crash particles
 ///////////////////////////////////////////////////////////////
 void crashed_vehicle_particle_create(rct_vehicle_colour colours, const CoordsXYZ& vehiclePos);
-void crashed_vehicle_particle_update(VehicleCrashParticle* particle);
 void crash_splash_create(const CoordsXYZ& splashPos);
-void crash_splash_update(CrashSplashParticle* splash);
 
 rct_sprite_checksum sprite_checksum();
 

@@ -10,8 +10,9 @@
 #include "FileClassifier.h"
 
 #include "core/Console.hpp"
-#include "core/FileStream.hpp"
+#include "core/FileStream.h"
 #include "core/Path.hpp"
+#include "core/String.hpp"
 #include "rct12/SawyerChunkReader.h"
 #include "scenario/Scenario.h"
 #include "util/SawyerCoding.h"
@@ -174,6 +175,8 @@ uint32_t get_file_extension_type(const utf8* path)
     if (String::Equals(extension, ".td4", true))
         return FILE_EXTENSION_TD4;
     if (String::Equals(extension, ".sc6", true))
+        return FILE_EXTENSION_SC6;
+    if (String::Equals(extension, ".sea", true))
         return FILE_EXTENSION_SC6;
     if (String::Equals(extension, ".sv6", true))
         return FILE_EXTENSION_SV6;

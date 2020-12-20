@@ -34,7 +34,7 @@
 #include "../util/Util.h"
 #include "Memory.hpp"
 #include "String.hpp"
-#include "StringBuilder.hpp"
+#include "StringBuilder.h"
 
 namespace String
 {
@@ -68,7 +68,7 @@ namespace String
     std::string ToUtf8(const std::wstring_view& src)
     {
 #ifdef _WIN32
-        int srcLen = (int)src.size();
+        int srcLen = static_cast<int>(src.size());
         int sizeReq = WideCharToMultiByte(CODE_PAGE::CP_UTF8, 0, src.data(), srcLen, nullptr, 0, nullptr, nullptr);
         auto result = std::string(sizeReq, 0);
         WideCharToMultiByte(CODE_PAGE::CP_UTF8, 0, src.data(), srcLen, result.data(), sizeReq, nullptr, nullptr);
@@ -96,7 +96,7 @@ namespace String
     std::wstring ToWideChar(const std::string_view& src)
     {
 #ifdef _WIN32
-        int srcLen = (int)src.size();
+        int srcLen = static_cast<int>(src.size());
         int sizeReq = MultiByteToWideChar(CODE_PAGE::CP_UTF8, 0, src.data(), srcLen, nullptr, 0);
         auto result = std::wstring(sizeReq, 0);
         MultiByteToWideChar(CODE_PAGE::CP_UTF8, 0, src.data(), srcLen, result.data(), sizeReq);
@@ -126,6 +126,23 @@ namespace String
 #endif
     }
 
+    std::string_view ToStringView(const char* ch, size_t maxLen)
+    {
+        size_t len{};
+        for (size_t i = 0; i < maxLen; i++)
+        {
+            if (ch[i] == '\0')
+            {
+                break;
+            }
+            else
+            {
+                len++;
+            }
+        }
+        return std::string_view(ch, len);
+    }
+
     bool IsNullOrEmpty(const utf8* str)
     {
         return str == nullptr || str[0] == '\0';
@@ -151,6 +168,32 @@ namespace String
         else
         {
             return strcmp(a, b);
+        }
+    }
+
+    bool Equals(const std::string_view a, const std::string_view b, bool ignoreCase)
+    {
+        if (ignoreCase)
+        {
+            if (a.size() == b.size())
+            {
+                for (size_t i = 0; i < a.size(); i++)
+                {
+                    if (tolower(a[i]) != tolower(b[i]))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else
+        {
+            return a == b;
         }
     }
 
@@ -483,6 +526,13 @@ namespace String
         return utf8_write_codepoint(dst, codepoint);
     }
 
+    void AppendCodepoint(std::string& str, codepoint_t codepoint)
+    {
+        char buffer[8]{};
+        utf8_write_codepoint(buffer, codepoint);
+        str.append(buffer);
+    }
+
     bool IsWhiteSpace(codepoint_t codepoint)
     {
         // 0x3000 is the 'ideographic space', a 'fullwidth' character used in CJK languages.
@@ -667,7 +717,7 @@ namespace String
         // Convert from source code page to UTF-16
         std::wstring u16;
         {
-            int srcLen = (int)src.size();
+            int srcLen = static_cast<int>(src.size());
             int sizeReq = MultiByteToWideChar(srcCodePage, 0, src.data(), srcLen, nullptr, 0);
             u16 = std::wstring(sizeReq, 0);
             MultiByteToWideChar(srcCodePage, 0, src.data(), srcLen, u16.data(), sizeReq);
@@ -676,7 +726,7 @@ namespace String
         // Convert from UTF-16 to destination code page
         std::string dst;
         {
-            int srcLen = (int)u16.size();
+            int srcLen = static_cast<int>(u16.size());
             int sizeReq = WideCharToMultiByte(dstCodePage, 0, u16.data(), srcLen, nullptr, 0, nullptr, nullptr);
             dst = std::string(sizeReq, 0);
             WideCharToMultiByte(dstCodePage, 0, u16.data(), srcLen, dst.data(), sizeReq, nullptr, nullptr);
@@ -709,16 +759,16 @@ namespace String
 
         // Measure how long the destination needs to be
         auto requiredSize = LCMapStringEx(
-            LOCALE_NAME_USER_DEFAULT, LCMAP_UPPERCASE | LCMAP_LINGUISTIC_CASING, srcW.c_str(), (int)srcW.length(), nullptr, 0,
-            nullptr, nullptr, 0);
+            LOCALE_NAME_USER_DEFAULT, LCMAP_UPPERCASE | LCMAP_LINGUISTIC_CASING, srcW.c_str(), static_cast<int>(srcW.length()),
+            nullptr, 0, nullptr, nullptr, 0);
 
         auto dstW = std::wstring();
         dstW.resize(requiredSize);
 
         // Transform the string
         auto result = LCMapStringEx(
-            LOCALE_NAME_USER_DEFAULT, LCMAP_UPPERCASE | LCMAP_LINGUISTIC_CASING, srcW.c_str(), (int)srcW.length(), dstW.data(),
-            (int)dstW.length(), nullptr, nullptr, 0);
+            LOCALE_NAME_USER_DEFAULT, LCMAP_UPPERCASE | LCMAP_LINGUISTIC_CASING, srcW.c_str(), static_cast<int>(srcW.length()),
+            dstW.data(), static_cast<int>(dstW.length()), nullptr, nullptr, 0);
         if (result == 0)
         {
             // Check the error
@@ -731,8 +781,9 @@ namespace String
             return String::ToUtf8(dstW);
         }
 #    else
-        log_warning("String::ToUpper not supported");
-        return std::string(src);
+        std::string dst = std::string(src);
+        std::transform(dst.begin(), dst.end(), dst.begin(), [](unsigned char c) { return std::toupper(c); });
+        return dst;
 #    endif
 #else
         icu::UnicodeString str = icu::UnicodeString::fromUTF8(std::string(src));
@@ -744,16 +795,9 @@ namespace String
         return res;
 #endif
     }
-
-    bool ContainsColourCode(const std::string& string)
-    {
-        for (unsigned char c : string)
-        {
-            if (c >= FORMAT_COLOUR_CODE_START && c <= FORMAT_COLOUR_CODE_END)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
 } // namespace String
+
+char32_t CodepointView::iterator::GetNextCodepoint(const char* ch, const char** next)
+{
+    return utf8_get_next(ch, next);
+}

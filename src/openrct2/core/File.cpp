@@ -16,7 +16,7 @@
 #include "../platform/Platform2.h"
 #include "../util/Util.h"
 #include "File.h"
-#include "FileStream.hpp"
+#include "FileStream.h"
 #include "String.hpp"
 
 #include <fstream>
@@ -131,7 +131,8 @@ namespace File
             FILETIME ftCreate, ftAccess, ftWrite;
             if (GetFileTime(hFile, &ftCreate, &ftAccess, &ftWrite))
             {
-                lastModified = ((uint64_t)ftWrite.dwHighDateTime << 32ULL) | (uint64_t)ftWrite.dwLowDateTime;
+                lastModified = (static_cast<uint64_t>(ftWrite.dwHighDateTime) << 32ULL)
+                    | static_cast<uint64_t>(ftWrite.dwLowDateTime);
             }
             CloseHandle(hFile);
         }

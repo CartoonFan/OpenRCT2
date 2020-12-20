@@ -134,7 +134,7 @@ public:
 
     void Draw(rct_drawpixelinfo* dpi) override
     {
-        auto bgColour = theme_get_colour(WC_CHAT, 0);
+        auto bgColour = ThemeGetColour(WC_CHAT, 0);
         chat_draw(dpi, bgColour);
         _inGameConsole.Draw(dpi);
     }
@@ -231,12 +231,12 @@ public:
         return _keysPressed;
     }
 
-    CURSOR_ID GetCursor() override
+    CursorID GetCursor() override
     {
         return _cursorRepository.GetCurrentCursor();
     }
 
-    void SetCursor(CURSOR_ID cursor) override
+    void SetCursor(CursorID cursor) override
     {
         _cursorRepository.SetCurrentCursor(cursor);
     }
@@ -280,7 +280,7 @@ public:
         return std::make_shared<DrawingEngineFactory>();
     }
 
-    void DrawRainAnimation(IRainDrawer* rainDrawer, rct_drawpixelinfo* dpi, DrawRainFunc drawFunc) override
+    void DrawWeatherAnimation(IWeatherDrawer* weatherDrawer, rct_drawpixelinfo* dpi, DrawWeatherFunc drawFunc) override
     {
         int32_t left = dpi->x;
         int32_t right = left + dpi->width;
@@ -289,7 +289,7 @@ public:
 
         for (auto& w : g_window_list)
         {
-            DrawRainWindow(rainDrawer, w.get(), left, right, top, bottom, drawFunc);
+            DrawWeatherWindow(weatherDrawer, w.get(), left, right, top, bottom, drawFunc);
         }
     }
 
@@ -401,7 +401,7 @@ public:
                     switch (e.button.button)
                     {
                         case SDL_BUTTON_LEFT:
-                            store_mouse_input(MOUSE_STATE_LEFT_PRESS, mousePos);
+                            StoreMouseInput(MouseState::LeftPress, mousePos);
                             _cursorState.left = CURSOR_PRESSED;
                             _cursorState.old = 1;
                             break;
@@ -409,7 +409,7 @@ public:
                             _cursorState.middle = CURSOR_PRESSED;
                             break;
                         case SDL_BUTTON_RIGHT:
-                            store_mouse_input(MOUSE_STATE_RIGHT_PRESS, mousePos);
+                            StoreMouseInput(MouseState::RightPress, mousePos);
                             _cursorState.right = CURSOR_PRESSED;
                             _cursorState.old = 2;
                             break;
@@ -428,7 +428,7 @@ public:
                     switch (e.button.button)
                     {
                         case SDL_BUTTON_LEFT:
-                            store_mouse_input(MOUSE_STATE_LEFT_RELEASE, mousePos);
+                            StoreMouseInput(MouseState::LeftRelease, mousePos);
                             _cursorState.left = CURSOR_RELEASED;
                             _cursorState.old = 3;
                             break;
@@ -436,7 +436,7 @@ public:
                             _cursorState.middle = CURSOR_RELEASED;
                             break;
                         case SDL_BUTTON_RIGHT:
-                            store_mouse_input(MOUSE_STATE_RIGHT_RELEASE, mousePos);
+                            StoreMouseInput(MouseState::RightRelease, mousePos);
                             _cursorState.right = CURSOR_RELEASED;
                             _cursorState.old = 4;
                             break;
@@ -461,13 +461,13 @@ public:
 
                     if (_cursorState.touchIsDouble)
                     {
-                        store_mouse_input(MOUSE_STATE_RIGHT_PRESS, fingerPos);
+                        StoreMouseInput(MouseState::RightPress, fingerPos);
                         _cursorState.right = CURSOR_PRESSED;
                         _cursorState.old = 2;
                     }
                     else
                     {
-                        store_mouse_input(MOUSE_STATE_LEFT_PRESS, fingerPos);
+                        StoreMouseInput(MouseState::LeftPress, fingerPos);
                         _cursorState.left = CURSOR_PRESSED;
                         _cursorState.old = 1;
                     }
@@ -482,13 +482,13 @@ public:
 
                     if (_cursorState.touchIsDouble)
                     {
-                        store_mouse_input(MOUSE_STATE_RIGHT_RELEASE, fingerPos);
+                        StoreMouseInput(MouseState::RightRelease, fingerPos);
                         _cursorState.right = CURSOR_RELEASED;
                         _cursorState.old = 4;
                     }
                     else
                     {
-                        store_mouse_input(MOUSE_STATE_LEFT_RELEASE, fingerPos);
+                        StoreMouseInput(MouseState::LeftRelease, fingerPos);
                         _cursorState.left = CURSOR_RELEASED;
                         _cursorState.old = 3;
                     }
@@ -624,6 +624,11 @@ public:
         return _platformUiContext->ShowDirectoryDialog(_window, title);
     }
 
+    bool HasFilePicker() const override
+    {
+        return _platformUiContext->HasFilePicker();
+    }
+
     IWindowManager* GetWindowManager() override
     {
         return _windowManager;
@@ -658,7 +663,7 @@ private:
 
         // Create window in window first rather than fullscreen so we have the display the window is on first
         uint32_t flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
-        if (gConfigGeneral.drawing_engine == DRAWING_ENGINE_OPENGL)
+        if (gConfigGeneral.drawing_engine == DrawingEngine::OpenGL)
         {
             flags |= SDL_WINDOW_OPENGL;
         }
@@ -669,6 +674,8 @@ private:
             SDLException::Throw("SDL_CreateWindow(...)");
         }
 
+        ApplyScreenSaverLockSetting();
+
         SDL_SetWindowMinimumSize(_window, 720, 480);
         SetCursorTrap(gConfigGeneral.trap_cursor);
         _platformUiContext->SetWindowIcon(_window);
@@ -678,8 +685,13 @@ private:
         OnResize(width, height);
 
         UpdateFullscreenResolutions();
-        SetFullscreenMode(static_cast<FULLSCREEN_MODE>(gConfigGeneral.fullscreen_mode));
 
+        // Fix #4022: Force Mac to windowed to avoid cursor offset on launch issue
+#ifdef __MACOSX__
+        gConfigGeneral.fullscreen_mode = static_cast<int32_t>(OpenRCT2::Ui::FULLSCREEN_MODE::WINDOWED);
+#else
+        SetFullscreenMode(static_cast<FULLSCREEN_MODE>(gConfigGeneral.fullscreen_mode));
+#endif
         TriggerResize();
     }
 
@@ -758,7 +770,7 @@ private:
         resolutions.erase(last, resolutions.end());
 
         // Update config fullscreen resolution if not set
-        if (gConfigGeneral.fullscreen_width == -1 || gConfigGeneral.fullscreen_height == -1)
+        if (!resolutions.empty() && (gConfigGeneral.fullscreen_width == -1 || gConfigGeneral.fullscreen_height == -1))
         {
             gConfigGeneral.fullscreen_width = resolutions.back().Width;
             gConfigGeneral.fullscreen_height = resolutions.back().Height;
@@ -797,9 +809,9 @@ private:
         return SDL_GetWindowFlags(_window);
     }
 
-    static void DrawRainWindow(
-        IRainDrawer* rainDrawer, rct_window* original_w, int16_t left, int16_t right, int16_t top, int16_t bottom,
-        DrawRainFunc drawFunc)
+    static void DrawWeatherWindow(
+        IWeatherDrawer* weatherDrawer, rct_window* original_w, int16_t left, int16_t right, int16_t top, int16_t bottom,
+        DrawWeatherFunc drawFunc)
     {
         rct_window* w{};
         auto itStart = window_get_iterator(original_w);
@@ -807,7 +819,7 @@ private:
         {
             if (it == g_window_list.end())
             {
-                // Loop ended, draw rain for original_w
+                // Loop ended, draw weather for original_w
                 auto vp = original_w->viewport;
                 if (vp != nullptr)
                 {
@@ -819,7 +831,7 @@ private:
                     {
                         auto width = right - left;
                         auto height = bottom - top;
-                        drawFunc(rainDrawer, left, top, width, height);
+                        drawFunc(weatherDrawer, left, top, width, height);
                     }
                 }
                 return;
@@ -841,39 +853,39 @@ private:
                 break;
             }
 
-            DrawRainWindow(rainDrawer, original_w, left, w->windowPos.x, top, bottom, drawFunc);
+            DrawWeatherWindow(weatherDrawer, original_w, left, w->windowPos.x, top, bottom, drawFunc);
 
             left = w->windowPos.x;
-            DrawRainWindow(rainDrawer, original_w, left, right, top, bottom, drawFunc);
+            DrawWeatherWindow(weatherDrawer, original_w, left, right, top, bottom, drawFunc);
             return;
         }
 
         int16_t w_right = RCT_WINDOW_RIGHT(w);
         if (right > w_right)
         {
-            DrawRainWindow(rainDrawer, original_w, left, w_right, top, bottom, drawFunc);
+            DrawWeatherWindow(weatherDrawer, original_w, left, w_right, top, bottom, drawFunc);
 
             left = w_right;
-            DrawRainWindow(rainDrawer, original_w, left, right, top, bottom, drawFunc);
+            DrawWeatherWindow(weatherDrawer, original_w, left, right, top, bottom, drawFunc);
             return;
         }
 
         if (top < w->windowPos.y)
         {
-            DrawRainWindow(rainDrawer, original_w, left, right, top, w->windowPos.y, drawFunc);
+            DrawWeatherWindow(weatherDrawer, original_w, left, right, top, w->windowPos.y, drawFunc);
 
             top = w->windowPos.y;
-            DrawRainWindow(rainDrawer, original_w, left, right, top, bottom, drawFunc);
+            DrawWeatherWindow(weatherDrawer, original_w, left, right, top, bottom, drawFunc);
             return;
         }
 
         int16_t w_bottom = RCT_WINDOW_BOTTOM(w);
         if (bottom > w_bottom)
         {
-            DrawRainWindow(rainDrawer, original_w, left, right, top, w_bottom, drawFunc);
+            DrawWeatherWindow(weatherDrawer, original_w, left, right, top, w_bottom, drawFunc);
 
             top = w_bottom;
-            DrawRainWindow(rainDrawer, original_w, left, right, top, bottom, drawFunc);
+            DrawWeatherWindow(weatherDrawer, original_w, left, right, top, bottom, drawFunc);
             return;
         }
     }

@@ -43,7 +43,7 @@ static void paint_3d_cinema_structure(
     }
 
     uint32_t imageId = (rideEntry->vehicles[0].base_image_id + direction) | imageColourFlags;
-    sub_98197C(session, imageId, xOffset, yOffset, 24, 24, 47, height + 3, xOffset + 16, yOffset + 16, height + 3);
+    PaintAddImageAsParent(session, imageId, xOffset, yOffset, 24, 24, 47, height + 3, xOffset + 16, yOffset + 16, height + 3);
 
     session->CurrentlyDrawnItem = savedTileElement;
     session->InteractionType = VIEWPORT_INTERACTION_ITEM_RIDE;
@@ -121,7 +121,7 @@ static void paint_3d_cinema(
 }
 
 /* 0x0076554C */
-TRACK_PAINT_FUNCTION get_track_paint_function_3d_cinema(int32_t trackType, int32_t direction)
+TRACK_PAINT_FUNCTION get_track_paint_function_3d_cinema(int32_t trackType)
 {
     if (trackType != FLAT_TRACK_ELEM_3_X_3)
     {

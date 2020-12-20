@@ -10,17 +10,18 @@
 #pragma once
 
 #include "../common.h"
+#include "./Weather.h"
 
 #include <memory>
 #include <string>
 
-enum DRAWING_ENGINE
+enum class DrawingEngine : int32_t
 {
-    DRAWING_ENGINE_NONE = -1,
-    DRAWING_ENGINE_SOFTWARE,
-    DRAWING_ENGINE_SOFTWARE_WITH_HARDWARE_DISPLAY,
-    DRAWING_ENGINE_OPENGL,
-    DRAWING_ENGINE_COUNT,
+    None = -1,
+    Software,
+    SoftwareWithHardwareDisplay,
+    OpenGL,
+    Count,
 };
 
 enum DRAWING_ENGINE_FLAGS
@@ -43,7 +44,6 @@ namespace OpenRCT2::Ui
 
 namespace OpenRCT2::Drawing
 {
-    enum class DRAWING_ENGINE_TYPE;
     struct IDrawingContext;
 
     struct IDrawingEngine
@@ -63,7 +63,7 @@ namespace OpenRCT2::Drawing
         virtual void EndDraw() abstract;
         virtual void PaintWindows() abstract;
         virtual void UpdateWindows() abstract;
-        virtual void PaintRain() abstract;
+        virtual void PaintWeather() abstract;
         virtual void CopyRect(int32_t x, int32_t y, int32_t width, int32_t height, int32_t dx, int32_t dy) abstract;
         virtual std::string Screenshot() abstract;
 
@@ -81,14 +81,16 @@ namespace OpenRCT2::Drawing
         {
         }
         virtual std::unique_ptr<IDrawingEngine> Create(
-            DRAWING_ENGINE_TYPE type, const std::shared_ptr<OpenRCT2::Ui::IUiContext>& uiContext) abstract;
+            DrawingEngine type, const std::shared_ptr<OpenRCT2::Ui::IUiContext>& uiContext) abstract;
     };
 
-    struct IRainDrawer
+    struct IWeatherDrawer
     {
-        virtual ~IRainDrawer()
+        virtual ~IWeatherDrawer()
         {
         }
-        virtual void Draw(int32_t x, int32_t y, int32_t width, int32_t height, int32_t xStart, int32_t yStart) abstract;
+        virtual void Draw(
+            int32_t x, int32_t y, int32_t width, int32_t height, int32_t xStart, int32_t yStart,
+            const uint8_t* weatherpattern) abstract;
     };
 } // namespace OpenRCT2::Drawing

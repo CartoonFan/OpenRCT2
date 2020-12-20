@@ -15,6 +15,7 @@
 #define MAX_SERVER_DESCRIPTION_LENGTH 256
 
 #include "../common.h"
+#include "../core/JsonFwd.hpp"
 #include "../localisation/StringIds.h"
 #include "NetworkTypes.h"
 
@@ -22,13 +23,16 @@
 #include <string>
 #include <vector>
 
-struct json_t;
 struct GameAction;
 struct Peep;
 struct CoordsXYZ;
-class GameActionResult;
+namespace GameActions
+{
+    class Result;
+}
 enum class ModifyGroupType : uint8_t;
 enum class PermissionState : uint8_t;
+enum class NetworkPermission : uint32_t;
 
 namespace OpenRCT2
 {
@@ -53,7 +57,7 @@ void network_update();
 void network_process_pending();
 void network_flush();
 
-int32_t network_get_authstatus();
+NetworkAuth network_get_authstatus();
 uint32_t network_get_server_tick();
 uint8_t network_get_current_player_id();
 int32_t network_get_num_players();
@@ -78,16 +82,16 @@ int32_t network_get_current_player_group_index();
 uint8_t network_get_group_id(uint32_t index);
 int32_t network_get_num_groups();
 const char* network_get_group_name(uint32_t index);
-std::unique_ptr<GameActionResult> network_set_player_group(
+std::unique_ptr<GameActions::Result> network_set_player_group(
     NetworkPlayerId_t actionPlayerId, NetworkPlayerId_t playerId, uint8_t groupId, bool isExecuting);
-std::unique_ptr<GameActionResult> network_modify_groups(
+std::unique_ptr<GameActions::Result> network_modify_groups(
     NetworkPlayerId_t actionPlayerId, ModifyGroupType type, uint8_t groupId, const std::string& name, uint32_t permissionIndex,
     PermissionState permissionState, bool isExecuting);
-std::unique_ptr<GameActionResult> network_kick_player(NetworkPlayerId_t playerId, bool isExecuting);
+std::unique_ptr<GameActions::Result> network_kick_player(NetworkPlayerId_t playerId, bool isExecuting);
 uint8_t network_get_default_group();
 int32_t network_get_num_actions();
 rct_string_id network_get_action_name_string_id(uint32_t index);
-int32_t network_can_perform_action(uint32_t groupindex, uint32_t index);
+int32_t network_can_perform_action(uint32_t groupindex, NetworkPermission index);
 int32_t network_can_perform_command(uint32_t groupindex, int32_t index);
 void network_set_pickup_peep(uint8_t playerid, Peep* peep);
 Peep* network_get_pickup_peep(uint8_t playerid);
@@ -116,4 +120,4 @@ std::string network_get_version();
 
 NetworkStats_t network_get_stats();
 NetworkServerState_t network_get_server_state();
-json_t* network_get_server_info_as_json();
+json_t network_get_server_info_as_json();

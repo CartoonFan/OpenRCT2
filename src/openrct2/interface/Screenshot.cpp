@@ -11,9 +11,10 @@
 
 #include "../Context.h"
 #include "../Game.h"
+#include "../GameState.h"
 #include "../Intro.h"
 #include "../OpenRCT2.h"
-#include "../actions/SetCheatAction.hpp"
+#include "../actions/SetCheatAction.h"
 #include "../audio/audio.h"
 #include "../core/Console.hpp"
 #include "../core/Imaging.h"
@@ -75,19 +76,19 @@ void screenshot_check()
         gScreenshotCountdown--;
         if (gScreenshotCountdown == 0)
         {
-            // update_rain_animation();
+            // update_weather_animation();
             std::string screenshotPath = screenshot_dump();
 
             if (!screenshotPath.empty())
             {
-                audio_play_sound(SoundId::WindowOpen, 100, context_get_width() / 2);
+                OpenRCT2::Audio::Play(OpenRCT2::Audio::SoundId::WindowOpen, 100, context_get_width() / 2);
             }
             else
             {
-                context_show_error(STR_SCREENSHOT_FAILED, STR_NONE);
+                context_show_error(STR_SCREENSHOT_FAILED, STR_NONE, {});
             }
 
-            // redraw_rain();
+            // redraw_weather();
         }
     }
 }
@@ -414,15 +415,15 @@ void screenshot_giant()
         WriteDpiToFile(path->c_str(), &dpi, gPalette);
 
         // Show user that screenshot saved successfully
-        auto ft = Formatter::Common();
+        Formatter ft;
         ft.Add<rct_string_id>(STR_STRING);
         ft.Add<char*>(path_get_filename(path->c_str()));
-        context_show_error(STR_SCREENSHOT_SAVED_AS, STR_NONE);
+        context_show_error(STR_SCREENSHOT_SAVED_AS, STR_NONE, ft);
     }
     catch (const std::exception& e)
     {
         log_error("%s", e.what());
-        context_show_error(STR_SCREENSHOT_FAILED, STR_NONE);
+        context_show_error(STR_SCREENSHOT_FAILED, STR_NONE, {});
     }
 
     ReleaseDPI(dpi);
@@ -495,7 +496,7 @@ static void benchgfx_render_screenshots(const char* inputPath, std::unique_ptr<I
         }
 
         const double average = totalTime / static_cast<double>(totalRenderCount);
-        const auto engineStringId = DrawingEngineStringIds[DRAWING_ENGINE_SOFTWARE];
+        const auto engineStringId = DrawingEngineStringIds[EnumValue(DrawingEngine::Software)];
         const auto engineName = format_string(engineStringId, nullptr);
         std::printf("Engine: %s\n", engineName.c_str());
         std::printf("Render Count: %u\n", totalRenderCount);
@@ -550,15 +551,9 @@ int32_t cmdline_for_gfxbench(const char** argv, int32_t argc)
 
 static void ApplyOptions(const ScreenshotOptions* options, rct_viewport& viewport)
 {
-    if (options->weather != 0)
+    if (options->weather != WeatherType::Sunny && options->weather != WeatherType::Count)
     {
-        if (options->weather < 1 || options->weather > 6)
-        {
-            throw std::runtime_error("Weather can only be set to an integer value from 1 till 6.");
-        }
-
-        uint8_t customWeather = options->weather - 1;
-        climate_force_weather(customWeather);
+        climate_force_weather(WeatherType{ static_cast<uint8_t>(EnumValue(options->weather) - 1) });
     }
 
     if (options->hide_guests)

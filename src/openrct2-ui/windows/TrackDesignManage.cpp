@@ -36,15 +36,15 @@ enum {
 
 static rct_widget window_track_manage_widgets[] = {
     WINDOW_SHIM(WINDOW_TITLE, WW, WH),
-    MakeWidget({ 10, 24}, {110, 12}, WWT_BUTTON, WindowColour::Primary, STR_TRACK_MANAGE_RENAME),
-    MakeWidget({130, 24}, {110, 12}, WWT_BUTTON, WindowColour::Primary, STR_TRACK_MANAGE_DELETE),
+    MakeWidget({ 10, 24}, {110, 12}, WindowWidgetType::Button, WindowColour::Primary, STR_TRACK_MANAGE_RENAME),
+    MakeWidget({130, 24}, {110, 12}, WindowWidgetType::Button, WindowColour::Primary, STR_TRACK_MANAGE_DELETE),
     { WIDGETS_END }
 };
 
 static rct_widget window_track_delete_prompt_widgets[] = {
     WINDOW_SHIM(WINDOW_TITLE, WW, WH),
-    MakeWidget({ 10, 54}, {110, 12}, WWT_BUTTON, WindowColour::Primary, STR_TRACK_MANAGE_DELETE),
-    MakeWidget({130, 54}, {110, 12}, WWT_BUTTON, WindowColour::Primary, STR_CANCEL             ),
+    MakeWidget({ 10, 54}, {110, 12}, WindowWidgetType::Button, WindowColour::Primary, STR_TRACK_MANAGE_DELETE),
+    MakeWidget({130, 54}, {110, 12}, WindowWidgetType::Button, WindowColour::Primary, STR_CANCEL             ),
     { WIDGETS_END }
 };
 
@@ -61,68 +61,20 @@ static void window_track_delete_prompt_mouseup(rct_window *w, rct_widgetindex wi
 static void window_track_delete_prompt_paint(rct_window *w, rct_drawpixelinfo *dpi);
 
 // 0x009940EC
-static rct_window_event_list window_track_manage_events = {
-    window_track_manage_close,
-    window_track_manage_mouseup,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    window_track_manage_textinput,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    window_track_manage_paint,
-    nullptr
-};
+static rct_window_event_list window_track_manage_events([](auto& events)
+{
+    events.close = &window_track_manage_close;
+    events.mouse_up = &window_track_manage_mouseup;
+    events.text_input = &window_track_manage_textinput;
+    events.paint = &window_track_manage_paint;
+});
 
 // 0x0099415C
-static rct_window_event_list window_track_delete_prompt_events = {
-    nullptr,
-    window_track_delete_prompt_mouseup,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    window_track_delete_prompt_paint,
-    nullptr
-};
+static rct_window_event_list window_track_delete_prompt_events([](auto& events)
+{
+    events.mouse_up = &window_track_delete_prompt_mouseup;
+    events.paint = &window_track_delete_prompt_paint;
+});
 // clang-format on
 
 #pragma endregion
@@ -140,11 +92,11 @@ rct_window* window_track_manage_open(track_design_file_ref* tdFileRef)
 {
     window_close_by_class(WC_MANAGE_TRACK_DESIGN);
 
-    rct_window* w = window_create_centred(
+    rct_window* w = WindowCreateCentred(
         250, 44, &window_track_manage_events, WC_MANAGE_TRACK_DESIGN, WF_STICK_TO_FRONT | WF_TRANSPARENT);
     w->widgets = window_track_manage_widgets;
     w->enabled_widgets = (1 << WIDX_CLOSE) | (1 << WIDX_RENAME) | (1 << WIDX_DELETE);
-    window_init_scroll_widgets(w);
+    WindowInitScrollWidgets(w);
 
     rct_window* trackDesignListWindow = window_find_by_class(WC_TRACK_DESIGN_LIST);
     if (trackDesignListWindow != nullptr)
@@ -205,13 +157,13 @@ static void window_track_manage_textinput(rct_window* w, rct_widgetindex widgetI
 
     if (str_is_null_or_empty(text))
     {
-        context_show_error(STR_CANT_RENAME_TRACK_DESIGN, STR_NONE);
+        context_show_error(STR_CANT_RENAME_TRACK_DESIGN, STR_NONE, {});
         return;
     }
 
     if (!filename_valid_characters(text))
     {
-        context_show_error(STR_CANT_RENAME_TRACK_DESIGN, STR_NEW_NAME_CONTAINS_INVALID_CHARACTERS);
+        context_show_error(STR_CANT_RENAME_TRACK_DESIGN, STR_NEW_NAME_CONTAINS_INVALID_CHARACTERS, {});
         return;
     }
 
@@ -223,7 +175,7 @@ static void window_track_manage_textinput(rct_window* w, rct_widgetindex widgetI
     }
     else
     {
-        context_show_error(STR_CANT_RENAME_TRACK_DESIGN, STR_ANOTHER_FILE_EXISTS_WITH_NAME_OR_FILE_IS_WRITE_PROTECTED);
+        context_show_error(STR_CANT_RENAME_TRACK_DESIGN, STR_ANOTHER_FILE_EXISTS_WITH_NAME_OR_FILE_IS_WRITE_PROTECTED, {});
     }
 }
 
@@ -234,7 +186,7 @@ static void window_track_manage_textinput(rct_window* w, rct_widgetindex widgetI
 static void window_track_manage_paint(rct_window* w, rct_drawpixelinfo* dpi)
 {
     Formatter::Common().Add<char*>(_trackDesignFileReference->name);
-    window_draw_widgets(w, dpi);
+    WindowDrawWidgets(w, dpi);
 }
 
 /**
@@ -247,12 +199,12 @@ static void window_track_delete_prompt_open()
 
     int32_t screenWidth = context_get_width();
     int32_t screenHeight = context_get_height();
-    rct_window* w = window_create(
+    rct_window* w = WindowCreate(
         ScreenCoordsXY(std::max(TOP_TOOLBAR_HEIGHT + 1, (screenWidth - 250) / 2), (screenHeight - 44) / 2), 250, 74,
         &window_track_delete_prompt_events, WC_TRACK_DELETE_PROMPT, WF_STICK_TO_FRONT);
     w->widgets = window_track_delete_prompt_widgets;
     w->enabled_widgets = (1 << WIDX_CLOSE) | (1 << WIDX_RENAME) | (1 << WIDX_DELETE);
-    window_init_scroll_widgets(w);
+    WindowInitScrollWidgets(w);
     w->flags |= WF_TRANSPARENT;
 }
 
@@ -277,7 +229,7 @@ static void window_track_delete_prompt_mouseup(rct_window* w, rct_widgetindex wi
             }
             else
             {
-                context_show_error(STR_CANT_DELETE_TRACK_DESIGN, STR_FILE_IS_WRITE_PROTECTED_OR_LOCKED);
+                context_show_error(STR_CANT_DELETE_TRACK_DESIGN, STR_FILE_IS_WRITE_PROTECTED_OR_LOCKED, {});
             }
             break;
     }
@@ -289,7 +241,7 @@ static void window_track_delete_prompt_mouseup(rct_window* w, rct_widgetindex wi
  */
 static void window_track_delete_prompt_paint(rct_window* w, rct_drawpixelinfo* dpi)
 {
-    window_draw_widgets(w, dpi);
+    WindowDrawWidgets(w, dpi);
 
     gfx_draw_string_centred_wrapped(
         dpi, &_trackDesignFileReference->name, { w->windowPos.x + 125, w->windowPos.y + 28 }, 246,

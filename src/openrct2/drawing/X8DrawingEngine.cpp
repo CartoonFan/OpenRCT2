@@ -17,11 +17,13 @@
 #include "../interface/Viewport.h"
 #include "../interface/Window.h"
 #include "../ui/UiContext.h"
+#include "../util/Util.h"
+#include "../world/Climate.h"
 #include "Drawing.h"
 #include "IDrawingContext.h"
 #include "IDrawingEngine.h"
 #include "LightFX.h"
-#include "Rain.h"
+#include "Weather.h"
 
 #include <algorithm>
 #include <cstring>
@@ -30,26 +32,27 @@ using namespace OpenRCT2;
 using namespace OpenRCT2::Drawing;
 using namespace OpenRCT2::Ui;
 
-X8RainDrawer::X8RainDrawer()
+X8WeatherDrawer::X8WeatherDrawer()
 {
-    _rainPixels = new RainPixel[_rainPixelsCapacity];
+    _weatherPixels = new WeatherPixel[_weatherPixelsCapacity];
 }
 
-X8RainDrawer::~X8RainDrawer()
+X8WeatherDrawer::~X8WeatherDrawer()
 {
-    delete[] _rainPixels;
+    delete[] _weatherPixels;
 }
 
-void X8RainDrawer::SetDPI(rct_drawpixelinfo* dpi)
+void X8WeatherDrawer::SetDPI(rct_drawpixelinfo* dpi)
 {
     _screenDPI = dpi;
 }
 
-void X8RainDrawer::Draw(int32_t x, int32_t y, int32_t width, int32_t height, int32_t xStart, int32_t yStart)
+void X8WeatherDrawer::Draw(
+    int32_t x, int32_t y, int32_t width, int32_t height, int32_t xStart, int32_t yStart, const uint8_t* weatherpattern)
 {
-    const uint8_t* pattern = RainPattern;
-    uint8_t patternXSpace = *pattern++;
-    uint8_t patternYSpace = *pattern++;
+    const uint8_t* pattern = weatherpattern;
+    auto patternXSpace = *pattern++;
+    auto patternYSpace = *pattern++;
 
     uint8_t patternStartXOffset = xStart % patternXSpace;
     uint8_t patternStartYOffset = yStart % patternYSpace;
@@ -60,25 +63,25 @@ void X8RainDrawer::Draw(int32_t x, int32_t y, int32_t width, int32_t height, int
     uint8_t* screenBits = _screenDPI->bits;
 
     // Stores the colours of changed pixels
-    RainPixel* newPixels = &_rainPixels[_rainPixelsCount];
+    WeatherPixel* newPixels = &_weatherPixels[_weatherPixelsCount];
     for (; height != 0; height--)
     {
-        uint8_t patternX = pattern[patternYPos * 2];
+        auto patternX = pattern[patternYPos * 2];
         if (patternX != 0xFF)
         {
-            if (_rainPixelsCount < (_rainPixelsCapacity - static_cast<uint32_t>(width)))
+            if (_weatherPixelsCount < (_weatherPixelsCapacity - static_cast<uint32_t>(width)))
             {
                 uint32_t finalPixelOffset = width + pixelOffset;
 
                 uint32_t xPixelOffset = pixelOffset;
                 xPixelOffset += (static_cast<uint8_t>(patternX - patternStartXOffset)) % patternXSpace;
 
-                uint8_t patternPixel = pattern[patternYPos * 2 + 1];
+                auto patternPixel = pattern[patternYPos * 2 + 1];
                 for (; xPixelOffset < finalPixelOffset; xPixelOffset += patternXSpace)
                 {
                     uint8_t current_pixel = screenBits[xPixelOffset];
                     screenBits[xPixelOffset] = patternPixel;
-                    _rainPixelsCount++;
+                    _weatherPixelsCount++;
 
                     // Store colour and position
                     *newPixels++ = { xPixelOffset, current_pixel };
@@ -92,24 +95,24 @@ void X8RainDrawer::Draw(int32_t x, int32_t y, int32_t width, int32_t height, int
     }
 }
 
-void X8RainDrawer::Restore()
+void X8WeatherDrawer::Restore()
 {
-    if (_rainPixelsCount > 0)
+    if (_weatherPixelsCount > 0)
     {
         uint32_t numPixels = (_screenDPI->width + _screenDPI->pitch) * _screenDPI->height;
         uint8_t* bits = _screenDPI->bits;
-        for (uint32_t i = 0; i < _rainPixelsCount; i++)
+        for (uint32_t i = 0; i < _weatherPixelsCount; i++)
         {
-            RainPixel rainPixel = _rainPixels[i];
-            if (rainPixel.Position >= numPixels)
+            WeatherPixel weatherPixel = _weatherPixels[i];
+            if (weatherPixel.Position >= numPixels)
             {
                 // Pixel out of bounds, bail
                 break;
             }
 
-            bits[rainPixel.Position] = rainPixel.Colour;
+            bits[weatherPixel.Position] = weatherPixel.Colour;
         }
-        _rainPixelsCount = 0;
+        _weatherPixelsCount = 0;
     }
 }
 
@@ -197,8 +200,8 @@ void X8DrawingEngine::BeginDraw()
             Resize(_width, _height);
         }
 #endif
-        _rainDrawer.SetDPI(&_bitsDPI);
-        _rainDrawer.Restore();
+        _weatherDrawer.SetDPI(&_bitsDPI);
+        _weatherDrawer.Restore();
     }
 }
 
@@ -222,9 +225,9 @@ void X8DrawingEngine::UpdateWindows()
     window_update_all();
 }
 
-void X8DrawingEngine::PaintRain()
+void X8DrawingEngine::PaintWeather()
 {
-    DrawRain(&_bitsDPI, &_rainDrawer);
+    DrawWeather(&_bitsDPI, &_weatherDrawer);
 }
 
 void X8DrawingEngine::CopyRect(int32_t x, int32_t y, int32_t width, int32_t height, int32_t dx, int32_t dy)
@@ -651,7 +654,7 @@ void X8DrawingContext::FillRect(uint32_t colour, int32_t left, int32_t top, int3
     }
 }
 
-void X8DrawingContext::FilterRect(FILTER_PALETTE_ID palette, int32_t left, int32_t top, int32_t right, int32_t bottom)
+void X8DrawingContext::FilterRect(FilterPaletteID palette, int32_t left, int32_t top, int32_t right, int32_t bottom)
 {
     rct_drawpixelinfo* dpi = _dpi;
 
@@ -703,7 +706,7 @@ void X8DrawingContext::FilterRect(FILTER_PALETTE_ID palette, int32_t left, int32
                        (startY / dpi->zoom_level) * ((dpi->width / dpi->zoom_level) + dpi->pitch) + (startX / dpi->zoom_level));
 
     // Find colour in colour table?
-    auto paletteMap = GetPaletteMapForColour(palette);
+    auto paletteMap = GetPaletteMapForColour(EnumValue(palette));
     if (paletteMap)
     {
         const int32_t scaled_width = width / dpi->zoom_level;

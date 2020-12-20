@@ -16,11 +16,11 @@
 #include "../PlatformEnvironment.h"
 #include "../ReplayManager.h"
 #include "../Version.h"
-#include "../actions/ClimateSetAction.hpp"
-#include "../actions/RideSetPriceAction.hpp"
-#include "../actions/RideSetSetting.hpp"
-#include "../actions/SetCheatAction.hpp"
-#include "../actions/StaffSetCostumeAction.hpp"
+#include "../actions/ClimateSetAction.h"
+#include "../actions/RideSetPriceAction.h"
+#include "../actions/RideSetSettingAction.h"
+#include "../actions/SetCheatAction.h"
+#include "../actions/StaffSetCostumeAction.h"
 #include "../config/Config.h"
 #include "../core/Guard.hpp"
 #include "../core/Path.hpp"
@@ -156,7 +156,7 @@ static int32_t cc_rides(InteractiveConsole& console, const arguments_t& argv)
                 if (argv.size() > 1 && argv[1] == "mode")
                 {
                     console.WriteFormatLine("Ride modes are specified using integer IDs as given below:");
-                    for (int32_t i = 0; i < RIDE_MODE_COUNT; i++)
+                    for (int32_t i = 0; i < static_cast<uint8_t>(RideMode::Count); i++)
                     {
                         char mode_name[128] = { 0 };
                         rct_string_id mode_string_id = RideModeNames[i];
@@ -214,7 +214,7 @@ static int32_t cc_rides(InteractiveConsole& console, const arguments_t& argv)
                 else
                 {
                     auto ride = get_ride(ride_index);
-                    if (mode <= 0 || mode > (RIDE_MODE_COUNT - 1))
+                    if (mode >= static_cast<uint8_t>(RideMode::Count))
                     {
                         console.WriteFormatLine("Invalid ride mode.");
                     }
@@ -224,7 +224,7 @@ static int32_t cc_rides(InteractiveConsole& console, const arguments_t& argv)
                     }
                     else
                     {
-                        ride->mode = static_cast<uint8_t>(mode & 0xFF);
+                        ride->mode = static_cast<RideMode>(mode & 0xFF);
                         invalidate_test_results(ride);
                     }
                 }
@@ -449,7 +449,7 @@ static int32_t cc_staff(InteractiveConsole& console, const arguments_t& argv)
             {
                 console.WriteFormatLine("staff set energy <staff id> <value 0-255>");
                 console.WriteFormatLine("staff set costume <staff id> <costume id>");
-                for (int32_t i = 0; i < ENTERTAINER_COSTUME_COUNT; i++)
+                for (int32_t i = 0; i < static_cast<uint8_t>(EntertainerCostume::Count); i++)
                 {
                     char costume_name[128] = { 0 };
                     rct_string_id costume = StaffCostumeNames[i];
@@ -499,13 +499,13 @@ static int32_t cc_staff(InteractiveConsole& console, const arguments_t& argv)
                     console.WriteLineError("Specified staff is not entertainer");
                     return 1;
                 }
-                if (!int_valid[1] || int_val[1] < 0 || int_val[1] >= ENTERTAINER_COSTUME_COUNT)
+                if (!int_valid[1] || int_val[1] < 0 || int_val[1] >= static_cast<uint8_t>(EntertainerCostume::Count))
                 {
                     console.WriteLineError("Invalid costume ID");
                     return 1;
                 }
 
-                uint8_t costume = int_val[1];
+                EntertainerCostume costume = static_cast<EntertainerCostume>(int_val[1]);
                 auto staffSetCostumeAction = StaffSetCostumeAction(int_val[0], costume);
                 GameActions::Execute(&staffSetCostumeAction);
             }
@@ -739,8 +739,8 @@ static int32_t cc_set(InteractiveConsole& console, const arguments_t& argv)
             if (gCash != money)
             {
                 auto setCheatAction = SetCheatAction(CheatType::SetMoney, money);
-                setCheatAction.SetCallback([&console](const GameAction*, const GameActionResult* res) {
-                    if (res->Error != GA_ERROR::OK)
+                setCheatAction.SetCallback([&console](const GameAction*, const GameActions::Result* res) {
+                    if (res->Error != GameActions::Status::Ok)
                         console.WriteLineError("Network error: Permission denied!");
                     else
                         console.Execute("get money");
@@ -947,8 +947,8 @@ static int32_t cc_set(InteractiveConsole& console, const arguments_t& argv)
             if (gCheatsSandboxMode != (int_val[0] != 0))
             {
                 auto setCheatAction = SetCheatAction(CheatType::SandboxMode, int_val[0] != 0);
-                setCheatAction.SetCallback([&console](const GameAction*, const GameActionResult* res) {
-                    if (res->Error != GA_ERROR::OK)
+                setCheatAction.SetCallback([&console](const GameAction*, const GameActions::Result* res) {
+                    if (res->Error != GameActions::Status::Ok)
                         console.WriteLineError("Network error: Permission denied!");
                     else
                         console.Execute("get cheat_sandbox_mode");
@@ -965,8 +965,8 @@ static int32_t cc_set(InteractiveConsole& console, const arguments_t& argv)
             if (gCheatsDisableClearanceChecks != (int_val[0] != 0))
             {
                 auto setCheatAction = SetCheatAction(CheatType::DisableClearanceChecks, int_val[0] != 0);
-                setCheatAction.SetCallback([&console](const GameAction*, const GameActionResult* res) {
-                    if (res->Error != GA_ERROR::OK)
+                setCheatAction.SetCallback([&console](const GameAction*, const GameActions::Result* res) {
+                    if (res->Error != GameActions::Status::Ok)
                         console.WriteLineError("Network error: Permission denied!");
                     else
                         console.Execute("get cheat_disable_clearance_checks");
@@ -983,8 +983,8 @@ static int32_t cc_set(InteractiveConsole& console, const arguments_t& argv)
             if (gCheatsDisableSupportLimits != (int_val[0] != 0))
             {
                 auto setCheatAction = SetCheatAction(CheatType::DisableSupportLimits, int_val[0] != 0);
-                setCheatAction.SetCallback([&console](const GameAction*, const GameActionResult* res) {
-                    if (res->Error != GA_ERROR::OK)
+                setCheatAction.SetCallback([&console](const GameAction*, const GameActions::Result* res) {
+                    if (res->Error != GameActions::Status::Ok)
                         console.WriteLineError("Network error: Permission denied!");
                     else
                         console.Execute("get cheat_disable_support_limits");
@@ -1073,8 +1073,8 @@ static int32_t cc_load_object(InteractiveConsole& console, const arguments_t& ar
         }
         auto groupIndex = object_manager_get_loaded_object_entry_index(loadedObject);
 
-        uint8_t objectType = entry->GetType();
-        if (objectType == OBJECT_TYPE_RIDE)
+        ObjectType objectType = entry->GetType();
+        if (objectType == ObjectType::Ride)
         {
             // Automatically research the ride so it's supported by the game.
             rct_ride_entry* rideEntry;
@@ -1087,7 +1087,7 @@ static int32_t cc_load_object(InteractiveConsole& console, const arguments_t& ar
                 rideType = rideEntry->ride_type[j];
                 if (rideType != RIDE_TYPE_NULL)
                 {
-                    uint8_t category = RideTypeDescriptors[rideType].Category;
+                    ResearchCategory category = RideTypeDescriptors[rideType].GetResearchCategory();
                     research_insert_ride_entry(rideType, groupIndex, category, true);
                 }
             }
@@ -1096,7 +1096,7 @@ static int32_t cc_load_object(InteractiveConsole& console, const arguments_t& ar
             research_reset_current_item();
             gSilentResearch = false;
         }
-        else if (objectType == OBJECT_TYPE_SCENERY_GROUP)
+        else if (objectType == ObjectType::SceneryGroup)
         {
             research_insert_scenery_group_entry(groupIndex, true);
 
@@ -1124,17 +1124,18 @@ static int32_t cc_object_count(InteractiveConsole& console, [[maybe_unused]] con
         "Paths", "Path Additions", "Scenery groups", "Park entrances", "Water",
     };
 
-    for (int32_t i = 0; i < 10; i++)
+    for (ObjectType i = ObjectType::Ride; i < ObjectType::ScenarioText; i++)
     {
         int32_t entryGroupIndex = 0;
-        for (; entryGroupIndex < object_entry_group_counts[i]; entryGroupIndex++)
+        for (; entryGroupIndex < object_entry_group_counts[EnumValue(i)]; entryGroupIndex++)
         {
             if (object_entry_get_chunk(i, entryGroupIndex) == nullptr)
             {
                 break;
             }
         }
-        console.WriteFormatLine("%s: %d/%d", object_type_names[i], entryGroupIndex, object_entry_group_counts[i]);
+        console.WriteFormatLine(
+            "%s: %d/%d", object_type_names[EnumValue(i)], entryGroupIndex, object_entry_group_counts[EnumValue(i)]);
     }
 
     return 0;
@@ -1159,6 +1160,10 @@ static int32_t cc_open(InteractiveConsole& console, const arguments_t& argv)
         else if (argv[0] == "scenario_options" && invalidArguments(&invalidTitle, !title))
         {
             context_open_window(WC_EDITOR_SCENARIO_OPTIONS);
+        }
+        else if (argv[0] == "objective_options" && invalidArguments(&invalidTitle, !title))
+        {
+            context_open_window(WC_EDITOR_OBJECTIVE_OPTIONS);
         }
         else if (argv[0] == "options")
         {
@@ -1295,7 +1300,7 @@ static int32_t cc_for_date([[maybe_unused]] InteractiveConsole& console, [[maybe
     if (argv.size() <= 2)
     {
         day = std::clamp(
-            gDateMonthTicks / (0x10000 / days_in_month[month - 1]) + 1, 1, static_cast<int>(days_in_month[month - 1]));
+            gDateMonthTicks / (TICKS_PER_MONTH / days_in_month[month - 1]) + 1, 1, static_cast<int>(days_in_month[month - 1]));
     }
 
     // YYYY MM DD (year, month, and day provided)
@@ -1364,7 +1369,7 @@ static int32_t cc_save_park([[maybe_unused]] InteractiveConsole& console, [[mayb
 static int32_t cc_say(InteractiveConsole& console, const arguments_t& argv)
 {
     if (network_get_mode() == NETWORK_MODE_NONE || network_get_status() != NETWORK_STATUS_CONNECTED
-        || network_get_authstatus() != NETWORK_AUTH_OK)
+        || network_get_authstatus() != NetworkAuth::Ok)
     {
         console.WriteFormatLine("This command only works in multiplayer mode.");
         return 0;
@@ -1574,7 +1579,7 @@ static int32_t cc_mp_desync(InteractiveConsole& console, const arguments_t& argv
     for (int i = 0; i < MAX_SPRITES; i++)
     {
         auto* sprite = GetEntity(i);
-        if (sprite == nullptr || sprite->sprite_identifier == SPRITE_IDENTIFIER_NULL)
+        if (sprite == nullptr || sprite->sprite_identifier == SpriteIdentifier::Null)
             continue;
 
         auto peep = sprite->As<Peep>();
@@ -1657,11 +1662,11 @@ static int32_t cc_assert([[maybe_unused]] InteractiveConsole& console, [[maybe_u
 static int32_t cc_add_news_item([[maybe_unused]] InteractiveConsole& console, [[maybe_unused]] const arguments_t& argv)
 {
     printf("argv.size() = %zu\n", argv.size());
-    if (argv.size() < 3)
+    if (argv.size() < 2)
     {
         console.WriteLineWarning("Too few arguments");
         static_assert(News::ItemTypeCount == 10, "News::ItemType::Count changed, update console command!");
-        console.WriteLine("add_news_item <type> <message> <assoc>");
+        console.WriteLine("add_news_item <type> <message> [assoc]");
         console.WriteLine("type is one of:");
         console.WriteLine("    0 (News::ItemType::Null)");
         console.WriteLine("    1 (News::ItemType::Ride)");
@@ -1674,13 +1679,32 @@ static int32_t cc_add_news_item([[maybe_unused]] InteractiveConsole& console, [[
         console.WriteLine("    8 (News::ItemType::Award)");
         console.WriteLine("    9 (News::ItemType::Graph)");
         console.WriteLine("message is the message to display, wrapped in quotes for multiple words");
-        console.WriteLine("assoc is the associated id of ride/peep/tile/etc.");
+        console.WriteLine("assoc is the associated id of ride/peep/tile/etc. If the selected ItemType doesn't need an assoc "
+                          "(Null, Money, Award, Graph), you can leave this field blank");
         return 1;
     }
+
     auto type = atoi(argv[0].c_str());
     auto msg = argv[1].c_str();
-    auto assoc = atoi(argv[2].c_str());
-    News::AddItemToQueue(static_cast<News::ItemType>(type), msg, assoc);
+    auto assoc = 0;
+
+    News::ItemType itemType = static_cast<News::ItemType>(type);
+
+    if (argv.size() == 3) // 3 arguments passed, set assoc
+    {
+        assoc = atoi(argv[2].c_str());
+    }
+    else
+    {
+        if (News::CheckIfItemRequiresAssoc(itemType))
+        {
+            console.WriteLine("Selected ItemType requires an assoc");
+            return 0;
+        }
+    }
+
+    News::AddItemToQueue(itemType, msg, assoc);
+    console.WriteLine("Successfully added News Item");
     return 0;
 }
 
@@ -1736,6 +1760,7 @@ static constexpr const utf8* console_window_table[] = {
     "object_selection",
     "inventions_list",
     "scenario_options",
+    "objective_options",
     "options",
     "themes",
     "title_sequences"
@@ -1906,17 +1931,17 @@ void InteractiveConsole::Execute(const std::string& s)
 
 void InteractiveConsole::WriteLine(const std::string& s)
 {
-    WriteLine(s, FORMAT_WINDOW_COLOUR_2);
+    WriteLine(s, FormatToken::ColourWindow2);
 }
 
 void InteractiveConsole::WriteLineError(const std::string& s)
 {
-    WriteLine(s, FORMAT_RED);
+    WriteLine(s, FormatToken::ColourRed);
 }
 
 void InteractiveConsole::WriteLineWarning(const std::string& s)
 {
-    WriteLine(s, FORMAT_YELLOW);
+    WriteLine(s, FormatToken::ColourYellow);
 }
 
 void InteractiveConsole::WriteFormatLine(const char* format, ...)

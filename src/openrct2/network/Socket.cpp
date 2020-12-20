@@ -250,7 +250,7 @@ private:
 class TcpSocket final : public ITcpSocket, protected Socket
 {
 private:
-    std::atomic<SOCKET_STATUS> _status = ATOMIC_VAR_INIT(SOCKET_STATUS_CLOSED);
+    std::atomic<SocketStatus> _status = ATOMIC_VAR_INIT(SocketStatus::Closed);
     uint16_t _listeningPort = 0;
     SOCKET _socket = INVALID_SOCKET;
 
@@ -271,7 +271,7 @@ public:
         CloseSocket();
     }
 
-    SOCKET_STATUS GetStatus() const override
+    SocketStatus GetStatus() const override
     {
         return _status;
     }
@@ -296,7 +296,7 @@ public:
 
     void Listen(const std::string& address, uint16_t port) override
     {
-        if (_status != SOCKET_STATUS_CLOSED)
+        if (_status != SocketStatus::Closed)
         {
             throw std::runtime_error("Socket not closed.");
         }
@@ -352,12 +352,12 @@ public:
         }
 
         _listeningPort = port;
-        _status = SOCKET_STATUS_LISTENING;
+        _status = SocketStatus::Listening;
     }
 
     std::unique_ptr<ITcpSocket> Accept() override
     {
-        if (_status != SOCKET_STATUS_LISTENING)
+        if (_status != SocketStatus::Listening)
         {
             throw std::runtime_error("Socket not listening.");
         }
@@ -407,7 +407,7 @@ public:
 
     void Connect(const std::string& address, uint16_t port) override
     {
-        if (_status != SOCKET_STATUS_CLOSED && _status != SOCKET_STATUS_WAITING)
+        if (_status != SocketStatus::Closed && _status != SocketStatus::Waiting)
         {
             throw std::runtime_error("Socket not closed.");
         }
@@ -415,7 +415,7 @@ public:
         try
         {
             // Resolve address
-            _status = SOCKET_STATUS_RESOLVING;
+            _status = SocketStatus::Resolving;
 
             sockaddr_storage ss{};
             socklen_t ss_len;
@@ -424,7 +424,7 @@ public:
                 throw SocketException("Unable to resolve address.");
             }
 
-            _status = SOCKET_STATUS_CONNECTING;
+            _status = SocketStatus::Connecting;
             _socket = socket(ss.ss_family, SOCK_STREAM, IPPROTO_TCP);
             if (_socket == INVALID_SOCKET)
             {
@@ -481,7 +481,7 @@ public:
                     }
                     if (error == 0)
                     {
-                        _status = SOCKET_STATUS_CONNECTED;
+                        _status = SocketStatus::Connected;
                         return;
                     }
                 }
@@ -499,7 +499,7 @@ public:
 
     void ConnectAsync(const std::string& address, uint16_t port) override
     {
-        if (_status != SOCKET_STATUS_CLOSED)
+        if (_status != SocketStatus::Closed)
         {
             throw std::runtime_error("Socket not closed.");
         }
@@ -507,7 +507,7 @@ public:
         // When connect is called, the status is set to resolving, but we want to make sure
         // the status is changed before this async method exits. Otherwise, the consumer
         // might think the status has closed before it started to connect.
-        _status = SOCKET_STATUS_WAITING;
+        _status = SocketStatus::Waiting;
 
         auto saddress = std::string(address);
         std::promise<void> barrier;
@@ -530,7 +530,7 @@ public:
 
     void Finish() override
     {
-        if (_status == SOCKET_STATUS_CONNECTED)
+        if (_status == SocketStatus::Connected)
         {
             shutdown(_socket, SHUT_WR);
         }
@@ -538,7 +538,7 @@ public:
 
     void Disconnect() override
     {
-        if (_status == SOCKET_STATUS_CONNECTED)
+        if (_status == SocketStatus::Connected)
         {
             shutdown(_socket, SHUT_RDWR);
         }
@@ -546,7 +546,7 @@ public:
 
     size_t SendData(const void* buffer, size_t size) override
     {
-        if (_status != SOCKET_STATUS_CONNECTED)
+        if (_status != SocketStatus::Connected)
         {
             throw std::runtime_error("Socket not connected.");
         }
@@ -568,7 +568,7 @@ public:
 
     NetworkReadPacket ReceiveData(void* buffer, size_t size, size_t* sizeReceived) override
     {
-        if (_status != SOCKET_STATUS_CONNECTED)
+        if (_status != SocketStatus::Connected)
         {
             throw std::runtime_error("Socket not connected.");
         }
@@ -635,7 +635,7 @@ private:
         _socket = socket;
         _hostName = hostName;
         _ipAddress = ipAddress;
-        _status = SOCKET_STATUS_CONNECTED;
+        _status = SocketStatus::Connected;
     }
 
     void CloseSocket()
@@ -645,7 +645,7 @@ private:
             closesocket(_socket);
             _socket = INVALID_SOCKET;
         }
-        _status = SOCKET_STATUS_CLOSED;
+        _status = SocketStatus::Closed;
     }
 
     std::string GetIpAddressFromSocket(const sockaddr_in* addr)
@@ -678,7 +678,7 @@ private:
 class UdpSocket final : public IUdpSocket, protected Socket
 {
 private:
-    SOCKET_STATUS _status = SOCKET_STATUS_CLOSED;
+    SocketStatus _status = SocketStatus::Closed;
     uint16_t _listeningPort = 0;
     SOCKET _socket = INVALID_SOCKET;
     NetworkEndpoint _endpoint;
@@ -694,7 +694,7 @@ public:
         CloseSocket();
     }
 
-    SOCKET_STATUS GetStatus() const override
+    SocketStatus GetStatus() const override
     {
         return _status;
     }
@@ -711,7 +711,7 @@ public:
 
     void Listen(const std::string& address, uint16_t port) override
     {
-        if (_status != SOCKET_STATUS_CLOSED)
+        if (_status != SocketStatus::Closed)
         {
             throw std::runtime_error("Socket not closed.");
         }
@@ -740,7 +740,7 @@ public:
         }
 
         _listeningPort = port;
-        _status = SOCKET_STATUS_LISTENING;
+        _status = SocketStatus::Listening;
     }
 
     size_t SendData(const std::string& address, uint16_t port, const void* buffer, size_t size) override
@@ -770,7 +770,7 @@ public:
         auto ss = &dest->GetAddress();
         auto ss_len = dest->GetAddressLen();
 
-        if (_status != SOCKET_STATUS_LISTENING)
+        if (_status != SocketStatus::Listening)
         {
             _endpoint = *dest;
         }
@@ -797,7 +797,7 @@ public:
     {
         sockaddr_in senderAddr{};
         socklen_t senderAddrLen = sizeof(sockaddr_in);
-        if (_status != SOCKET_STATUS_LISTENING)
+        if (_status != SocketStatus::Listening)
         {
             senderAddrLen = _endpoint.GetAddressLen();
             std::memcpy(&senderAddr, &_endpoint.GetAddress(), senderAddrLen);
@@ -836,7 +836,7 @@ private:
     {
         _socket = socket;
         _hostName = hostName;
-        _status = SOCKET_STATUS_CONNECTED;
+        _status = SocketStatus::Connected;
     }
 
     SOCKET CreateSocket()
@@ -879,7 +879,7 @@ private:
             closesocket(_socket);
             _socket = INVALID_SOCKET;
         }
-        _status = SOCKET_STATUS_CLOSED;
+        _status = SocketStatus::Closed;
     }
 };
 
@@ -915,8 +915,8 @@ static std::vector<INTERFACE_INFO> GetNetworkInterfaces()
     {
         interfaces.resize(capacity);
         if (WSAIoctl(
-                sock, SIO_GET_INTERFACE_LIST, nullptr, 0, interfaces.data(), (DWORD)(capacity * sizeof(INTERFACE_INFO)), &len,
-                nullptr, nullptr)
+                sock, SIO_GET_INTERFACE_LIST, nullptr, 0, interfaces.data(),
+                static_cast<DWORD>(capacity * sizeof(INTERFACE_INFO)), &len, nullptr, nullptr)
             == 0)
         {
             break;
@@ -949,9 +949,10 @@ std::vector<std::unique_ptr<INetworkEndpoint>> GetBroadcastAddresses()
         // iiBroadcast is unusable, because it always seems to be set to 255.255.255.255.
         sockaddr_storage address{};
         memcpy(&address, &ifo.iiAddress.Address, sizeof(sockaddr));
-        ((sockaddr_in*)&address)->sin_addr.s_addr = ifo.iiAddress.AddressIn.sin_addr.s_addr
+        (reinterpret_cast<sockaddr_in*>(&address))->sin_addr.s_addr = ifo.iiAddress.AddressIn.sin_addr.s_addr
             | ~ifo.iiNetmask.AddressIn.sin_addr.s_addr;
-        baddresses.push_back(std::make_unique<NetworkEndpoint>((const sockaddr*)&address, (socklen_t)sizeof(sockaddr)));
+        baddresses.push_back(std::make_unique<NetworkEndpoint>(
+            reinterpret_cast<const sockaddr*>(&address), static_cast<socklen_t>(sizeof(sockaddr))));
     }
 #    else
     int sock = socket(AF_INET, SOCK_DGRAM, 0);

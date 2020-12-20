@@ -56,7 +56,7 @@ static void paint_twist_structure(
 
     uint32_t structureFrameNum = frameNum % 24;
     uint32_t imageId = (baseImageId + structureFrameNum) | imageColourFlags;
-    sub_98197C(session, imageId, xOffset, yOffset, 24, 24, 48, height, xOffset + 16, yOffset + 16, height);
+    PaintAddImageAsParent(session, imageId, xOffset, yOffset, 24, 24, 48, height, xOffset + 16, yOffset + 16, height);
 
     rct_drawpixelinfo* dpi = &session->DPI;
 
@@ -68,7 +68,7 @@ static void paint_twist_structure(
 
             uint32_t peepFrameNum = (frameNum + i * 12) % 216;
             imageId = (baseImageId + 24 + peepFrameNum) | imageColourFlags;
-            sub_98199C(session, imageId, xOffset, yOffset, 24, 24, 48, height, xOffset + 16, yOffset + 16, height);
+            PaintAddImageAsChild(session, imageId, xOffset, yOffset, 24, 24, 48, height, xOffset + 16, yOffset + 16, height);
         }
     }
 
@@ -101,12 +101,12 @@ static void paint_twist(
             if (track_paint_util_has_fence(EDGE_SW, session->MapPosition, tileElement, ride, session->CurrentRotation))
             {
                 imageId = SPR_FENCE_ROPE_SW | session->TrackColours[SCHEME_MISC];
-                sub_98197C(session, imageId, 0, 0, 1, 28, 7, height, 29, 0, height + 3);
+                PaintAddImageAsParent(session, imageId, 0, 0, 1, 28, 7, height, 29, 0, height + 3);
             }
             if (track_paint_util_has_fence(EDGE_SE, session->MapPosition, tileElement, ride, session->CurrentRotation))
             {
                 imageId = SPR_FENCE_ROPE_SE | session->TrackColours[SCHEME_MISC];
-                sub_98197C(session, imageId, 0, 0, 28, 1, 7, height, 0, 29, height + 3);
+                PaintAddImageAsParent(session, imageId, 0, 0, 28, 1, 7, height, 0, 29, height + 3);
             }
             break;
         default:
@@ -163,7 +163,7 @@ static void paint_twist(
 /**
  * rct2: 0x0076D658
  */
-TRACK_PAINT_FUNCTION get_track_paint_function_twist(int32_t trackType, int32_t direction)
+TRACK_PAINT_FUNCTION get_track_paint_function_twist(int32_t trackType)
 {
     if (trackType != FLAT_TRACK_ELEM_3_X_3)
     {

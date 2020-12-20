@@ -38,10 +38,10 @@ enum WINDOW_SAVE_PROMPT_WIDGET_IDX {
 
 static rct_widget window_save_prompt_widgets[] = {
     WINDOW_SHIM_WHITE(STR_NONE, WW_SAVE, WH_SAVE),
-    MakeWidget({  2, 19}, {256, 12}, WWT_LABEL_CENTRED, WindowColour::Primary, STR_EMPTY                ), // question/label
-    MakeWidget({  8, 35}, { 78, 14}, WWT_BUTTON,        WindowColour::Primary, STR_SAVE_PROMPT_SAVE     ), // save
-    MakeWidget({ 91, 35}, { 78, 14}, WWT_BUTTON,        WindowColour::Primary, STR_SAVE_PROMPT_DONT_SAVE), // don't save
-    MakeWidget({174, 35}, { 78, 14}, WWT_BUTTON,        WindowColour::Primary, STR_SAVE_PROMPT_CANCEL   ), // cancel
+    MakeWidget({  2, 19}, {256, 12}, WindowWidgetType::LabelCentred, WindowColour::Primary, STR_EMPTY                ), // question/label
+    MakeWidget({  8, 35}, { 78, 14}, WindowWidgetType::Button,        WindowColour::Primary, STR_SAVE_PROMPT_SAVE     ), // save
+    MakeWidget({ 91, 35}, { 78, 14}, WindowWidgetType::Button,        WindowColour::Primary, STR_SAVE_PROMPT_DONT_SAVE), // don't save
+    MakeWidget({174, 35}, { 78, 14}, WindowWidgetType::Button,        WindowColour::Primary, STR_SAVE_PROMPT_CANCEL   ), // cancel
     { WIDGETS_END },
 };
 
@@ -55,8 +55,8 @@ enum WINDOW_QUIT_PROMPT_WIDGET_IDX {
 
 static rct_widget window_quit_prompt_widgets[] = {
     WINDOW_SHIM_WHITE(STR_QUIT_GAME_PROMPT_TITLE, WW_QUIT, WH_QUIT),
-    MakeWidget({ 8, 19}, {78, 14}, WWT_BUTTON, WindowColour::Primary, STR_OK    ), // ok
-    MakeWidget({91, 19}, {78, 14}, WWT_BUTTON, WindowColour::Primary, STR_CANCEL), // cancel
+    MakeWidget({ 8, 19}, {78, 14}, WindowWidgetType::Button, WindowColour::Primary, STR_OK    ), // ok
+    MakeWidget({91, 19}, {78, 14}, WindowWidgetType::Button, WindowColour::Primary, STR_CANCEL), // cancel
     { WIDGETS_END },
 };
 
@@ -72,36 +72,12 @@ static void window_save_prompt_mouseup(rct_window *w, rct_widgetindex widgetInde
 static void window_save_prompt_paint(rct_window *w, rct_drawpixelinfo *dpi);
 static void window_save_prompt_callback(int32_t result, const utf8 * path);
 
-static rct_window_event_list window_save_prompt_events = {
-    window_save_prompt_close,
-    window_save_prompt_mouseup,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    window_save_prompt_paint,
-    nullptr
-};
+static rct_window_event_list window_save_prompt_events([](auto& events)
+{
+    events.close = &window_save_prompt_close;
+    events.mouse_up = &window_save_prompt_mouseup;
+    events.paint = &window_save_prompt_paint;
+});
 // clang-format on
 
 /**
@@ -113,13 +89,13 @@ rct_window* window_save_prompt_open()
     int32_t width, height;
     rct_string_id stringId;
     rct_window* window;
-    uint8_t prompt_mode;
+    PromptMode prompt_mode;
     rct_widget* widgets;
     uint64_t enabled_widgets;
 
     prompt_mode = gSavePromptMode;
-    if (prompt_mode == PM_QUIT)
-        prompt_mode = PM_SAVE_BEFORE_QUIT;
+    if (prompt_mode == PromptMode::Quit)
+        prompt_mode = PromptMode::SaveBeforeQuit;
 
     // do not show save prompt if we're in the title demo and click on load game
     if (gScreenFlags & SCREEN_FLAGS_TITLE_DEMO)
@@ -165,34 +141,33 @@ rct_window* window_save_prompt_open()
         height = WH_SAVE;
     }
 
-    if (prompt_mode >= std::size(window_save_prompt_labels))
+    if (EnumValue(prompt_mode) >= std::size(window_save_prompt_labels))
     {
         log_warning("Invalid save prompt mode %u", prompt_mode);
         return nullptr;
     }
-    window = window_create_centred(
-        width, height, &window_save_prompt_events, WC_SAVE_PROMPT, WF_TRANSPARENT | WF_STICK_TO_FRONT);
+    window = WindowCreateCentred(width, height, &window_save_prompt_events, WC_SAVE_PROMPT, WF_TRANSPARENT | WF_STICK_TO_FRONT);
 
     window->widgets = widgets;
     window->enabled_widgets = enabled_widgets;
-    window_init_scroll_widgets(window);
+    WindowInitScrollWidgets(window);
 
     // Pause the game if not network play.
     if (network_get_mode() == NETWORK_MODE_NONE)
     {
         gGamePaused |= GAME_PAUSED_MODAL;
-        audio_stop_all_music_and_sounds();
+        OpenRCT2::Audio::StopAll();
     }
 
     window_invalidate_by_class(WC_TOP_TOOLBAR);
 
-    stringId = window_save_prompt_labels[prompt_mode][0];
+    stringId = window_save_prompt_labels[EnumValue(prompt_mode)][0];
     if (stringId == STR_LOAD_GAME_PROMPT_TITLE && gScreenFlags & SCREEN_FLAGS_SCENARIO_EDITOR)
         stringId = STR_LOAD_LANDSCAPE_PROMPT_TITLE;
     if (stringId == STR_QUIT_GAME_PROMPT_TITLE && gScreenFlags & SCREEN_FLAGS_SCENARIO_EDITOR)
         stringId = STR_QUIT_SCENARIO_EDITOR;
     window_save_prompt_widgets[WIDX_TITLE].text = stringId;
-    window_save_prompt_widgets[WIDX_LABEL].text = window_save_prompt_labels[prompt_mode][1];
+    window_save_prompt_widgets[WIDX_LABEL].text = window_save_prompt_labels[EnumValue(prompt_mode)][1];
 
     return window;
 }
@@ -207,7 +182,7 @@ static void window_save_prompt_close(rct_window* w)
     if (network_get_mode() == NETWORK_MODE_NONE)
     {
         gGamePaused &= ~GAME_PAUSED_MODAL;
-        audio_unpause_sounds();
+        OpenRCT2::Audio::Resume();
     }
 
     window_invalidate_by_class(WC_TOP_TOOLBAR);
@@ -270,7 +245,7 @@ static void window_save_prompt_mouseup(rct_window* w, rct_widgetindex widgetInde
 
 static void window_save_prompt_paint(rct_window* w, rct_drawpixelinfo* dpi)
 {
-    window_draw_widgets(w, dpi);
+    WindowDrawWidgets(w, dpi);
 }
 
 static void window_save_prompt_callback(int32_t result, const utf8* path)
